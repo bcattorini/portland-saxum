@@ -1,13 +1,11 @@
 // ------------------------------------------------------------------
 // Badge component + status→(color, Spanish label) maps (brief §5 palette,
-// §0 language rule: UI labels in Spanish).
+// §0 language rule: UI labels in Spanish). Aligned to the LIVE schema enums.
 // ------------------------------------------------------------------
 import type {
   CommentCityStatus,
   DisciplineCityStatus,
-  DocumentStatus,
   InternalStatus,
-  PaymentStatus,
 } from "./types";
 
 type BadgeTone =
@@ -49,15 +47,16 @@ export function DisciplineStatusBadge({
   return <Badge tone={tone} label={label} />;
 }
 
-// -- Comment City status -------------------------------------------
+// -- Comment City status (raw iBuild values) -----------------------
 const COMMENT_CITY: Record<CommentCityStatus, [BadgeTone, string]> = {
-  UNRESOLVED: ["danger", "Sin resolver"],
-  RESOLVED: ["success", "Resuelto"],
-  INFO_ONLY: ["neutral", "Informativo"],
+  Unresolved: ["danger", "Sin resolver"],
+  Resolved: ["success", "Resuelto"],
+  "Info Only": ["neutral", "Informativo"],
+  Information: ["neutral", "Informativo"],
 };
 
 export function CommentStatusBadge({ status }: { status: CommentCityStatus }) {
-  const [tone, label] = COMMENT_CITY[status];
+  const [tone, label] = COMMENT_CITY[status] ?? (["neutral", status] as [BadgeTone, string]);
   return <Badge tone={tone} label={label} />;
 }
 
@@ -72,35 +71,12 @@ const INTERNAL: Record<InternalStatus, [BadgeTone, string]> = {
   Resolved: ["success", "Resuelto"],
 };
 
+export function internalStatusMeta(status: InternalStatus): [BadgeTone, string] {
+  return INTERNAL[status];
+}
+
 export function InternalStatusBadge({ status }: { status: InternalStatus }) {
   const [tone, label] = INTERNAL[status];
-  return <Badge tone={tone} label={label} />;
-}
-
-// -- Document status -----------------------------------------------
-const DOCUMENT: Record<DocumentStatus, [BadgeTone, string]> = {
-  Pending: ["danger", "Pendiente"],
-  "In Progress": ["amber", "En progreso"],
-  Submitted: ["cycle1", "Enviado"],
-  Approved: ["success", "Aprobado"],
-  "N/A": ["neutral", "N/A"],
-};
-
-export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {
-  const [tone, label] = DOCUMENT[status];
-  return <Badge tone={tone} label={label} />;
-}
-
-// -- Payment status ------------------------------------------------
-const PAYMENT: Record<PaymentStatus, [BadgeTone, string]> = {
-  Pending: ["amber", "Pendiente"],
-  Paid: ["success", "Pagado"],
-  Overdue: ["danger", "Vencido"],
-  Cancelled: ["neutral", "Cancelado"],
-};
-
-export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
-  const [tone, label] = PAYMENT[status];
   return <Badge tone={tone} label={label} />;
 }
 

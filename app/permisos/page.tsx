@@ -1,38 +1,57 @@
-// Permisos — brief §2/§3. Portfolio tabs → property cards → property panel
-// with three tabs (Planos & Ciudad / Documentos / Pagos).
-// Placeholder shell until the prototype comment data + Supabase are connected.
+// Permisos — server component. Loads properties + aggregates per-property
+// comment stats from disciplines, then hands off to the client app.
+import { createClient } from "@/lib/supabase/server";
+import type { Discipline, Property, PropertyWithStats } from "@/lib/types";
+import { PermisosApp } from "./PermisosApp";
 
-export default function PermisosPage() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Permisos</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Proceso de permisos por propiedad: Planos &amp; Ciudad, Documentos y
-          Pagos.
-        </p>
-      </div>
+export const dynamic = "force-dynamic";
 
-      {/* Portfolio switcher (visual only for now) */}
-      <div className="inline-flex rounded-lg border border-line bg-card p-1 text-sm">
-        <span className="rounded-md bg-brand px-3 py-1.5 font-medium text-white">
-          Portland Saxum
-        </span>
-        <span className="px-3 py-1.5 font-medium text-neutral-500">Casas</span>
-      </div>
+export default async function PermisosPage() {
+  const supabase = await createClient();
 
-      <div className="rounded-xl border border-dashed border-line bg-card/50 p-6 text-sm text-neutral-500">
-        Las tarjetas de propiedades y el panel de disciplinas se cargan desde
-        los datos reales de iBuild. Pendiente: importar{" "}
-        <code className="rounded bg-neutral-100 px-1">
-          PermitTracker_PortlandSaxum_v4.html
-        </code>{" "}
-        y{" "}
-        <code className="rounded bg-neutral-100 px-1">
-          PermitTracker_Casas_v3.html
-        </code>
-        .
+  const [{ data: properties, error: pErr }, { data: disciplines, error: dErr }] =
+    await Promise.all([
+      supabase
+        .from("properties")
+        .select("*")
+        .order("portfolio")
+        .order("sort_order", { nullsFirst: false }),
+      supabase
+        .from("disciplines")
+        .select("property_id, open_comments, total_comments, info_comments"),
+    ]);
+
+  if (pErr || dErr) {
+    return (
+      <div className="rounded-xl border border-line bg-card p-6 text-sm text-[#a32d2d]">
+        Error al cargar propiedades: {pErr?.message || dErr?.message}
       </div>
-    </div>
-  );
+    );
+  }
+
+  const byProp = new Map<string, { disc: number; open: number; total: number; info: number }>();
+  for (const d of (disciplines ?? []) as Pick<
+    Discipline,
+    "property_id" | "open_comments" | "total_comments" | "info_comments"
+  >[]) {
+    const cur = byProp.get(d.property_id) ?? { disc: 0, open: 0, total: 0, info: 0 };
+    cur.disc += 1;
+    cur.open += d.open_comments ?? 0;
+    cur.total += d.total_comments ?? 0;
+    cur.info += d.info_comments ?? 0;
+    byProp.set(d.property_id, cur);
+  }
+
+  const enriched: PropertyWithStats[] = ((properties ?? []) as Property[]).map((p) => {
+    const s = byProp.get(p.id) ?? { disc: 0, open: 0, total: 0, info: 0 };
+    return {
+      ...p,
+      disc_count: s.disc,
+      open_sum: s.open,
+      total_sum: s.total,
+      info_sum: s.info,
+    };
+  });
+
+  return <PermisosApp properties={enriched} />;
 }
