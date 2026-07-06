@@ -100,77 +100,10 @@ drop policy if exists action_items_all on action_items;
 create policy action_items_all on action_items for all to public using (true) with check (true);
 
 -- ---------------------------------------------------------------------------
--- Seed known documents (brief §6) — ONLY if property_documents is empty.
--- Properties resolved by their real live addresses.
+-- Document seed lives in scripts/seed-documents.mjs (run via the API), NOT here.
+-- Reason: pasting accented Spanish (ñ/ó/á) through the SQL Editor corrupted the
+-- text (UTF-8 read as Latin-1). The API seeder sends proper UTF-8. Run once:
+--     node scripts/seed-documents.mjs
 -- ---------------------------------------------------------------------------
-do $$
-begin
-  if not exists (select 1 from property_documents) then
-
-    -- helper inline: insert one doc for a property matched by address
-    -- 156 NE 77 St
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'WASA Agreement', 'Acuerdo WASA pendiente de entrega por el dueño.', 'Pending', 'Dueño', 1 from properties where address = '156 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'FPL', 'Coordinación FPL pendiente.', 'Pending', 'Dueño', 2 from properties where address = '156 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'BBL Dedication (NE 77 St, 5ft)', 'Dedicación de 5 ft en NE 77 St. Contacto: Sandra Saez · Ssaez@miamigov.com · 305-416-1262. Proceso 14-16 semanas.', 'Pending', 'Bruno', 3 from properties where address = '156 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Covenant', 'Covenant pendiente de entrega por el dueño.', 'Pending', 'Dueño', 4 from properties where address = '156 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Hydrant Flow Test', 'Reporte de hydrant flow test (vigencia máx. 12 meses).', 'Pending', 'Dueño', 5 from properties where address = '156 NE 77 St';
-
-    -- 150 NE 77 St (mismos 5 documentos que 156)
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'WASA Agreement', 'Acuerdo WASA pendiente de entrega por el dueño.', 'Pending', 'Dueño', 1 from properties where address = '150 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'FPL', 'Coordinación FPL pendiente.', 'Pending', 'Dueño', 2 from properties where address = '150 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'BBL Dedication (NE 77 St, 5ft)', 'Dedicación de 5 ft en NE 77 St. Contacto: Sandra Saez · Ssaez@miamigov.com · 305-416-1262. Proceso 14-16 semanas.', 'Pending', 'Bruno', 3 from properties where address = '150 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Covenant', 'Covenant pendiente de entrega por el dueño.', 'Pending', 'Dueño', 4 from properties where address = '150 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Hydrant Flow Test', 'Reporte de hydrant flow test (vigencia máx. 12 meses).', 'Pending', 'Dueño', 5 from properties where address = '150 NE 77 St';
-
-    -- 160 NE 77 St (mismos 5 + Civil comments response)
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'WASA Agreement', 'Acuerdo WASA pendiente de entrega por el dueño.', 'Pending', 'Dueño', 1 from properties where address = '160 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'FPL', 'Coordinación FPL pendiente.', 'Pending', 'Dueño', 2 from properties where address = '160 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'BBL Dedication (NE 77 St, 5ft)', 'Dedicación de 5 ft en NE 77 St. Contacto: Sandra Saez · Ssaez@miamigov.com · 305-416-1262. Proceso 14-16 semanas.', 'Pending', 'Bruno', 3 from properties where address = '160 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Covenant', 'Covenant pendiente de entrega por el dueño.', 'Pending', 'Dueño', 4 from properties where address = '160 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Hydrant Flow Test', 'Reporte de hydrant flow test (vigencia máx. 12 meses).', 'Pending', 'Dueño', 5 from properties where address = '160 NE 77 St';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Civil comments response', 'Respuesta a comentarios de Civil pendiente por David.', 'Pending', 'David', 6 from properties where address = '160 NE 77 St';
-
-    -- 3770 Oak Av
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Carta del vecino (tala de aguacate)', 'Carta del vecino autorizando la remoción del árbol de aguacate en propiedad adyacente.', 'Pending', 'Bruno', 1 from properties where address = '3770 Oak Av';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'BBL Dedication (Oak Av, 10ft)', 'Dedicación de 10 ft en Oak Av. Contacto: Sandra Saez. Proceso 14-16 semanas.', 'Pending', 'Bruno', 2 from properties where address = '3770 Oak Av';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Waiver PZ-25-20026', 'Waiver de setback PZ-25-20026 en proceso. Building permit no se aprueba hasta final decision.', 'In Progress', 'David', 3 from properties where address = '3770 Oak Av';
-
-    -- 3801 Oak Av
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'BBL Dedication (Oak Av, 10ft)', 'Dedicación de 10 ft en Oak Av. Contacto: Sandra Saez. Proceso 14-16 semanas.', 'Pending', 'Bruno', 1 from properties where address = '3801 Oak Av';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Covenant (doble folio)', 'Covenant doble folio (Zoning REF74). Contacto: Alicia T. Menardy · ATMenardy@miamigov.com.', 'Pending', 'Alicia T. Menardy', 2 from properties where address = '3801 Oak Av';
-
-    -- 3201 Day Av (Master)
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'BBL Dedication (McDonald St, 10ft)', 'Dedicación de 10 ft en McDonald St. Contacto: Sandra Saez. Proceso 14-16 semanas.', 'Pending', 'Bruno', 1 from properties where address = '3201 Day Av';
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Covenant (doble folio)', 'Covenant doble folio. Contacto: Alicia T. Menardy · ATMenardy@miamigov.com.', 'Pending', 'Alicia T. Menardy', 2 from properties where address = '3201 Day Av';
-
-    -- 3201 Day Av — Demo (matched by address LIKE to avoid em-dash issues)
-    insert into property_documents (property_id, title, description, status, assignee, sort_order)
-    select id, 'Tree Protection Bond $36,000', 'Entregar EN PERSONA: 444 SW 2nd Ave, 4th floor, Environmental Resources Div. Pink Tabebuia #20 -> $20,000 · Gumbo Limbo #23 -> $16,000. Bloquea aprobación del demo permit.', 'Pending', 'Bruno', 1 from properties where address like '3201 Day Av%Demo';
-
-  end if;
-end $$;
 
 commit;

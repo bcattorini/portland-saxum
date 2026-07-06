@@ -5,7 +5,10 @@
 import type {
   CommentCityStatus,
   DisciplineCityStatus,
+  DocumentStatus,
   InternalStatus,
+  PaymentStatus,
+  PaymentType,
 } from "./types";
 
 type BadgeTone =
@@ -78,6 +81,41 @@ export function internalStatusMeta(status: InternalStatus): [BadgeTone, string] 
 export function InternalStatusBadge({ status }: { status: InternalStatus }) {
   const [tone, label] = INTERNAL[status];
   return <Badge tone={tone} label={label} />;
+}
+
+// -- Document status -----------------------------------------------
+const DOCUMENT: Record<DocumentStatus, [BadgeTone, string]> = {
+  Pending: ["danger", "Pendiente"],
+  "In Progress": ["amber", "En progreso"],
+  Submitted: ["cycle1", "Enviado"],
+  Approved: ["success", "Aprobado"],
+  "N/A": ["neutral", "N/A"],
+};
+
+export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {
+  const [tone, label] = DOCUMENT[status];
+  return <Badge tone={tone} label={label} />;
+}
+
+// -- Payment status + type -----------------------------------------
+const PAYMENT: Record<PaymentStatus, [BadgeTone, string]> = {
+  Pending: ["amber", "Pendiente"],
+  Paid: ["success", "Pagado"],
+  Overdue: ["danger", "Vencido"],
+  Cancelled: ["neutral", "Cancelado"],
+};
+
+export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+  const [tone, label] = PAYMENT[status];
+  return <Badge tone={tone} label={label} />;
+}
+
+export function PaymentTypeBadge({ type }: { type: PaymentType }) {
+  return type === "vendor" ? (
+    <Badge tone="cycle2" label="Proveedor" />
+  ) : (
+    <Badge tone="cycle1" label="Cliente" />
+  );
 }
 
 // -- Cycle badge ---------------------------------------------------

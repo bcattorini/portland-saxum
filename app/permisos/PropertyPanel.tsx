@@ -15,6 +15,8 @@ import {
   InternalStatusBadge,
 } from "@/lib/badges";
 import { CommentDrawer } from "./CommentDrawer";
+import { DocumentosTab } from "./DocumentosTab";
+import { PagosTab } from "./PagosTab";
 
 type Tab = "planos" | "docs" | "pagos";
 
@@ -57,19 +59,9 @@ export function PropertyPanel({ property }: { property: PropertyWithStats }) {
 
       <div className="p-5">
         {tab === "planos" && <PlanosTab property={property} />}
-        {tab === "docs" && <ComingSoon module="Documentos" />}
-        {tab === "pagos" && <ComingSoon module="Pagos" />}
+        {tab === "docs" && <DocumentosTab propertyId={property.id} />}
+        {tab === "pagos" && <PagosTab propertyId={property.id} />}
       </div>
-    </div>
-  );
-}
-
-function ComingSoon({ module }: { module: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-line bg-page/50 p-6 text-sm text-neutral-500">
-      <span className="font-medium text-neutral-700">{module}</span> — este módulo aún
-      no existe en la base de datos. Pendiente de decisión sobre el modelo de datos
-      (ver nota al equipo).
     </div>
   );
 }

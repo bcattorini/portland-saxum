@@ -42,6 +42,25 @@ export const INTERNAL_STATUSES: InternalStatus[] = [
 
 export type EntityType = "property" | "construction_project";
 
+export type DocumentStatus =
+  | "Pending"
+  | "In Progress"
+  | "Submitted"
+  | "Approved"
+  | "N/A";
+
+export const DOCUMENT_STATUSES: DocumentStatus[] = [
+  "Pending",
+  "In Progress",
+  "Submitted",
+  "Approved",
+  "N/A",
+];
+
+export type PaymentType = "vendor" | "client";
+export type PaymentStatus = "Pending" | "Paid" | "Overdue" | "Cancelled";
+export const PAYMENT_STATUSES: PaymentStatus[] = ["Pending", "Paid", "Overdue", "Cancelled"];
+
 // ------------------------------------------------------------------
 // Row shapes (live schema)
 // ------------------------------------------------------------------
@@ -103,6 +122,37 @@ export interface TrackingHistory {
   notes: string | null;
   changed_by: string | null;
   changed_at: string;
+}
+
+export interface PropertyDocument {
+  id: string;
+  property_id: string;
+  title: string;
+  description: string | null;
+  status: DocumentStatus;
+  assignee: string | null;
+  due_date: string | null;
+  notes: string | null;
+  sort_order: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Payment {
+  id: string;
+  property_id: string;
+  description: string;
+  payment_type: PaymentType;
+  vendor_or_payer: string | null;
+  amount: number;
+  currency: string;
+  due_date: string | null;
+  paid_date: string | null;
+  status: PaymentStatus;
+  quickbooks_code: string | null;
+  notes: string | null;
+  sort_order: number | null;
+  created_at: string;
 }
 
 // -- Derived shape used by the property cards (aggregated from disciplines) --
