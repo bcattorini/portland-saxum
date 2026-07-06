@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permit Tracker — Portland Saxum</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#F0F2F5;color:#1a1a1a;min-height:100vh}
+
+/* ── Top bar ── */
+.topbar{background:#1B3A6B;color:#fff;padding:13px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.brand{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand span{font-weight:400;opacity:.6;margin-left:8px;font-size:13px}
+.sync-status{font-size:11px;display:flex;align-items:center;gap:6px;opacity:.8}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#6EE7B7;display:inline-block}
+.sync-dot.loading{background:#FCD34D;animation:pulse 1s infinite}
+.sync-dot.error{background:#FCA5A5}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── Layout ── */
+.container{max-width:1080px;margin:0 auto;padding:20px 18px}
+
+/* ── Property status bar ── */
+.prop-status-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.psb-card{background:#fff;border-radius:10px;padding:12px 14px;border:0.5px solid #E0E0D8;cursor:pointer;transition:all .15s;position:relative}
+.psb-card:hover{border-color:#1B3A6B;box-shadow:0 0 0 2px #E6F1FB}
+.psb-card.active{border:1.5px solid #1B3A6B;box-shadow:0 0 0 3px #E6F1FB}
+.psb-addr{font-size:13px;font-weight:600;color:#1B3A6B;margin-bottom:3px}
+.psb-permit{font-size:10.5px;color:#999;margin-bottom:8px}
+.psb-open{font-size:22px;font-weight:700;line-height:1}
+.psb-open.r{color:#A32D2D}.psb-open.a{color:#854F0B}.psb-open.g{color:#3B6D11}
+.psb-label{font-size:10px;color:#aaa;margin-top:2px}
+.psb-bar{height:3px;border-radius:999px;background:#EEE;margin-top:8px}
+.psb-bar-fill{height:3px;border-radius:999px}
+.psb-cycle{position:absolute;top:10px;right:10px}
+
+/* ── Panel ── */
+.panel{display:none}.panel.active{display:block}
+.panel-header{background:#fff;border:0.5px solid #E0E0D8;border-radius:12px 12px 0 0;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:none}
+.panel-title{font-size:14px;font-weight:600;color:#1B3A6B}
+.panel-meta{font-size:11px;color:#999;margin-top:2px}
+
+/* ── General notes section ── */
+.general-section{background:#fff;border:0.5px solid #E0E0D8;border-top:none;padding:0}
+.general-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:0.5px solid #F0F0EC;cursor:pointer;user-select:none;transition:background .1s}
+.general-header:hover{background:#FAFBFC}
+.general-header-left{display:flex;align-items:center;gap:8px}
+.general-header-title{font-size:12px;font-weight:600;color:#1B3A6B}
+.general-header-meta{font-size:11px;color:#999}
+.general-chevron{font-size:12px;color:#1B3A6B;transition:transform .2s}
+.general-chevron.open{transform:rotate(90deg)}
+.general-body{display:none;padding:14px 16px}
+.general-body.open{display:block}
+.general-tabs{display:flex;gap:0;border-bottom:0.5px solid #E8E8E4;margin-bottom:14px}
+.gtab{padding:6px 14px;font-size:11.5px;cursor:pointer;border:none;background:none;color:#888;border-bottom:2px solid transparent;margin-bottom:-0.5px;font-family:inherit;transition:color .15s}
+.gtab:hover{color:#1B3A6B}
+.gtab.active{color:#1B3A6B;border-bottom:2px solid #1B3A6B;font-weight:600}
+.gtab-panel{display:none}.gtab-panel.active{display:block}
+
+/* Notes tab */
+.notes-area{width:100%;min-height:90px;font-family:inherit;font-size:12.5px;padding:10px 12px;
+  border:0.5px solid #D8E0EE;border-radius:8px;resize:vertical;outline:none;
+  color:#1a1a1a;line-height:1.6;transition:border .15s;background:#FAFBFD}
+.notes-area:focus{border-color:#1B3A6B;background:#fff;box-shadow:0 0 0 2px #E6F1FB}
+.notes-save-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.notes-last-saved{font-size:10.5px;color:#aaa}
+.notes-save-btn{padding:5px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:6px;
+  font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.notes-save-btn:hover{background:#143059}
+.gsave-indicator{font-size:11px;color:#3B6D11;display:none;margin-left:8px}
+
+/* Tasks tab */
+.task-list{margin-bottom:10px}
+.task-item{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;background:#FAFBFD;
+  border:0.5px solid #E8E8E4;border-radius:7px;margin-bottom:6px}
+.task-item:last-child{margin-bottom:0}
+.task-cb{margin-top:2px;width:15px;height:15px;cursor:pointer;accent-color:#1B3A6B;flex-shrink:0}
+.task-content{flex:1;display:flex;flex-direction:column;gap:3px}
+.task-text{font-size:12.5px;color:#1a1a1a;line-height:1.4}
+.task-text.done{text-decoration:line-through;color:#aaa}
+.task-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.task-assignee{font-size:10.5px;color:#888}
+.task-due{font-size:10.5px;color:#854F0B;font-weight:500}
+.task-due.overdue{color:#A32D2D}
+.task-del{flex-shrink:0;background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;padding:0 2px;line-height:1}
+.task-del:hover{color:#A32D2D}
+.add-task-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.add-task-input{flex:1;min-width:180px;font-family:inherit;font-size:12px;padding:7px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff}
+.add-task-input:focus{border-color:#1B3A6B;box-shadow:0 0 0 2px #E6F1FB}
+.add-task-assignee{width:130px;font-family:inherit;font-size:12px;padding:7px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff;min-width:0}
+.add-task-due{width:130px;font-family:inherit;font-size:12px;padding:6px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff;min-width:0}
+.add-task-btn{padding:7px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;
+  font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.add-task-btn:hover{background:#143059}
+.tasks-empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
+
+/* Key dates tab */
+.dates-list{margin-bottom:10px}
+.date-item{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;background:#FAFBFD;
+  border:0.5px solid #E8E8E4;border-radius:7px;margin-bottom:6px}
+.date-badge{flex-shrink:0;min-width:80px;text-align:center;padding:3px 8px;border-radius:6px;
+  font-size:10px;font-weight:700;margin-top:1px}
+.date-badge.upcoming{background:#E6F1FB;color:#0C447C}
+.date-badge.soon{background:#FAEEDA;color:#854F0B}
+.date-badge.past{background:#FCEBEB;color:#A32D2D}
+.date-badge.ok{background:#EAF3DE;color:#3B6D11}
+.date-content{flex:1}
+.date-label{font-size:12.5px;font-weight:500;color:#1a1a1a}
+.date-val{font-size:11px;color:#888;margin-top:1px}
+.date-del{flex-shrink:0;background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;padding:0 2px}
+.date-del:hover{color:#A32D2D}
+.add-date-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.add-date-label{flex:1;min-width:160px;font-family:inherit;font-size:12px;padding:7px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff}
+.add-date-input{width:150px;font-family:inherit;font-size:12px;padding:6px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff}
+.add-date-btn{padding:7px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;
+  font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.add-date-btn:hover{background:#143059}
+.dates-empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
+
+/* ── Discipline block ── */
+.disc-block{background:#fff;border:0.5px solid #E0E0D8;border-top:0.5px solid #EEE}
+.disc-header-row{display:grid;grid-template-columns:1fr 160px 130px 46px 46px 46px 34px;gap:0;padding:7px 14px;background:#F5F7FA;border-top:0.5px solid #E8ECF2;border-bottom:0.5px solid #E8ECF2}
+.disc-header-row span{font-size:10px;font-weight:600;color:#6B7A99;text-transform:uppercase;letter-spacing:.05em}
+.dh-c{text-align:center}
+.disc-row{display:grid;grid-template-columns:1fr 160px 130px 46px 46px 46px 34px;gap:0;padding:9px 14px;border-bottom:0.5px solid #F0F0EC;cursor:pointer;align-items:center;transition:background .1s}
+.disc-row:hover{background:#F8F9FC}
+.disc-row.is-open{background:#EEF3FA;border-bottom-color:#D8E4F5}
+.disc-row:last-child{border-bottom:none}
+.dname{font-size:12.5px;font-weight:600;color:#1a1a1a}
+.drev{font-size:11px;color:#999;margin-top:1px}
+.dc{text-align:center;font-size:12px;color:#aaa}
+.dc.hot{color:#A32D2D;font-weight:600}
+.dc.ok{color:#3B6D11;font-weight:500}
+.chevron{text-align:center;font-size:12px;color:#1B3A6B;transition:transform .2s}
+.chevron.open{transform:rotate(90deg)}
+
+/* ── Comments drawer ── */
+.drawer{display:none;border-bottom:0.5px solid #D8E4F5}
+.drawer.open{display:block}
+.drawer-inner{padding:10px 14px 12px 14px;background:#F3F7FC}
+.drawer-meta{font-size:10.5px;color:#7B8FB5;margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Comment card ── */
+.cc{background:#fff;border:0.5px solid #DDE3EE;border-radius:8px;margin-bottom:7px;overflow:hidden}
+.cc:last-child{margin-bottom:0}
+.cc-top{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;cursor:pointer;transition:background .1s}
+.cc-top:hover{background:#F8F9FC}
+.cc-ref{flex-shrink:0;font-size:10px;font-weight:700;color:#1B3A6B;background:#E6F1FB;padding:2px 7px;border-radius:999px;margin-top:1px;white-space:nowrap}
+.cc-body{flex:1;font-size:12px;color:#333;line-height:1.45}
+.cc-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+
+/* ── Internal panel ── */
+.cc-internal{display:none;border-top:0.5px solid #E8EEF7;background:#F8FAFD;padding:11px 12px 12px 34px}
+.cc-internal.open{display:block}
+.int-grid{display:grid;grid-template-columns:160px 160px 1fr;gap:10px;align-items:start;margin-bottom:10px}
+.fl{font-size:10px;font-weight:600;color:#6B7A99;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fi, .fs{width:100%;font-family:inherit;font-size:12px;padding:6px 9px;border:0.5px solid #D0D8E8;border-radius:6px;background:#fff;color:#1a1a1a;outline:none;transition:border .15s}
+.fi:focus,.fs:focus{border-color:#1B3A6B;box-shadow:0 0 0 2px #E6F1FB}
+.save-btn{padding:5px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
+.save-btn:hover{background:#143059}
+.saving-spinner{font-size:11px;color:#854F0B;margin-left:8px;display:none}
+
+/* ── History ── */
+.history{margin-top:10px;border-top:0.5px solid #E8EEF7;padding-top:8px}
+.history-title{font-size:10px;font-weight:600;color:#9AA5BE;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.history-entry{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:11px;color:#555}
+.history-ts{flex-shrink:0;color:#AAB0C0;font-size:10.5px;white-space:nowrap}
+.history-empty{font-size:11px;color:#C0C8D8;font-style:italic}
+
+/* ── Alerts ── */
+.alerts-block{border:0.5px solid #E0E0D8;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;background:#fff}
+.alert-item{display:grid;grid-template-columns:auto 1fr;gap:11px;padding:9px 16px;border-top:0.5px solid #F0F0EC;align-items:start}
+.apill{padding:2px 9px;border-radius:999px;font-size:9.5px;font-weight:700;white-space:nowrap;margin-top:2px}
+.ap-r{background:#FCEBEB;color:#A32D2D}.ap-a{background:#FAEEDA;color:#854F0B}
+.atext strong{font-size:12px;font-weight:600;color:#1a1a1a;display:block;margin-bottom:1px}
+.atext span{font-size:11px;color:#666;line-height:1.4}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600}
+.b-r{background:#FCEBEB;color:#A32D2D}
+.b-a{background:#FAEEDA;color:#854F0B}
+.b-g{background:#EAF3DE;color:#3B6D11}
+.b-gray{background:#F1EFE8;color:#5F5E5A}
+.b-blue{background:#E6F1FB;color:#0C447C}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.b-teal{background:#E0F5F0;color:#1A6B55}
+
+/* ── Empty state ── */
+.empty-prop{padding:50px 20px;text-align:center;background:#fff;border:0.5px solid #E0E0D8;border-top:none;border-radius:0 0 12px 12px}
+.empty-prop h3{font-size:14px;font-weight:600;margin-bottom:6px;color:#444}
+.empty-prop p{font-size:12px;color:#999;max-width:300px;margin:0 auto;line-height:1.5}
+
+footer{text-align:center;font-size:11px;color:#bbb;padding:20px 0 12px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Portland Saxum <span>Permit Tracker</span></div>
+  <div class="sync-status" id="syncStatus">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncLabel">Connecting...</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Property cards -->
+  <div class="prop-status-bar" id="propBar"></div>
+
+  <!-- Panels -->
+  <div id="panel-156" class="panel"></div>
+  <div id="panel-150" class="panel"></div>
+  <div id="panel-160" class="panel"></div>
+  <div id="panel-167" class="panel">
+    <div class="panel-header">
+      <div><div class="panel-title">167 NE 76 Street</div><div class="panel-meta">No permit number · Not yet submitted to the City</div></div>
+      <span class="badge b-gray">PRE-SUBMISSION</span>
+    </div>
+    <div class="empty-prop">
+      <h3>Not yet in iBuild</h3>
+      <p>167 NE 76 St hasn't been submitted to the City of Miami yet. No permit number or review comments exist.</p>
+      <br><p style="color:#A32D2D;font-weight:500;font-size:12px">Next step: define submission date.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>Portland Saxum Construction Management · iBuild data June 9, 2026</footer>
+
+<script>
+// ── CLOUD STORAGE ─────────────────────────────────────────────────────────
+const STORAGE_KEY_PREFIX = 'ps_permit_';
+
+async function cloudGet(key) {
+  try {
+    const result = await window.storage.get(STORAGE_KEY_PREFIX + key, true);
+    return result ? JSON.parse(result.value) : null;
+  } catch(e) { return null; }
+}
+async function cloudSet(key, value) {
+  try {
+    await window.storage.set(STORAGE_KEY_PREFIX + key, JSON.stringify(value), true);
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── LOCAL CACHE ───────────────────────────────────────────────────────────
+let cache = {};
+
+async function getCommentData(prop, discCode, ref) {
+  const k = `${prop}_${discCode}_${ref}`;
+  if (cache[k]) return cache[k];
+  const d = await cloudGet(k);
+  const def = { assignee:'', status:'Pending', notes:'', history:[] };
+  cache[k] = d || def;
+  return cache[k];
+}
+
+async function saveCommentData(prop, discCode, ref, data) {
+  const k = `${prop}_${discCode}_${ref}`;
+  cache[k] = data;
+  return await cloudSet(k, data);
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────
+const PROPS = [
+  { key:'156', addr:'156 NE 77 St', permit:'BD25-029908-001', cycle:'Cycle 1', cycleClass:'b-blue', workflow:'02/02/2026', note:'No resubmittal yet',
+    total:86, open:78, info:8, resolved:0, pct:0,
+    alerts:[
+      {level:'r', title:'BBL 5-ft dedication — NE 77 St', text:'Sandra Saez · Ssaez@miamigov.com · 305-416-1262 · 14–16 week process'},
+      {level:'r', title:'MDC upfront fees — M2026010252', text:'Must be paid before Miami-Dade County review proceeds'},
+      {level:'a', title:'Building + PW shared response', text:'Carmen Sueiro (Building) and Iris Valdes (PW) issued near-identical packages on 156 and 160 — one coordinated response covers both'},
+    ]
+  },
+  { key:'150', addr:'150 NE 77 St', permit:'BD25-015956-001', cycle:'Cycle 2', cycleClass:'b-purple', workflow:'11/13/2025', note:'Resubmittal: 02/16/2026',
+    total:107, open:54, info:12, resolved:35, pct:35,
+    alerts:[
+      {level:'r', title:'Demo permit — Tree Bond $42,000', text:'Submit IN PERSON · 444 SW 2nd Ave 4th floor · Environmental Resources Div. · blocks demo approval'},
+      {level:'r', title:'Building Cycle 2 — AOR narrative required', text:'20 new comments (ADA/FHAG, ramps, fire ratings, building code analysis) — narrative signed & sealed by AOR is mandatory'},
+      {level:'a', title:'MDC upfront fees — M2026004805', text:'Must be paid to proceed with Miami-Dade County review'},
+    ]
+  },
+  { key:'160', addr:'160 NE 77 St', permit:'BD26-000114-001', cycle:'Cycle 1', cycleClass:'b-blue', workflow:'02/02/2026', note:'No resubmittal yet — most behind',
+    total:64, open:58, info:5, resolved:1, pct:2,
+    alerts:[
+      {level:'r', title:'First resubmittal not submitted', text:'Zero responses sent — most behind of the three properties'},
+      {level:'r', title:'BBL missing from survey — Zoning blocked', text:'Sandra Saez · Ssaez@miamigov.com · 305-416-1262'},
+      {level:'a', title:'MDC upfront fees — M2026009943', text:'Must be paid before Miami-Dade County review proceeds'},
+    ]
+  },
+  { key:'167', addr:'167 NE 76 St', permit:'—', cycle:'Pre-submit', cycleClass:'b-gray', workflow:'—', note:'Not yet in iBuild',
+    total:0, open:0, info:0, resolved:0, pct:0, alerts:[]
+  },
+];
+
+const DISCIPLINES = {
+  '156': [
+    { code:'B', name:'Building', reviewer:'Carmen Sueiro', cityStatus:'CORRECTIONS', open:18, info:0, total:18,
+      comments:[
+        {ref:15, text:'GENERAL INSTRUCTIONS: Respond each comment with sheet number and exact location. Cloud all changes. Corrections on one page apply throughout the full set.', cs:'Unresolved'},
+        {ref:16, text:'RESUBMITTAL INSTRUCTIONS: Replace existing plans with same original .pdf file names. All pages must be rescanned.', cs:'Unresolved'},
+        {ref:17, text:'All Work Items must be included at building permit application. Contact AOsorio@miamigov.com or MHatten@miamigov.com. Questions: csueiro@miamigov.com.', cs:'Unresolved'},
+        {ref:18, text:'Provide Site Plan showing to scale new construction, distances from lot lines, crown of road elevation, finished grade, flood hazard areas (FBC B 107.2.6).', cs:'Unresolved'},
+        {ref:19, text:'Total Cost must be verified. Provide estimate or construction contract with Value of Work (FBC B 109.3). Upload to ProjectDox; email csueiro@miamigov.com.', cs:'Unresolved'},
+        {ref:20, text:'Provide NOA for waterproofing material at proposed balconies (FBC Section 1516 & 110.3.6).', cs:'Unresolved'},
+        {ref:21, text:'Provide Occupancy and Use of proposed building (FBC Building Section 302).', cs:'Unresolved'},
+        {ref:22, text:'Indicate fire rating of proposed demising walls, specifying use and occupancy classification of adjacent spaces (FBC 2023 Table 508.4).', cs:'Unresolved'},
+        {ref:23, text:'Note: roof top equipment must be 10\'-0" from edge or protected by 42" minimum guardrails (FBC B Sections 1009.16.2 and 1013.3).', cs:'Unresolved'},
+        {ref:24, text:'Note: specify location of readily visible exit signs indicating direction of egress travel (FBC 2023 B Section 1013).', cs:'Unresolved'},
+        {ref:25, text:'Provide Laboratory Impact Sound Transmission Test Report for floor/ceiling assemblies — STC not less than 50, or 45 if field tested (FBC B Section 1207.2).', cs:'Unresolved'},
+        {ref:26, text:'Note: smooth, hard, nonabsorbent material at toilet/bathroom floors extending 4 inches onto walls (FBC B 1210.2.1).', cs:'Unresolved'},
+        {ref:27, text:'Note: prior to footing installation, provide statement of allowable bearing capacity from PE (FBC B 1818.2).', cs:'Unresolved'},
+        {ref:28, text:'Provide termite protection note per Florida Dept. of Agriculture (FBC B Section 1816.1).', cs:'Unresolved'},
+        {ref:29, text:'Note: glazing larger than 9 sq. ft. must be Category II Safety Glass (FBC 2406.2).', cs:'Unresolved'},
+        {ref:30, text:'Note: Ground Floor dwelling units shall comply with Fair Housing Act / Section 504 accessibility regulations.', cs:'Unresolved'},
+        {ref:31, text:'Provide NOAs for proposed windows and doors.', cs:'Unresolved'},
+        {ref:32, text:'Provide NOA for proposed roofing material.', cs:'Unresolved'},
+      ]},
+    { code:'Z', name:'Zoning', reviewer:'Jonathan Thole', cityStatus:'CORRECTIONS', open:18, info:2, total:20,
+      comments:[
+        {ref:42, text:'See checklist items. Contact jthole@miamigov.com. Provide Written Narrative with sheet numbers. Additional comments may follow on resubmittal.', cs:'Information'},
+        {ref:43, text:'Survey must have BBL marked by Public Works. Provide Average Crown of Road (7.75\'). Provide Lot area — Gross vs Net. Setbacks pending BBL location.', cs:'Unresolved'},
+        {ref:44, text:'PREAPP-25-0123: 156 NE 77 St.', cs:'Info Only'},
+        {ref:45, text:'Layers shown incorrectly. 1st layer = first 10\' from BBL. 2nd layer = following 15\' (25\' from BBL). 3rd = everything beyond. Pending BBL review.', cs:'Unresolved'},
+        {ref:46, text:'Indicate gross and net lot area in zoning data table. Gross for density/FLR; net for all other calculations.', cs:'Unresolved'},
+        {ref:47, text:'Art. 3 Section 3.15.2: Provide Certification by Housing Dept. and recorded covenant running with the land.', cs:'Unresolved'},
+        {ref:48, text:'Identify on plans all requested Attainable Mixed-Income Housing Development incentives (density, parking, height, etc.).', cs:'Unresolved'},
+        {ref:49, text:'Label on plans "Opportunity Zone" for parking. Property in Opportunity Zone — no parking required for floor area ≤10,000 sq ft.', cs:'Unresolved'},
+        {ref:50, text:'Front façade requires additional architectural embellishment. Large blank walls not permitted — consider score lines, cornices, balconies, material variety.', cs:'Unresolved'},
+        {ref:51, text:'At first Story, Façades along Frontage Line must have frequent doors and windows. Pedestrian Entrances at max 75 ft spacing. Completely enclose entry ways.', cs:'Unresolved'},
+        {ref:52, text:'Show all floor/roof plans with property lines and BBL. Dimension all setbacks, encroachments, and overhangs. Pending BBL review.', cs:'Unresolved'},
+        {ref:53, text:'Outdoor storage, electrical, plumbing, mechanical equipment must be in Second or Third Layer, concealed from view. Show transformer pad locations.', cs:'Unresolved'},
+        {ref:54, text:'Provide heights and materials of all proposed and existing fences/walls. Fences must comply with layer requirements.', cs:'Unresolved'},
+        {ref:56, text:'Zoning data table incomplete. Include all fields per Art. 5 Illustration 5.5. Provide all calculations in ft or sq ft. Pending BBL review.', cs:'Unresolved'},
+        {ref:57, text:'Provide chart of multifamily unit types and sq footages (Micro 275 sf min, Efficiency 400 sf min, 1BR 550 sf min, 2BR 650 sf min).', cs:'Unresolved'},
+        {ref:58, text:'Open Space min 10% of Lot Area. Unpaved Green Space min 5%. Pending BBL review and lot area.', cs:'Unresolved'},
+        {ref:59, text:'Landscape plan must be prepared by licensed landscape architect. Preliminary plans required. Pending BBL review.', cs:'Unresolved'},
+        {ref:60, text:'Provide required street trees at back of curb, max 30 ft spacing. Species from permitted list.', cs:'Unresolved'},
+        {ref:61, text:'Provide landscape preparer\'s certification form prior to CO issuance.', cs:'Unresolved'},
+        {ref:62, text:'Provide Unit chart: unit type, bedrooms, sq footage, floor location. Must match Affordable Housing Certification.', cs:'Unresolved'},
+      ]},
+    { code:'F', name:'Fire', reviewer:'Nadya Vazquez', cityStatus:'CORRECTIONS', open:11, info:0, total:11,
+      comments:[
+        {ref:69, text:'Hydrant flow test report required — dated no more than 12 months from submission. Contact Lt. Joselin Fernandez (jofernandez@miamigov.com).', cs:'Unresolved'},
+        {ref:70, text:'Submit dedicated Fire Alarm drawings. Required per FL Building Code (8th ed.) Section 907.2.9.1(1) for Group R-2 occupancies 3+ stories.', cs:'Unresolved'},
+        {ref:71, text:'Verify building height. Class III standpipe required where highest story floor >30 ft above lowest FD vehicle access (FBC 8th ed. 905.3.1).', cs:'Unresolved'},
+        {ref:72, text:'Comply with FFPC NFPA 101 30.2.2.3.5 — outside stairs complying with exception in 7.2.2.6.3.1(6) shall be permitted.', cs:'Unresolved'},
+        {ref:73, text:'FDC must be ≤100 ft from nearest fire hydrant (NFPA 14: 6.4.5.4). Show FDC locations and hydrant distances on Fire Protection Site Plan.', cs:'Unresolved'},
+        {ref:74, text:'Multi-story buildings must comply with MD-WASD hydrant spacing (max 300 ft). Provide hydrant locations on civil and fire protection drawings.', cs:'Unresolved'},
+        {ref:75, text:'Provide egress capacity calculations (FFPC 8th ed. NFPA 101 7.3.3).', cs:'Unresolved'},
+        {ref:76, text:'Building >3 stories or vertical distance >25 ft must have at least one passenger elevator accessible to FD (FBC 8th ed. 3002.4).', cs:'Unresolved'},
+        {ref:77, text:'Provide corridor dimensions on LS drawing. Corridors >50 persons: min 44 in wide (NFPA 101 30.2.3.3).', cs:'Unresolved'},
+        {ref:78, text:'Smoke alarms per NFPA 101 30.3.4.5 in every sleeping area, outside sleeping areas, and on all levels.', cs:'Unresolved'},
+        {ref:79, text:'List NFPA 13, 2019 edition as applicable standard on Fire Protection drawings.', cs:'Unresolved'},
+      ]},
+    { code:'DRP', name:'Public Works', reviewer:'Iris Valdes', cityStatus:'CORRECTIONS', open:9, info:0, total:9,
+      comments:[
+        {ref:80, text:'Line and grade, pavement resurfacing subpermits required with Building application after permit is issued.', cs:'Unresolved'},
+        {ref:81, text:'ROW permit required through iPW (apps.miamigov.com/PublicWorks) to close sidewalk or work in ROW. Only City-registered GC can pull.', cs:'Unresolved'},
+        {ref:82, text:'BBL is 5 ft within property along NE 77 St. Dedicate for public ROW (City Code 54-58). Contact Sandra Saez — Ssaez@miamigov.com / 305-416-1262. Process: 14–16 weeks.', cs:'Unresolved'},
+        {ref:83, text:'Street lighting required per Bulletin 36 (City Code 54-56). Photometric calculations signed/sealed by PE required. Min 0.6 fc at any point. Use brand AEL.', cs:'Unresolved'},
+        {ref:86, text:'Roadway cross section 50-F: 6.5\' sidewalk, 2\' curb/gutter, 6.5\' parking, 10\' travel lane to centerline. Reconstruct all ROW to centerline.', cs:'Unresolved'},
+        {ref:88, text:'ROW stormwater system required. Inlet per SD-05. USF 5129 frame. HDPE french drain (SD-09) 24 in, 50 ft min. Exfiltration trench per SD-10/SD-07.', cs:'Unresolved'},
+        {ref:89, text:'DERM approval required prior to final City of Miami PW approval for any ROW drainage improvements.', cs:'Unresolved'},
+        {ref:90, text:'Percolation tests required for all new exfiltration trenches.', cs:'Unresolved'},
+        {ref:91, text:'Other comments may apply.', cs:'Unresolved'},
+      ]},
+    { code:'P', name:'Plumbing', reviewer:'Cergio Moreno', cityStatus:'CORRECTIONS', open:9, info:0, total:9,
+      comments:[
+        {ref:3, text:'Check all scupper sizes. Architectural roof plan shows 8" × 4" scupper sizes (P-5.pdf).', cs:'Unresolved'},
+        {ref:4, text:'Sheet C-1 shows 12" solid HDPE pipe — match size with civil drawings (P-1.pdf).', cs:'Unresolved'},
+        {ref:5, text:'4" sanitary pipe at 1/8" slope has capacity for 180 DFU. Civil shows 6" pipe (min for 198 DFU) — reconcile (P-1.pdf).', cs:'Unresolved'},
+        {ref:6, text:'Provide correct storm drain sizes per civil drawings (P-2.pdf — note #01).', cs:'Unresolved'},
+        {ref:7, text:'Provide correct storm drain sizes per civil drawings (P-2.pdf — note #02).', cs:'Unresolved'},
+        {ref:8, text:'Provide full-open valves to all risers per FBC-Plumbing 606.1 (P-8.pdf).', cs:'Unresolved'},
+        {ref:9, text:'Provide piping routes and point of discharge on floor plan per FBC-P 504.6 (P-9.pdf).', cs:'Unresolved'},
+        {ref:10, text:'Provide on plans A/C condensation piping route and point of discharge per FBC-P [M] 314.2.1.', cs:'Unresolved'},
+        {ref:11, text:'Provide required isometric drawings for condensation risers, water heater pan and T&P relief [MDC Sec. 8-10(a)(ii)].', cs:'Unresolved'},
+      ]},
+    { code:'LI', name:'Environmental', reviewer:'Augusto Carvajal', cityStatus:'CORRECTIONS', open:4, info:5, total:9,
+      comments:[
+        {ref:33, text:'TREE PROTECTION: All reasonable steps to prevent tree destruction during construction. Protective barriers with 10\' radius required. (Info Only)', cs:'Info Only'},
+        {ref:34, text:'All tree activity subject to Intended Decision notice per Sec. 17-4(d). Comment changes from informational to unresolved until Intended Decision period ends. (Info Only)', cs:'Info Only'},
+        {ref:35, text:'Additional comments may apply after applicant provides requested information. (Info Only)', cs:'Info Only'},
+        {ref:36, text:'On-site visit may be conducted as part of the review process. (Info Only)', cs:'Info Only'},
+        {ref:37, text:'Contact reviewer at acarvajal@miamigov.com regarding project status. (Info Only)', cs:'Info Only'},
+        {ref:38, text:'Represent Tree Protection Zones (TPZ) for all trees to scale on Tree Disposition and Landscape plan, regardless of disposition.', cs:'Unresolved'},
+        {ref:39, text:'Per Miami 21 Section 3.8.4.1: 10 ft × 10 ft sight triangle required at driveways meeting Base Building Line. Vertical clearance 2.5–10 ft above ground.', cs:'Unresolved'},
+        {ref:40, text:'Clarify on all new trees to be planted or relocated (L3.pdf — Changemark).', cs:'Unresolved'},
+        {ref:41, text:'Tree #9 on neighbor\'s property — >30% of CRZ affected. Provide evidence of poor condition. Root exploration may be needed. Consider removal with neighbor\'s authorization.', cs:'Unresolved'},
+      ]},
+    { code:'FF', name:'Flood Plain', reviewer:'Ana Maria Gonzalez', cityStatus:'CORRECTIONS', open:5, info:0, total:5,
+      comments:[
+        {ref:63, text:'Revise proposed FFE in NGVD on Civil drawings. Coordinate with A-2.0.', cs:'Unresolved'},
+        {ref:64, text:'Revise proposed FFE in NGVD on sheet A-1.0. Coordinate with A-2.0.', cs:'Unresolved'},
+        {ref:65, text:'Provide Drainage Calculation — 100-yr storm, 1/2 hr TOC, MDC PW manual. Retain rainwater within property lines. I=6.40" (City code Section 20.3).', cs:'Unresolved'},
+        {ref:66, text:'Provide grading plan on C-2 showing how rainwater runoff is retained within property lines.', cs:'Unresolved'},
+        {ref:67, text:'Indicate point of connection between drainage from roof and drainage plan on C-2.', cs:'Unresolved'},
+      ]},
+    { code:'S', name:'Structural', reviewer:'Yanet Albelo', cityStatus:'CORRECTIONS', open:3, info:0, total:3,
+      comments:[
+        {ref:12, text:'Submit Special Inspectors Letter signed, sealed, dated by RA or PE for Reinforced Masonry, Soil Compaction, Steel Connections, 2nd Floor/Roof Beam & Slab Reinforcing. Add note: GC must call for inspection prior to each concrete pour.', cs:'Unresolved'},
+        {ref:13, text:'Provide foundation section at masonry walls along property line at Grid Lines 8–9 and 10. WF-16 footing not clearly identified on S-1. Provide ramp section detail.', cs:'Unresolved'},
+        {ref:14, text:'Consider corridor live loads in slab calculations. Provide values in design load info on S-0. Revise slab design as necessary.', cs:'Unresolved'},
+      ]},
+    { code:'MDC', name:'Miami-Dade County', reviewer:'Gonzalo Briz', cityStatus:'PENDING ACTION', open:1, info:0, total:1,
+      comments:[
+        {ref:2, text:'M2026010252 — Pay upfront fees to proceed with plan review. You are responsible for tracking all MDC reviews. MDC approvals appear one cycle later in iBuild.', cs:'Unresolved'},
+      ]},
+    { code:'BBL', name:'PW BBL', reviewer:'Mauricio Valdes', cityStatus:'APPROVED', open:0, info:0, total:0, comments:[] },
+    { code:'E',   name:'Electrical',  reviewer:'Osmany Caballero', cityStatus:'APPROVED', open:0, info:0, total:0, comments:[] },
+    { code:'MA',  name:'Mechanical',  reviewer:'Juan Dalmau',      cityStatus:'APPROVED', open:0, info:0, total:0, comments:[] },
+  ],
+  '150': [
+    { code:'B', name:'Building', reviewer:'M.M. Chalgub, AIA', cityStatus:'CORRECTIONS', open:20, info:3, total:24,
+      comments:[
+        {ref:78, text:'(FBC-A206.2.1) Delineate on plan all accessible routes from public sidewalks and from within the site, into and through the building.', cs:'Unresolved'},
+        {ref:80, text:'(FHAG Design Manual pg 3.5) Sliding/swinging doors to private terraces must be "usable" — 32" min clear width when fully opened.', cs:'Unresolved'},
+        {ref:81, text:'(FHAG Design Manual pg 4.3) Provide 36" wide (minimum) accessible route throughout each covered dwelling unit.', cs:'Unresolved'},
+        {ref:82, text:'CLEAR FLOOR SPACE (all kitchens): clear floor space shall be centered with Kitchen Sink, Refrigerator and Range (A-6.0.pdf).', cs:'Unresolved'},
+        {ref:83, text:'MAILBOXES: provide elevation of mailboxes demonstrating compliance with FHAG.', cs:'Unresolved'},
+        {ref:84, text:'EXTERIOR EXIT STAIRWAYS — FBC-B 1027.5: min 10 ft fire separation distance from adjacent lot lines. Indicate on all floor levels (LS-1.1.pdf).', cs:'Unresolved'},
+        {ref:85, text:'FIRE RATING — Egress stairs are open. Please clarify (LS-1.1.pdf).', cs:'Unresolved'},
+        {ref:86, text:'RAMPS: Demonstrate compliance with Sections 1012.7, 1012.8 Handrails, 1012.9 Guards, 1012.10 Edge Protection. Provide details.', cs:'Unresolved'},
+        {ref:87, text:'(FBC-B1012.3) Ramp cross slope shall not exceed 1:48 (2%).', cs:'Unresolved'},
+        {ref:88, text:'(FBC-B705.8.1) Address max allowable openings in exterior walls relative to setbacks. Provide tabulation per floor and per façade.', cs:'Unresolved'},
+        {ref:89, text:'(FBC-B504.1) Provide Building Code Analysis: max building height based on construction type, occupancy, and sprinkler system.', cs:'Unresolved'},
+        {ref:90, text:'(FBC-B506.1) Provide Building Code Analysis: max building area based on construction type, occupancy, sprinkler, and frontage.', cs:'Unresolved'},
+        {ref:91, text:'(FBC-B504.4) Max number of stories above grade shall not exceed Table 504.4 limits. Provide Building Code Analysis.', cs:'Unresolved'},
+        {ref:92, text:'(FBC-B602.1) Provide applicable requirements of Table 601 — Fire-Resistance Rating Requirements for Building Elements (hours). Required/Provided.', cs:'Unresolved'},
+        {ref:93, text:'WATERPROOFING (FBC-B107.2.5): Provide details for impervious moisture barrier at balconies. Manufacturer\'s installation instructions required. Provide NOA# on plans.', cs:'Unresolved'},
+        {ref:94, text:'(FBC-B1207.3) Floor assemblies designed to IIC 50 or better. Provide floor detail with acoustical insulation, STC rating, and testing agency report.', cs:'Unresolved'},
+        {ref:95, text:'SECTION 1030 EMERGENCY ESCAPE AND RESCUE: identify on Floor Plans and Window Schedule.', cs:'Unresolved'},
+        {ref:96, text:'TOTAL DEMOLITION PERMIT: Building Discipline Approval is subject to issuance of a SEPARATE TOTAL DEMOLITION PERMIT.', cs:'Unresolved'},
+        {ref:97, text:'RESPONSE TO COMMENTS: Provide detailed narrative signed & sealed by AOR. Projects without NARRATIVE will be automatically rejected.', cs:'Unresolved'},
+        {ref:98, text:'REVISIONS TO DRAWINGS: Cloud/Delta/# and date all changes. Identify revision Delta# in title block and drawings index.', cs:'Unresolved'},
+        {ref:99, text:'REWORKS: Further review required. Quality of responses determines outcome of next review. (Info Only)', cs:'Info Only'},
+        {ref:100, text:'RESUBMITTAL INSTRUCTIONS: Replace existing plans with corrected plans using same original .pdf file names. (Info Only)', cs:'Info Only'},
+        {ref:101, text:'REWORK FEE: $56.00 per discipline denied two or more times for the same reason (Code of CoM, Sec. 10-4). (Info Only)', cs:'Info Only'},
+      ]},
+    { code:'Z', name:'Zoning', reviewer:'Jonathan Thole', cityStatus:'CORRECTIONS', open:10, info:4, total:24,
+      comments:[
+        {ref:28, text:'Art. 3 Section 3.15.2: Submit recorded covenant running with the land acceptable to City of Miami. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:30, text:'On plans, state Section 3.15 benefits being requested. Provide code sections. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:31, text:'Property in Opportunity Zone — no parking required for floor area ≤10,000 sq ft. Update legend to reflect Transit Corridor provision. Still pending.', cs:'Unresolved'},
+        {ref:33, text:'Dimension all setbacks, encroachments, and overhangs on all levels. Provide cutlines of property lines on all floors. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:36, text:'Provide heights and materials of all proposed/existing fences and walls on site plan. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:42, text:'Provide dimension on plans for First Layer compliance — paved flush with sidewalk for min 6.5 ft. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:43, text:'Landscape legend missing — Open Space/Lawn sections incomplete. Lot area must be Net not Gross. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:44, text:'Provide required street trees at back of curb. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:46, text:'Provide landscape preparer\'s certification. Still pending 02/25/2026.', cs:'Unresolved'},
+        {ref:47, text:'Enclosure of entry way to the East required as per meeting. Still pending 02/25/2026.', cs:'Unresolved'},
+      ]},
+    { code:'F', name:'Fire', reviewer:'Nadya Vazquez', cityStatus:'CORRECTIONS', open:7, info:0, total:12,
+      comments:[
+        {ref:54, text:'Hydrant flow test report — new hydrant proposed. Test to be performed and submitted upon installation. Still pending per reviewer 03/04/2026.', cs:'Unresolved'},
+        {ref:55, text:'Identify proposed hydrants on Civil drawings. FDC shall be ≤100 ft from nearest hydrant (NFPA 14: 6.4.5.4). Still pending.', cs:'Unresolved'},
+        {ref:56, text:'Min depth of cover for underground fire line: 30" general, 36" under driveways. Private fire line profile drawing removed — clarification still needed.', cs:'Unresolved'},
+        {ref:57, text:'Clarify compliance with FFPC NFPA 101 30.2.2.3.5 — outside stairs. Stairs modified with side walls removed. Reviewer confirmation still pending.', cs:'Unresolved'},
+        {ref:63, text:'Sprinkler protection in trash chute closet. Show 6" clearance from chute intake door to door frame. Reviewer requests clarification on location.', cs:'Unresolved'},
+        {ref:64, text:'Fire resistance rating tags for all protected doors required on all life safety sheets. Reviewer: define fire ratings on LS drawings — still pending.', cs:'Unresolved'},
+        {ref:106, text:'Egress Capacity: comply with NFPA 101 30.2.3.2 and 30.2.3.3. Street floor exits sized for street floor load plus stair discharge. Corridors >50 persons: min 44" width.', cs:'Unresolved'},
+      ]},
+    { code:'DRP', name:'Public Works', reviewer:'Iris Valdes', cityStatus:'CORRECTIONS', open:5, info:3, total:8,
+      comments:[
+        {ref:70, text:'Architectural Site plan required with legal description, BBL distance to road center, lot dimensions, proposed ROW section. A1.0 must coordinate with civil final proposal. Still pending.', cs:'Unresolved'},
+        {ref:71, text:'BBL 5 ft within property along NE 77 St. Dedicate for public ROW (Code 54-58). Contact Sandra Saez — Ssaez@miamigov.com / 305-416-1262. Process: 14–16 weeks. Pending.', cs:'Unresolved'},
+        {ref:72, text:'All runoff retained on site. Roadway cross section 50-F required. French drain updated but still pending per reviewer 03/10/2026.', cs:'Unresolved'},
+        {ref:73, text:'DERM approval required prior to final PW approval for ROW drainage. Pending.', cs:'Unresolved'},
+        {ref:107, text:'Percolation tests required for all new exfiltration trenches.', cs:'Unresolved'},
+      ]},
+    { code:'FF', name:'Flood Plain', reviewer:'Ana Maria Gonzalez', cityStatus:'CORRECTIONS', open:4, info:0, total:7,
+      comments:[
+        {ref:13, text:'Provide proposed grade elevation in NGVD within north property line at pavers area. Still pending per reviewer 02/27/2026.', cs:'Unresolved'},
+        {ref:103, text:'Revise cross sections and ground floor plan on C-2 to include proposed privacy wall within property lines (as shown on A-2.0). Also include on S-2.', cs:'Unresolved'},
+        {ref:104, text:'Coordinate and provide point of connection between roof drainage (A-2.3, P-1) and proposed drainage plan on C-2.', cs:'Unresolved'},
+        {ref:105, text:'Verify if proposed foundation plan on east side conflicts with drainage plan.', cs:'Unresolved'},
+      ]},
+    { code:'E', name:'Electrical', reviewer:'Noel Ferro', cityStatus:'CORRECTIONS', open:2, info:0, total:9,
+      comments:[
+        {ref:21, text:'Parking lot photometric — no parking lot on this project. Photometric provided for exterior building illumination. Pending zoning approval to finalize.', cs:'Unresolved'},
+        {ref:22, text:'Egress photometric plan (normal and emergency mode) missing for 2nd and 3rd floors. Still pending.', cs:'Unresolved'},
+      ]},
+    { code:'P', name:'Plumbing', reviewer:'Luis Sosa', cityStatus:'CORRECTIONS', open:2, info:0, total:5,
+      comments:[
+        {ref:76, text:'Provide location of all irrigation items on symbol schedule: controller, rain sensor, POC, valves, sleeves (IR-01.pdf).', cs:'Unresolved'},
+        {ref:77, text:'Provide submeter for each unit per Miami-Dade Code Ch. 8A Art. XVIII Sec. 8A-381. Provide make, model, detail, and location on plans.', cs:'Unresolved'},
+      ]},
+    { code:'S', name:'Structural', reviewer:'Yudexi Rodriguez', cityStatus:'CORRECTIONS', open:1, info:0, total:4,
+      comments:[
+        {ref:50, text:'Provide Geotechnical Report signed, sealed, dated by licensed Geotechnical PE. Still pending per reviewer 02/27/2026 — "Comment remains."', cs:'Unresolved'},
+      ]},
+    { code:'MA', name:'Mechanical', reviewer:'Alejandro Cosano', cityStatus:'CORRECTIONS', open:1, info:0, total:3,
+      comments:[
+        {ref:6, text:'All mechanical equipment/roof curb must meet wind pressures per FBC 301.15, 1620.1 & 1620.6. Provide NOA or State Product Approval or manufacturer\'s literature listing wind resistance. Reviewer: comment not addressed — still pending.', cs:'Unresolved'},
+      ]},
+    { code:'LI', name:'Environmental', reviewer:'Ruben Colon', cityStatus:'CORRECTIONS', open:1, info:2, total:3,
+      comments:[
+        {ref:67, text:'Proposed building may conflict with tree protection zone and canopy of tree #3. Clarify steps to minimize adverse impacts. Reviewer (Cycle 2) requests meeting — contact rcolon@miamigov.com.', cs:'Unresolved'},
+      ]},
+    { code:'MDC', name:'Miami-Dade County', reviewer:'Gonzalo Briz', cityStatus:'PENDING ACTION', open:1, info:0, total:2,
+      comments:[
+        {ref:75, text:'M2026004805 — New files submitted to MDC. Indicate which files need to be submitted to avoid delays. MDC approvals appear one cycle later in iBuild.', cs:'Unresolved'},
+      ]},
+    { code:'BBL', name:'PW BBL', reviewer:'—', cityStatus:'APPROVED', open:0, info:0, total:0, comments:[] },
+  ],
+  '160': [
+    { code:'B', name:'Building', reviewer:'Carmen Sueiro', cityStatus:'CORRECTIONS', open:20, info:0, total:20,
+      comments:[
+        {ref:22, text:'GENERAL INSTRUCTIONS: Respond each comment with sheet number and exact location. Cloud all changes. Corrections on one page apply throughout the full set.', cs:'Unresolved'},
+        {ref:23, text:'RESUBMITTAL INSTRUCTIONS: Replace existing plans with same original .pdf file names. All pages must be rescanned.', cs:'Unresolved'},
+        {ref:24, text:'All Work Items must be included at building permit application. Contact AOsorio@miamigov.com or MHatten@miamigov.com. Questions: csueiro@miamigov.com.', cs:'Unresolved'},
+        {ref:25, text:'Provide Site Plan showing to scale new construction, distances from lot lines, crown of road elevation, finished grade, flood hazard areas (FBC B 107.2.6).', cs:'Unresolved'},
+        {ref:26, text:'Total Cost must be verified. Provide estimate/contract with Value of Work (FBC B 109.3). Upload to ProjectDox; email csueiro@miamigov.com.', cs:'Unresolved'},
+        {ref:27, text:'Provide NOA for waterproofing material at proposed balconies (FBC Section 1516 & 110.3.6).', cs:'Unresolved'},
+        {ref:28, text:'Provide Occupancy and Use of proposed building (FBC Building Section 302).', cs:'Unresolved'},
+        {ref:29, text:'Indicate fire rating of proposed demising walls, specifying use and occupancy classification of adjacent spaces (FBC 2023 Table 508.4).', cs:'Unresolved'},
+        {ref:30, text:'Note: roof top equipment 10\'-0" from edge or protected by 42" min guardrails (FBC B Sections 1009.16.2 and 1013.3).', cs:'Unresolved'},
+        {ref:31, text:'Note: door thresholds shall not exceed 1/2" height. Changes >1/4" beveled at max 50% slope (FBC 2023 B 1010.1.7).', cs:'Unresolved'},
+        {ref:32, text:'Note: specify location of visible exit signs indicating direction of egress travel (FBC 2023 B Section 1013).', cs:'Unresolved'},
+        {ref:33, text:'Note: guards shall comply with Sections 1015.2–1015.7. Operable windows >72" above finish grade comply with Section 1015.8.', cs:'Unresolved'},
+        {ref:34, text:'Provide Laboratory Impact Sound Transmission Test Report for floor/ceiling assemblies — STC not less than 50 (FBC B Section 1207.2).', cs:'Unresolved'},
+        {ref:35, text:'Note: smooth, hard, nonabsorbent material at toilet/bathroom floors extending 4 inches onto walls (FBC B 1210.2.1).', cs:'Unresolved'},
+        {ref:36, text:'Note: prior to footing installation, provide statement of allowable bearing capacity from PE (FBC B 1818.2).', cs:'Unresolved'},
+        {ref:37, text:'Provide termite protection note per Florida Dept. of Agriculture (FBC B Section 1816.1).', cs:'Unresolved'},
+        {ref:38, text:'Note: glazing >9 sq. ft. must be Category II Safety Glass (FBC 2406.2).', cs:'Unresolved'},
+        {ref:39, text:'Note: Ground Floor dwelling units comply with Fair Housing Act / Section 504 accessibility regulations.', cs:'Unresolved'},
+        {ref:40, text:'Provide NOAs for proposed windows and doors.', cs:'Unresolved'},
+        {ref:41, text:'Provide NOA for proposed roof material.', cs:'Unresolved'},
+      ]},
+    { code:'Z', name:'Zoning', reviewer:'Yaremy Vega', cityStatus:'CORRECTIONS', open:10, info:1, total:11,
+      comments:[
+        {ref:7,  text:'BBL currently missing from survey. Setback requirements cannot be finalized until BBL is placed on survey by Public Works.', cs:'Unresolved'},
+        {ref:8,  text:'Clarify if applying for exception for 100% parking reduction or Opportunity Zone. Specify which one.', cs:'Unresolved'},
+        {ref:9,  text:'Per preapp condition #2: clarify applicable section (3.15.6(a) or (b)) for Density bonus.', cs:'Unresolved'},
+        {ref:10, text:'Per preapp condition #3: provide Certification by Housing Dept. for Section 3.15.2 and 3.15.6 100% Density bonus.', cs:'Unresolved'},
+        {ref:11, text:'Per preapp condition #6: First Layer paved flush with adjacent sidewalk for min 6.5 ft. Refer to Illustration 8.4b.', cs:'Unresolved'},
+        {ref:12, text:'Art. 5 Section 5.5.5.c: Roof materials must be light-colored, high albedo or planted surface. Add note on roof plan.', cs:'Unresolved'},
+        {ref:13, text:'Art. 3 Section 3.6.10(c)(7)(b): 5 ft wide aisle required behind all bike parking for maneuvering. Modify bike parking layout.', cs:'Unresolved'},
+        {ref:14, text:'Provide number of proposed street trees and ensure shown in landscape plans.', cs:'Unresolved'},
+        {ref:15, text:'Provide required irrigation plan per Art. 9 Section 9.3.4.', cs:'Unresolved'},
+        {ref:16, text:'Provide landscape preparer\'s certificate.', cs:'Unresolved'},
+        {ref:17, text:'Additional comments may be provided upon resubmittal. Contact yvega@miamigov.com.', cs:'Information'},
+      ]},
+    { code:'DRP', name:'Public Works', reviewer:'Iris Valdes', cityStatus:'CORRECTIONS', open:9, info:0, total:9,
+      comments:[
+        {ref:58, text:'Line and grade, pavement resurfacing subpermits required after permit issued.', cs:'Unresolved'},
+        {ref:59, text:'ROW permit required through iPW. Only City-registered GC can pull.', cs:'Unresolved'},
+        {ref:60, text:'BBL 5 ft within property along NE 77 St. Dedicate for public ROW (Code 54-58). Contact Sandra Saez — Ssaez@miamigov.com / 305-416-1262. Process: 14–16 weeks.', cs:'Unresolved'},
+        {ref:61, text:'Street lighting per Bulletin 36 (City Code 54-56). Photometric calculations by PE required. Min 0.6 fc at any point. Use brand AEL.', cs:'Unresolved'},
+        {ref:62, text:'Roadway cross section 50-F: 6.5\' sidewalk, 2\' curb/gutter, 6.5\' parking, 10\' travel lane to centerline. Reconstruct all ROW to centerline.', cs:'Unresolved'},
+        {ref:63, text:'ROW stormwater required. Inlet per SD-05. USF 5129 frame. HDPE french drain (SD-09) 24 in, 50 ft min. Exfiltration trench per SD-10/SD-07.', cs:'Unresolved'},
+        {ref:64, text:'DERM approval required prior to final PW approval for ROW drainage.', cs:'Unresolved'},
+        {ref:65, text:'Percolation tests required for all new exfiltration trenches.', cs:'Unresolved'},
+        {ref:66, text:'Other comments may apply.', cs:'Unresolved'},
+      ]},
+    { code:'F', name:'Fire', reviewer:'Joseph Gentile', cityStatus:'CORRECTIONS', open:8, info:0, total:9,
+      comments:[
+        {ref:48, text:'Approved hydrant flow test report required. Dated no more than 12 months from submission. Contact Lt. Joselin Fernandez (jofernandez@miamigov.com).', cs:'Unresolved'},
+        {ref:49, text:'New handrails shall provide ≥2-1/4" clearance from wall per NFPA 101 7.2.2.4.5.5 (A-6.2.pdf).', cs:'Unresolved'},
+        {ref:50, text:'Correct fire line type on FP-1.pdf. Is this 4 inch?', cs:'Unresolved'},
+        {ref:51, text:'FDC must be ≤100 ft from nearest hydrant (NFPA 14: 6.4.5.4, 2019 ed.). Provide fire protection site plan (FP-1.pdf).', cs:'Unresolved'},
+        {ref:52, text:'Provide FDC distance to nearest fire hydrant on civil drawings (C-3.pdf).', cs:'Unresolved'},
+        {ref:53, text:'Show two separate exits to a public way. Exit discharge must be remotely separated. Show max diagonal and required 1/3 separation distance (LS-1.0.pdf).', cs:'Unresolved'},
+        {ref:54, text:'For stairs: NFPA 101, 46P × 0.3 in/P = 13.8 in — verify correct (LS-1.0.pdf).', cs:'Unresolved'},
+        {ref:56, text:'What is the fire rating of this wall? 1 hour or 2 hours? (LS-1.1.pdf)', cs:'Unresolved'},
+      ]},
+    { code:'LI', name:'Environmental', reviewer:'Craig Henry', cityStatus:'CORRECTIONS', open:3, info:2, total:5,
+      comments:[
+        {ref:44, text:'On-site visit may be conducted. Please contact reviewer to schedule — Craig Henry chenry@miamigov.com.', cs:'Unresolved'},
+        {ref:46, text:'Mitigation trees must have 3 minimum components. Provide column in tree replacement chart for minimum spread of each tree.', cs:'Unresolved'},
+        {ref:47, text:'Trees #9, 11 & 12 may be impacted by proposed footers. Detail how footers within TPZ will be installed. Root exploration may still be needed.', cs:'Unresolved'},
+      ]},
+    { code:'FF', name:'Flood Plain', reviewer:'Ana Maria Gonzalez', cityStatus:'CORRECTIONS', open:4, info:0, total:4,
+      comments:[
+        {ref:18, text:'Revise and coordinate proposed FFE in NGVD between drawings A-2.0, S-1, and C-2.', cs:'Unresolved'},
+        {ref:19, text:'Revise proposed FFE in NGVD on sheet C-2.', cs:'Unresolved'},
+        {ref:20, text:'Revise Drainage Calculation — 100-yr storm, 1/2 hr TOC, MDC PW manual. I=6.40" (City code Sec. 20.3).', cs:'Unresolved'},
+        {ref:21, text:'Stormwater runoff shall not be directed toward ROW. Retain on site. Revise section on C-2.', cs:'Unresolved'},
+      ]},
+    { code:'S', name:'Structural', reviewer:'Yudexi Rodriguez', cityStatus:'CORRECTIONS', open:1, info:1, total:2,
+      comments:[
+        {ref:5, text:'Submit Special Inspector form (City of Miami) signed, sealed, dated by PE for reinforced masonry, soil compaction, steel connections, elevated slab and beams reinforcing steel.', cs:'Unresolved'},
+      ]},
+    { code:'P', name:'Plumbing', reviewer:'Luis Sosa', cityStatus:'CORRECTIONS', open:2, info:0, total:2,
+      comments:[
+        {ref:2, text:'Provide index of drawings to include all sheets uploaded to drawings folder (FLBC 107.2.1).', cs:'Unresolved'},
+        {ref:3, text:'Provide irrigation plan for review (FLBC 107.2.1).', cs:'Unresolved'},
+      ]},
+    { code:'MDC', name:'Miami-Dade County', reviewer:'Gonzalo Briz', cityStatus:'PENDING ACTION', open:1, info:0, total:1,
+      comments:[
+        {ref:4, text:'M2026009943 — Pay upfront fees to proceed with plan review. You are responsible for tracking all MDC reviews. MDC approvals appear one cycle later in iBuild.', cs:'Unresolved'},
+      ]},
+    { code:'BBL', name:'PW BBL', reviewer:'Mauricio Valdes', cityStatus:'APPROVED', open:0, info:0, total:0, comments:[] },
+    { code:'E',   name:'Electrical',  reviewer:'—', cityStatus:'PENDING REVIEW', open:0, info:0, total:0, comments:[] },
+    { code:'MA',  name:'Mechanical',  reviewer:'—', cityStatus:'PENDING REVIEW', open:0, info:0, total:0, comments:[] },
+  ]
+};
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────
+const CITY_STATUS_CLASS = {
+  'Unresolved':'b-r','Resolved':'b-g','Info Only':'b-gray','Information':'b-gray'
+};
+const CITY_STATUS_BG = {
+  'CORRECTIONS':'b-r','PENDING ACTION':'b-a','PENDING REVIEW':'b-a','APPROVED':'b-g','PRE-SUBMISSION':'b-gray'
+};
+const INT_STATUS_OPTS = ['Pending','In Progress','With Architect','With Engineer','With Owner','Submitted','Resolved'];
+const INT_STATUS_CLASS = {
+  'Pending':'b-gray','In Progress':'b-blue','With Architect':'b-a',
+  'With Engineer':'b-a','With Owner':'b-a','Submitted':'b-purple','Resolved':'b-g'
+};
+
+function fmtDate(d) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' ' +
+         dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderPropBar(activeProp) {
+  const bar = document.getElementById('propBar');
+  bar.innerHTML = PROPS.map(p => {
+    const pctColor = p.pct === 0 ? 'r' : p.pct < 50 ? 'a' : 'g';
+    const pctBarColor = p.pct === 0 ? '#A32D2D' : p.pct < 50 ? '#854F0B' : '#3B6D11';
+    const isActive = p.key === activeProp;
+    return `<div class="psb-card${isActive?' active':''}" onclick="switchProp('${p.key}')">
+      <div class="psb-cycle"><span class="badge ${p.cycleClass}" style="font-size:9px">${p.cycle}</span></div>
+      <div class="psb-addr">${p.addr}</div>
+      <div class="psb-permit">${p.permit}</div>
+      ${p.total > 0 ? `
+        <div class="psb-open ${pctColor}">${p.open}</div>
+        <div class="psb-label">open comments</div>
+        <div class="psb-bar" style="margin-top:6px"><div class="psb-bar-fill" style="width:${p.pct}%;background:${pctBarColor}"></div></div>
+      ` : `<div class="psb-open" style="color:#bbb;font-size:14px;font-weight:500;margin-top:4px">No permit yet</div>`}
+    </div>`;
+  }).join('');
+}
+
+async function renderPanel(propKey) {
+  const panelEl = document.getElementById('panel-' + propKey);
+  const prop = PROPS.find(p => p.key === propKey);
+  const discs = DISCIPLINES[propKey] || [];
+
+  // Header
+  let html = `
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">${prop.addr}</div>
+        <div class="panel-meta">${prop.permit} · Workflow: ${prop.workflow} · ${prop.note}</div>
+      </div>
+      <span class="badge ${prop.cycleClass}">${prop.cycle}</span>
+    </div>
+    <div class="general-section" id="gen_${propKey}">
+      <div class="general-header" onclick="toggleGeneral('${propKey}')">
+        <div class="general-header-left">
+          <span class="general-chevron" id="genchev_${propKey}">▶</span>
+          <span class="general-header-title">General — notes, tasks & dates</span>
+          <span class="general-header-meta" id="gen_meta_${propKey}">click to expand</span>
+        </div>
+      </div>
+      <div class="general-body" id="genbody_${propKey}">
+        <div class="general-tabs">
+          <button class="gtab active" onclick="switchGTab('${propKey}','notes',this)">Notes</button>
+          <button class="gtab" onclick="switchGTab('${propKey}','tasks',this)">Tasks</button>
+          <button class="gtab" onclick="switchGTab('${propKey}','dates',this)">Key dates</button>
+        </div>
+
+        <!-- Notes -->
+        <div class="gtab-panel active" id="gtab_${propKey}_notes">
+          <textarea class="notes-area" id="gen_notes_${propKey}" placeholder="General notes for this property — next steps, context, decisions, open questions..."></textarea>
+          <div class="notes-save-row">
+            <span class="notes-last-saved" id="gen_notes_ts_${propKey}">Not saved yet</span>
+            <div>
+              <span class="gsave-indicator" id="gen_notes_ind_${propKey}">✓ Saved</span>
+              <button class="notes-save-btn" onclick="saveGenNotes('${propKey}')">Save notes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="gtab-panel" id="gtab_${propKey}_tasks">
+          <div class="task-list" id="gen_tasklist_${propKey}">
+            <div class="tasks-empty">No tasks yet — add one below.</div>
+          </div>
+          <div class="add-task-row">
+            <input class="add-task-input" id="new_task_text_${propKey}" placeholder="Task description..." onkeydown="if(event.key==='Enter') addTask('${propKey}')"/>
+            <input class="add-task-assignee" id="new_task_ass_${propKey}" placeholder="Assigned to"/>
+            <input class="add-task-due" id="new_task_due_${propKey}" type="date" title="Due date"/>
+            <button class="add-task-btn" onclick="addTask('${propKey}')">+ Add task</button>
+          </div>
+        </div>
+
+        <!-- Key dates -->
+        <div class="gtab-panel" id="gtab_${propKey}_dates">
+          <div class="dates-list" id="gen_datelist_${propKey}">
+            <div class="dates-empty">No dates added yet.</div>
+          </div>
+          <div class="add-date-row">
+            <input class="add-date-label" id="new_date_label_${propKey}" placeholder="e.g. Resubmittal deadline, BBL meeting..." onkeydown="if(event.key==='Enter') addDate('${propKey}')"/>
+            <input class="add-date-input" id="new_date_val_${propKey}" type="date"/>
+            <button class="add-date-btn" onclick="addDate('${propKey}')">+ Add date</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="disc-block">
+      <div class="disc-header-row">
+        <span>Discipline · Reviewer</span>
+        <span style="text-align:center">City status</span>
+        <span style="text-align:center">Our status</span>
+        <span class="dh-c">Total</span>
+        <span class="dh-c">Open</span>
+        <span class="dh-c">Info</span>
+        <span></span>
+      </div>`;
+
+  for (let di = 0; di < discs.length; di++) {
+    const d = discs[di];
+    const cityClass = CITY_STATUS_BG[d.cityStatus] || 'b-gray';
+
+    // Compute our status summary
+    let ourLabel = '—', ourClass = 'b-gray';
+    if (d.comments.length > 0) {
+      let counts = {};
+      for (const c of d.comments) {
+        const data = await getCommentData(propKey, d.code, c.ref);
+        counts[data.status] = (counts[data.status] || 0) + 1;
+      }
+      const res = counts['Resolved'] || 0;
+      const sub = counts['Submitted'] || 0;
+      const inp = counts['In Progress'] || 0;
+      const withT = (counts['With Architect']||0)+(counts['With Engineer']||0)+(counts['With Owner']||0);
+      if (res === d.comments.length) { ourLabel = 'All resolved'; ourClass = 'b-g'; }
+      else if (sub > 0) { ourLabel = `${sub} submitted`; ourClass = 'b-purple'; }
+      else if (withT > 0) { ourLabel = `${withT} assigned`; ourClass = 'b-a'; }
+      else if (inp > 0) { ourLabel = `${inp} in progress`; ourClass = 'b-blue'; }
+      else { ourLabel = 'Not started'; ourClass = 'b-gray'; }
+    }
+
+    html += `<div class="disc-row" id="discrow_${propKey}_${di}" onclick="toggleDisc('${propKey}',${di})">
+      <div><div class="dname">(${d.code}) ${d.name}</div><div class="drev">${d.reviewer}</div></div>
+      <div style="text-align:center"><span class="badge ${cityClass}">${d.cityStatus}</span></div>
+      <div style="text-align:center"><span class="badge ${ourClass}" id="our_${propKey}_${di}">${ourLabel}</span></div>
+      <div class="dc">${d.total || '—'}</div>
+      <div class="dc ${d.cityStatus==='APPROVED'?'ok':'hot'}">${d.cityStatus==='APPROVED'?'✓':(d.open||'—')}</div>
+      <div class="dc">${d.info||'—'}</div>
+      <div class="chevron" id="chev_${propKey}_${di}">▶</div>
+    </div>
+    <div class="drawer" id="drawer_${propKey}_${di}">
+      <div class="drawer-inner">
+        <div class="drawer-meta">iBuild comments — ${d.name} (${d.comments.length} comments) · click a comment to update internal tracking</div>
+        ${d.comments.length === 0
+          ? `<div style="font-size:12px;color:#bbb;font-style:italic">No open comments — discipline ${d.cityStatus.toLowerCase()}.</div>`
+          : d.comments.map(c => `
+          <div class="cc" id="cc_${propKey}_${d.code}_${c.ref}">
+            <div class="cc-top" onclick="toggleComment('${propKey}','${d.code}',${c.ref},${di})">
+              <span class="cc-ref">REF #${c.ref}</span>
+              <span class="cc-body">${c.text}</span>
+              <div class="cc-badges">
+                <span class="badge ${CITY_STATUS_CLASS[c.cs]||'b-gray'}" style="font-size:9.5px">${c.cs}</span>
+                <span class="badge b-gray" id="ibadge_${propKey}_${d.code}_${c.ref}" style="font-size:9.5px">Pending</span>
+              </div>
+            </div>
+            <div class="cc-internal" id="int_${propKey}_${d.code}_${c.ref}">
+              <div class="int-grid">
+                <div>
+                  <div class="fl">Assigned to</div>
+                  <input class="fi" id="ass_${propKey}_${d.code}_${c.ref}" placeholder="Name or team" />
+                </div>
+                <div>
+                  <div class="fl">Our status</div>
+                  <select class="fs" id="sta_${propKey}_${d.code}_${c.ref}">
+                    ${INT_STATUS_OPTS.map(s=>`<option value="${s}">${s}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <div class="fl">Notes</div>
+                  <input class="fi" id="not_${propKey}_${d.code}_${c.ref}" placeholder="Next step, deadline, context..." />
+                </div>
+              </div>
+              <button class="save-btn" onclick="saveComment('${propKey}','${d.code}',${c.ref},${di})">Save</button>
+              <span class="saving-spinner" id="spin_${propKey}_${d.code}_${c.ref}">Saving...</span>
+              <div class="history" id="hist_${propKey}_${d.code}_${c.ref}">
+                <div class="history-title">History</div>
+                <div class="history-empty">No history yet.</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  html += `</div>`;
+
+  // Alerts
+  if (prop.alerts.length > 0) {
+    html += `<div class="alerts-block" style="border-radius:0 0 12px 12px">`;
+    prop.alerts.forEach(a => {
+      html += `<div class="alert-item">
+        <span class="apill ap-${a.level}">${a.level==='r'?'URGENT':'NOTE'}</span>
+        <div class="atext"><strong>${a.title}</strong><span>${a.text}</span></div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div style="border-radius:0 0 12px 12px;border:0.5px solid #E0E0D8;border-top:none;height:6px;background:#fff"></div>`;
+  }
+
+  panelEl.innerHTML = html;
+
+  // Now populate saved data into inputs and badges
+  for (const d of discs) {
+    for (const c of d.comments) {
+      const data = await getCommentData(propKey, d.code, c.ref);
+      populateComment(propKey, d.code, c.ref, data);
+    }
+  }
+}
+
+function populateComment(prop, code, ref, data) {
+  const assEl = document.getElementById(`ass_${prop}_${code}_${ref}`);
+  const staEl = document.getElementById(`sta_${prop}_${code}_${ref}`);
+  const notEl = document.getElementById(`not_${prop}_${code}_${ref}`);
+  const ibEl  = document.getElementById(`ibadge_${prop}_${code}_${ref}`);
+  if (assEl) assEl.value = data.assignee || '';
+  if (staEl) staEl.value = data.status || 'Pending';
+  if (notEl) notEl.value = data.notes || '';
+  if (ibEl)  { ibEl.className = 'badge ' + (INT_STATUS_CLASS[data.status]||'b-gray'); ibEl.textContent = data.status||'Pending'; }
+  renderHistory(prop, code, ref, data.history || []);
+}
+
+function renderHistory(prop, code, ref, history) {
+  const el = document.getElementById(`hist_${prop}_${code}_${ref}`);
+  if (!el) return;
+  if (!history || history.length === 0) {
+    el.innerHTML = `<div class="history-title">History</div><div class="history-empty">No history yet.</div>`;
+    return;
+  }
+  let h = `<div class="history-title">History</div>`;
+  history.slice().reverse().forEach(entry => {
+    h += `<div class="history-entry">
+      <span class="history-ts">${fmtDate(entry.ts)}</span>
+      <span><strong>${entry.assignee||'—'}</strong> · <span class="badge ${INT_STATUS_CLASS[entry.status]||'b-gray'}" style="font-size:9px">${entry.status}</span>${entry.notes ? ' · ' + entry.notes : ''}</span>
+    </div>`;
+  });
+  el.innerHTML = h;
+}
+
+function toggleDisc(prop, di) {
+  const drawer = document.getElementById(`drawer_${prop}_${di}`);
+  const chev   = document.getElementById(`chev_${prop}_${di}`);
+  const row    = document.getElementById(`discrow_${prop}_${di}`);
+  const open   = drawer.classList.contains('open');
+  drawer.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+  row.classList.toggle('is-open', !open);
+}
+
+function toggleComment(prop, code, ref, di) {
+  const el = document.getElementById(`int_${prop}_${code}_${ref}`);
+  el.classList.toggle('open');
+}
+
+async function saveComment(prop, code, ref, di) {
+  const ass  = document.getElementById(`ass_${prop}_${code}_${ref}`).value.trim();
+  const sta  = document.getElementById(`sta_${prop}_${code}_${ref}`).value;
+  const not  = document.getElementById(`not_${prop}_${code}_${ref}`).value.trim();
+  const spin = document.getElementById(`spin_${prop}_${code}_${ref}`);
+
+  spin.style.display = 'inline';
+  spin.textContent = 'Saving...';
+
+  const existing = await getCommentData(prop, code, ref);
+  const history  = existing.history || [];
+  history.push({ ts: new Date().toISOString(), assignee: ass, status: sta, notes: not });
+
+  const newData = { assignee: ass, status: sta, notes: not, history };
+  const ok = await saveCommentData(prop, code, ref, newData);
+
+  spin.style.display = 'inline';
+  spin.textContent = ok ? '✓ Saved' : '⚠ Error saving';
+  spin.style.color  = ok ? '#3B6D11' : '#A32D2D';
+  setTimeout(() => { spin.style.display = 'none'; }, 2000);
+
+  // Update badge
+  const ibEl = document.getElementById(`ibadge_${prop}_${code}_${ref}`);
+  if (ibEl) { ibEl.className = 'badge ' + (INT_STATUS_CLASS[sta]||'b-gray'); ibEl.textContent = sta; }
+
+  // Update history
+  renderHistory(prop, code, ref, history);
+
+  // Update disc-level badge
+  await refreshDiscBadge(prop, di);
+
+  // Sync indicator
+  setSynced();
+}
+
+async function refreshDiscBadge(prop, di) {
+  const disc = DISCIPLINES[prop][di];
+  let counts = {};
+  for (const c of disc.comments) {
+    const d = await getCommentData(prop, disc.code, c.ref);
+    counts[d.status] = (counts[d.status]||0)+1;
+  }
+  const el = document.getElementById(`our_${prop}_${di}`);
+  if (!el) return;
+  let label='Not started', cls='b-gray';
+  const n = disc.comments.length;
+  if (n > 0) {
+    const res=counts['Resolved']||0, sub=counts['Submitted']||0, inp=counts['In Progress']||0;
+    const withT=(counts['With Architect']||0)+(counts['With Engineer']||0)+(counts['With Owner']||0);
+    if (res===n){label='All resolved';cls='b-g';}
+    else if(sub>0){label=`${sub} submitted`;cls='b-purple';}
+    else if(withT>0){label=`${withT} assigned`;cls='b-a';}
+    else if(inp>0){label=`${inp} in progress`;cls='b-blue';}
+  } else { label='—'; }
+  el.className='badge '+cls; el.textContent=label;
+}
+
+// ── GENERAL SECTION ───────────────────────────────────────────────────────
+function toggleGeneral(prop) {
+  const body = document.getElementById('genbody_' + prop);
+  const chev = document.getElementById('genchev_' + prop);
+  const meta = document.getElementById('gen_meta_' + prop);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+  if (!open) { meta.textContent = ''; loadGeneral(prop); }
+  else { updateGenMeta(prop); }
+}
+
+function switchGTab(prop, tab, btn) {
+  ['notes','tasks','dates'].forEach(t => {
+    document.getElementById(`gtab_${prop}_${t}`)?.classList.remove('active');
+  });
+  document.querySelectorAll(`#genbody_${prop} .gtab`).forEach(b => b.classList.remove('active'));
+  document.getElementById(`gtab_${prop}_${tab}`)?.classList.add('active');
+  btn.classList.add('active');
+}
+
+async function loadGeneral(prop) {
+  const data = await cloudGet(`gen_${prop}`) || { notes:'', notesTs:null, tasks:[], dates:[] };
+  // Notes
+  const notesEl = document.getElementById(`gen_notes_${prop}`);
+  if (notesEl) notesEl.value = data.notes || '';
+  const tsEl = document.getElementById(`gen_notes_ts_${prop}`);
+  if (tsEl) tsEl.textContent = data.notesTs ? 'Last saved: ' + fmtDate(data.notesTs) : 'Not saved yet';
+  // Tasks
+  renderTasks(prop, data.tasks || []);
+  // Dates
+  renderDates(prop, data.dates || []);
+  updateGenMeta(prop);
+}
+
+async function getGenData(prop) {
+  return await cloudGet(`gen_${prop}`) || { notes:'', notesTs:null, tasks:[], dates:[] };
+}
+async function setGenData(prop, data) {
+  return await cloudSet(`gen_${prop}`, data);
+}
+
+async function saveGenNotes(prop) {
+  setSyncing();
+  const data = await getGenData(prop);
+  data.notes = document.getElementById(`gen_notes_${prop}`).value;
+  data.notesTs = new Date().toISOString();
+  await setGenData(prop, data);
+  const tsEl = document.getElementById(`gen_notes_ts_${prop}`);
+  if (tsEl) tsEl.textContent = 'Last saved: ' + fmtDate(data.notesTs);
+  const ind = document.getElementById(`gen_notes_ind_${prop}`);
+  if (ind) { ind.style.display='inline'; setTimeout(()=>ind.style.display='none', 2000); }
+  setSynced();
+  updateGenMeta(prop);
+}
+
+async function addTask(prop) {
+  const textEl = document.getElementById(`new_task_text_${prop}`);
+  const assEl  = document.getElementById(`new_task_ass_${prop}`);
+  const dueEl  = document.getElementById(`new_task_due_${prop}`);
+  const text = textEl.value.trim();
+  if (!text) return;
+  setSyncing();
+  const data = await getGenData(prop);
+  data.tasks = data.tasks || [];
+  data.tasks.push({ id: Date.now(), text, assignee: assEl.value.trim(), due: dueEl.value, done: false, createdAt: new Date().toISOString() });
+  await setGenData(prop, data);
+  textEl.value = ''; assEl.value = ''; dueEl.value = '';
+  renderTasks(prop, data.tasks);
+  setSynced();
+  updateGenMeta(prop);
+}
+
+async function toggleTask(prop, id) {
+  const data = await getGenData(prop);
+  const task = data.tasks.find(t => t.id === id);
+  if (task) task.done = !task.done;
+  await setGenData(prop, data);
+  renderTasks(prop, data.tasks);
+  updateGenMeta(prop);
+}
+
+async function deleteTask(prop, id) {
+  const data = await getGenData(prop);
+  data.tasks = (data.tasks || []).filter(t => t.id !== id);
+  await setGenData(prop, data);
+  renderTasks(prop, data.tasks);
+  updateGenMeta(prop);
+}
+
+function renderTasks(prop, tasks) {
+  const el = document.getElementById(`gen_tasklist_${prop}`);
+  if (!el) return;
+  if (!tasks || tasks.length === 0) {
+    el.innerHTML = '<div class="tasks-empty">No tasks yet — add one below.</div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = tasks.map(t => {
+    let dueHtml = '';
+    if (t.due) {
+      const d = new Date(t.due + 'T00:00:00');
+      const diff = Math.ceil((d - today) / 86400000);
+      const cls = t.done ? 'ok' : diff < 0 ? 'overdue' : diff <= 7 ? 'soon' : 'upcoming';
+      const label = t.done ? 'Done' : diff < 0 ? `${Math.abs(diff)}d overdue` : diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      dueHtml = `<span class="task-due ${cls}">${label}</span>`;
+    }
+    return `<div class="task-item">
+      <input type="checkbox" class="task-cb" ${t.done?'checked':''} onchange="toggleTask('${prop}',${t.id})"/>
+      <div class="task-content">
+        <span class="task-text${t.done?' done':''}">${t.text}</span>
+        <div class="task-meta">
+          ${t.assignee ? `<span class="task-assignee">→ ${t.assignee}</span>` : ''}
+          ${dueHtml}
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask('${prop}',${t.id})" title="Delete">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function addDate(prop) {
+  const labelEl = document.getElementById(`new_date_label_${prop}`);
+  const valEl   = document.getElementById(`new_date_val_${prop}`);
+  const label = labelEl.value.trim();
+  const val   = valEl.value;
+  if (!label || !val) return;
+  setSyncing();
+  const data = await getGenData(prop);
+  data.dates = data.dates || [];
+  data.dates.push({ id: Date.now(), label, val });
+  data.dates.sort((a,b) => a.val.localeCompare(b.val));
+  await setGenData(prop, data);
+  labelEl.value = ''; valEl.value = '';
+  renderDates(prop, data.dates);
+  setSynced();
+  updateGenMeta(prop);
+}
+
+async function deleteDate(prop, id) {
+  const data = await getGenData(prop);
+  data.dates = (data.dates || []).filter(d => d.id !== id);
+  await setGenData(prop, data);
+  renderDates(prop, data.dates);
+  updateGenMeta(prop);
+}
+
+function renderDates(prop, dates) {
+  const el = document.getElementById(`gen_datelist_${prop}`);
+  if (!el) return;
+  if (!dates || dates.length === 0) {
+    el.innerHTML = '<div class="dates-empty">No dates added yet.</div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = dates.map(d => {
+    const dt = new Date(d.val + 'T00:00:00');
+    const diff = Math.ceil((dt - today) / 86400000);
+    const cls  = diff < 0 ? 'past' : diff <= 7 ? 'soon' : 'upcoming';
+    const badge = diff < 0 ? `${Math.abs(diff)}d ago` : diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    return `<div class="date-item">
+      <span class="date-badge ${cls}">${badge}</span>
+      <div class="date-content">
+        <div class="date-label">${d.label}</div>
+        <div class="date-val">${dt.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})}</div>
+      </div>
+      <button class="date-del" onclick="deleteDate('${prop}',${d.id})" title="Delete">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function updateGenMeta(prop) {
+  const meta = document.getElementById(`gen_meta_${prop}`);
+  if (!meta) return;
+  const body = document.getElementById(`genbody_${prop}`);
+  if (body.classList.contains('open')) { meta.textContent = ''; return; }
+  try {
+    const data = await getGenData(prop);
+    const parts = [];
+    const open = (data.tasks||[]).filter(t=>!t.done).length;
+    const dates = (data.dates||[]).length;
+    const hasNotes = (data.notes||'').trim().length > 0;
+    if (open) parts.push(`${open} task${open>1?'s':''} open`);
+    if (dates) parts.push(`${dates} date${dates>1?'s':''}`);
+    if (hasNotes) parts.push('notes');
+    meta.textContent = parts.length ? parts.join(' · ') : 'click to expand';
+  } catch(e) { meta.textContent = 'click to expand'; }
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+let activeProp = '156';
+let rendered = {};
+
+async function switchProp(key) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  activeProp = key;
+  renderPropBar(key);
+  const panelEl = document.getElementById('panel-' + key);
+  panelEl.classList.add('active');
+  if (!rendered[key] && DISCIPLINES[key]) {
+    setSyncing();
+    await renderPanel(key);
+    rendered[key] = true;
+    setSynced();
+  }
+}
+
+// ── SYNC STATUS ───────────────────────────────────────────────────────────
+function setSyncing() {
+  document.getElementById('syncDot').className = 'sync-dot loading';
+  document.getElementById('syncLabel').textContent = 'Syncing...';
+}
+function setSynced() {
+  document.getElementById('syncDot').className = 'sync-dot';
+  document.getElementById('syncLabel').textContent = 'All changes saved';
+}
+function setError() {
+  document.getElementById('syncDot').className = 'sync-dot error';
+  document.getElementById('syncLabel').textContent = 'Connection error';
+}
+
+// ── SEED: David's update 09/06/2026 ──────────────────────────────────────
+async function seedDavidUpdate() {
+  const SEED_KEY = 'ps_permit_seed_david_20260609';
+  try {
+    const already = await window.storage.get(SEED_KEY, true);
+    if (already) return; // already seeded
+  } catch(e) {}
+
+  const today    = new Date('2026-06-09').toISOString();
+  const tmrw     = '2026-06-10';
+  const eow      = '2026-06-15';
+  const noteText = (extra='') => `[09/06/2026 — David, arquitecto]\nEntrega hoy Civil, MEP y Estructural (tenían los últimos cambios de Pablo pendientes). Resubmittal de los tres edificios (156, 150, 160) programado para mañana 10/06/2026.${extra}`;
+
+  const updates = {
+    '156': { notes: noteText(), notesTs: today,
+      tasks:[ {id:1609156_1,text:'Confirmar recepción Civil + MEP + Estructural de David',assignee:'Equipo',due:'2026-06-09',done:false,createdAt:today},
+              {id:1609156_2,text:'Resubmittal a la Ciudad — 156, 150 y 160 NE 77 St',assignee:'Equipo',due:tmrw,done:false,createdAt:today} ],
+      dates:[ {id:1609156_3,label:'Resubmittal 156 · 150 · 160 NE 77 St',val:tmrw} ] },
+    '150': { notes: noteText(), notesTs: today,
+      tasks:[ {id:1609150_1,text:'Confirmar recepción Civil + MEP + Estructural de David',assignee:'Equipo',due:'2026-06-09',done:false,createdAt:today},
+              {id:1609150_2,text:'Resubmittal a la Ciudad — 156, 150 y 160 NE 77 St',assignee:'Equipo',due:tmrw,done:false,createdAt:today} ],
+      dates:[ {id:1609150_3,label:'Resubmittal 156 · 150 · 160 NE 77 St',val:tmrw} ] },
+    '160': { notes: noteText(), notesTs: today,
+      tasks:[ {id:1609160_1,text:'Confirmar recepción Civil + MEP + Estructural de David',assignee:'Equipo',due:'2026-06-09',done:false,createdAt:today},
+              {id:1609160_2,text:'Resubmittal a la Ciudad — 156, 150 y 160 NE 77 St',assignee:'Equipo',due:tmrw,done:false,createdAt:today} ],
+      dates:[ {id:1609160_3,label:'Resubmittal 156 · 150 · 160 NE 77 St',val:tmrw} ] },
+    '167': { notesTs: today,
+      notes: `[09/06/2026 — David, arquitecto]\nFinalizando base arquitectónica este fin de semana para mandar a Pablo y Luis. De ahí va a los ingenieros.\n\n⚠️ REVISIÓN REQUERIDA antes del envío a ingenieros — para evitar change orders, tiempo perdido y discrepancias entre planos.`,
+      tasks:[ {id:1609167_1,text:'⚠️ CRÍTICO: Revisar base arquitectónica antes de envío a ingenieros — evitar change orders y discrepancias entre planos',assignee:'Bruno + Pablo',due:eow,done:false,createdAt:today} ],
+      dates:[ {id:1609167_2,label:'David manda base a Pablo y Luis',val:'2026-06-14'},
+              {id:1609167_3,label:'⚠️ Deadline revisión base antes de ingenieros',val:eow} ] },
+  };
+
+  for (const [prop, data] of Object.entries(updates)) {
+    await cloudSet(`gen_${prop}`, data);
+  }
+
+  // Mark as seeded
+  try { await window.storage.set(SEED_KEY, 'done', true); } catch(e) {}
+}
+
+// ── SEED: Daily update — pendientes comunes + tareas (cargado por Sole) ──
+async function seedDailyUpdate() {
+  const SEED_KEY = 'ps_permit_seed_daily_update_v1';
+  try {
+    const already = await window.storage.get(SEED_KEY, true);
+    if (already) return; // already seeded
+  } catch(e) {}
+
+  const ts = new Date().toISOString();
+
+  const commonTasks = (prefix) => [
+    { id: `${prefix}_t1`, text: 'Falta agreement con WASA', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t2`, text: 'Falta FPL', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t3`, text: 'Falta dedication', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t4`, text: 'Revisar zoning — comentario #28', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t5`, text: 'Falta covenant', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t6`, text: 'Public Works — revisar comentario #71', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t7`, text: 'DERM approval — comentarios #73 y #75', assignee: '', due: null, done: false, createdAt: ts },
+    { id: `${prefix}_t8`, text: 'Pedir Hydrant Flow Test', assignee: 'Dueño', due: null, done: false, createdAt: ts },
+  ];
+
+  const updates = {
+    '156': {
+      notes: 'Todos los docs listos, solo falta respuesta a comentarios de Civil. Entrando en Cycle 2.',
+      notesTs: ts,
+      tasks: [
+        { id: '156_t0', text: 'Falta respuesta a comentarios de Civil', assignee: '', due: null, done: false, createdAt: ts },
+        ...commonTasks('156d')
+      ],
+    },
+    '150': {
+      notes: 'Entrando a Cycle 3 de revisión, ya en la Ciudad.',
+      notesTs: ts,
+      tasks: commonTasks('150d'),
+    },
+    '160': {
+      notes: 'Todos los docs listos, solo falta respuesta a comentarios de Civil. Entrando en Cycle 2.',
+      notesTs: ts,
+      tasks: [
+        { id: '160_t0', text: 'Falta respuesta a comentarios de Civil', assignee: '', due: null, done: false, createdAt: ts },
+        ...commonTasks('160d')
+      ],
+    },
+  };
+
+  for (const [prop, newData] of Object.entries(updates)) {
+    const existing = await cloudGet(`gen_${prop}`) || { notes:'', notesTs:null, tasks:[], dates:[] };
+    const merged = {
+      notes: existing.notes ? existing.notes + '\n\n[Update ' + new Date().toLocaleDateString('es-AR') + ']\n' + newData.notes : newData.notes,
+      notesTs: newData.notesTs,
+      tasks: [...(existing.tasks||[]), ...newData.tasks],
+      dates: existing.dates || [],
+    };
+    await cloudSet(`gen_${prop}`, merged);
+  }
+
+  try { await window.storage.set(SEED_KEY, 'done', true); } catch(e) {}
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+(async () => {
+  renderPropBar('156');
+  setSyncing();
+  try {
+    await seedDavidUpdate();
+    await seedDailyUpdate();
+    await renderPanel('156');
+    rendered['156'] = true;
+    setSynced();
+  } catch(e) {
+    setError();
+    console.error(e);
+  }
+  document.getElementById('panel-167').classList.remove('active');
+})();
+</script>
+</body>
+</html>
+<!-- PDF EXPORT ADDITIONS -->
+<style>
+/* ── Print / PDF styles ── */
+#pdfBtn{
+  position:fixed;bottom:24px;right:24px;
+  background:#1B3A6B;color:#fff;border:none;
+  padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;
+  box-shadow:0 4px 14px rgba(27,58,107,.35);z-index:999;transition:background .15s
+}
+#pdfBtn:hover{background:#143059}
+#pdfBtn svg{flex-shrink:0}
+
+/* PDF modal overlay */
+#pdfModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;
+  align-items:center;justify-content:center}
+#pdfModal.open{display:flex}
+.pdf-dialog{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:90vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.pdf-dialog h3{font-size:15px;font-weight:600;color:#1B3A6B;margin-bottom:6px}
+.pdf-dialog p{font-size:12.5px;color:#666;margin-bottom:16px;line-height:1.5}
+.pdf-options{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.pdf-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:0.5px solid #E0E0D8;
+  border-radius:8px;cursor:pointer;transition:border .15s}
+.pdf-opt:hover{border-color:#1B3A6B}
+.pdf-opt input{margin-top:2px;flex-shrink:0;accent-color:#1B3A6B}
+.pdf-opt-body strong{font-size:12.5px;font-weight:600;color:#1a1a1a;display:block;margin-bottom:2px}
+.pdf-opt-body span{font-size:11.5px;color:#888}
+.pdf-prop-checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px}
+.pdf-prop-check{display:flex;align-items:center;gap:7px;padding:7px 10px;border:0.5px solid #E0E0D8;
+  border-radius:7px;font-size:12px;cursor:pointer}
+.pdf-prop-check:hover{border-color:#1B3A6B}
+.pdf-prop-check input{accent-color:#1B3A6B}
+.pdf-label{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.pdf-actions{display:flex;gap:8px;justify-content:flex-end}
+.pdf-cancel{padding:7px 16px;background:none;border:0.5px solid #ccc;border-radius:7px;
+  font-size:12.5px;cursor:pointer;font-family:inherit;color:#555}
+.pdf-go{padding:7px 18px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;
+  font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit}
+.pdf-go:hover{background:#143059}
+
+/* ── Print document ── */
+#printDoc{display:none}
+
+@media print{
+  body > *:not(#printDoc){display:none!important}
+  #printDoc{display:block!important}
+  #pdfBtn,#pdfModal{display:none!important}
+  @page{margin:15mm 12mm;size:A4}
+}
+
+#printDoc{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  font-size:11px;color:#1a1a1a;line-height:1.4}
+.pd-cover{padding:20px 0 16px;border-bottom:2px solid #1B3A6B;margin-bottom:20px}
+.pd-cover-brand{font-size:20px;font-weight:700;color:#1B3A6B;margin-bottom:3px}
+.pd-cover-sub{font-size:12px;color:#666}
+.pd-cover-meta{font-size:10.5px;color:#999;margin-top:6px}
+.pd-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.pd-kpi{background:#F5F7FA;border-radius:7px;padding:9px 11px}
+.pd-kpi-l{font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.pd-kpi-v{font-size:18px;font-weight:700}
+.pd-kpi-v.r{color:#A32D2D}.pd-kpi-v.a{color:#854F0B}.pd-kpi-v.g{color:#3B6D11}
+.pd-prop-section{margin-bottom:24px;break-inside:avoid-page}
+.pd-prop-header{background:#1B3A6B;color:#fff;padding:8px 12px;border-radius:7px 7px 0 0;
+  display:flex;justify-content:space-between;align-items:center}
+.pd-prop-title{font-size:13px;font-weight:600}
+.pd-prop-meta{font-size:10px;opacity:.75}
+.pd-prop-stats{display:grid;grid-template-columns:repeat(5,1fr);background:#F0F4FA;
+  border:0.5px solid #D8E4F5;border-top:none;padding:8px 10px;gap:6px}
+.pd-stat{text-align:center}
+.pd-stat-v{font-size:14px;font-weight:700}
+.pd-stat-v.r{color:#A32D2D}.pd-stat-v.a{color:#854F0B}.pd-stat-v.g{color:#3B6D11}
+.pd-stat-l{font-size:9px;color:#888;text-transform:uppercase}
+.pd-bar-wrap{height:4px;background:#E8E8E4;border-radius:999px;margin-top:4px}
+.pd-bar-fill{height:4px;border-radius:999px}
+table.pd-disc{width:100%;border-collapse:collapse;border:0.5px solid #E0E0D8;border-top:none}
+table.pd-disc th{padding:5px 8px;background:#F5F7FA;font-size:9.5px;font-weight:600;
+  color:#1B3A6B;text-align:left;border-bottom:0.5px solid #D8E4F5;text-transform:uppercase;letter-spacing:.03em}
+table.pd-disc th.c{text-align:center}
+table.pd-disc td{padding:6px 8px;font-size:10.5px;border-bottom:0.5px solid #F0F0EC;vertical-align:top}
+table.pd-disc tr:last-child td{border-bottom:none}
+table.pd-disc td.c{text-align:center;color:#888}
+table.pd-disc td.hot{text-align:center;color:#A32D2D;font-weight:600}
+table.pd-disc td.ok{text-align:center;color:#3B6D11}
+.pd-badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:600}
+.pd-b-r{background:#FCEBEB;color:#A32D2D}
+.pd-b-a{background:#FAEEDA;color:#854F0B}
+.pd-b-g{background:#EAF3DE;color:#3B6D11}
+.pd-b-gray{background:#F1EFE8;color:#5F5E5A}
+.pd-b-blue{background:#E6F1FB;color:#0C447C}
+.pd-b-purple{background:#EEEDFE;color:#3C3489}
+.pd-comments-section{margin-top:0;break-inside:avoid}
+.pd-disc-group{margin-bottom:12px;break-inside:avoid}
+.pd-disc-group-title{font-size:10px;font-weight:700;color:#1B3A6B;background:#EEF3FA;
+  padding:4px 8px;border-radius:4px 4px 0 0;border:0.5px solid #D8E4F5;text-transform:uppercase;letter-spacing:.04em}
+.pd-comment-row{display:grid;grid-template-columns:48px 1fr 90px 100px 110px;gap:6px;
+  padding:5px 8px;border:0.5px solid #E8E8E4;border-top:none;align-items:start;background:#fff}
+.pd-comment-row:nth-child(even){background:#FAFAFA}
+.pd-comment-ref{font-size:9px;font-weight:700;color:#1B3A6B;background:#E6F1FB;
+  padding:1px 5px;border-radius:999px;white-space:nowrap;margin-top:1px}
+.pd-comment-text{font-size:10px;color:#333;line-height:1.4}
+.pd-comment-head{display:grid;grid-template-columns:48px 1fr 90px 100px 110px;gap:6px;
+  padding:4px 8px;border:0.5px solid #D8E4F5;border-top:none;background:#F5F7FA}
+.pd-comment-head span{font-size:9px;font-weight:600;color:#6B7A99;text-transform:uppercase;letter-spacing:.04em}
+.pd-alert{display:flex;gap:8px;align-items:flex-start;padding:6px 10px;
+  border-radius:5px;margin-bottom:5px;font-size:10px}
+.pd-alert.r{background:#FCEBEB;border:0.5px solid #F8D7DA}
+.pd-alert.a{background:#FAEEDA;border:0.5px solid #F5D9B0}
+.pd-alert strong{color:#1a1a1a;font-weight:600}
+.pd-alert-pill{flex-shrink:0;padding:1px 6px;border-radius:999px;font-size:8.5px;font-weight:700;margin-top:1px}
+.pd-alert-pill.r{background:#A32D2D;color:#fff}
+.pd-alert-pill.a{background:#854F0B;color:#fff}
+.pd-alerts-title{font-size:10px;font-weight:600;color:#1B3A6B;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px}
+.pd-hist-entry{font-size:9.5px;color:#555;margin-bottom:3px}
+.pd-hist-ts{color:#AAB0C0;font-size:9px}
+.pd-page-break{break-before:page}
+.pd-footer{margin-top:24px;padding-top:8px;border-top:0.5px solid #E0E0D8;
+  font-size:9.5px;color:#bbb;display:flex;justify-content:space-between}
+</style>
+
+<!-- Floating PDF button -->
+<button id="pdfBtn" onclick="document.getElementById('pdfModal').classList.add('open')">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Export PDF
+</button>
+
+<!-- PDF config modal -->
+<div id="pdfModal">
+  <div class="pdf-dialog">
+    <h3>Export Status Report</h3>
+    <p>Select which properties and level of detail to include in the PDF report.</p>
+
+    <div class="pdf-label">Properties to include</div>
+    <div class="pdf-prop-checks">
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp156" checked> 156 NE 77 St</label>
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp150" checked> 150 NE 77 St</label>
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp160" checked> 160 NE 77 St</label>
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp167"> 167 NE 76 St</label>
+    </div>
+
+    <div class="pdf-label">Detail level</div>
+    <div class="pdf-options">
+      <label class="pdf-opt">
+        <input type="radio" name="pdfDetail" value="summary" checked>
+        <div class="pdf-opt-body">
+          <strong>Summary — discipline overview</strong>
+          <span>One page per property. Shows all disciplines, status, and open comment counts. Best for quick sharing.</span>
+        </div>
+      </label>
+      <label class="pdf-opt">
+        <input type="radio" name="pdfDetail" value="full">
+        <div class="pdf-opt-body">
+          <strong>Full — includes all comments + internal tracking</strong>
+          <span>Every iBuild comment with assigned person, our status, and history log. Best for team reviews.</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="pdf-actions">
+      <button class="pdf-cancel" onclick="document.getElementById('pdfModal').classList.remove('open')">Cancel</button>
+      <button class="pdf-go" onclick="generatePDF()">Generate PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print document (hidden until print) -->
+<div id="printDoc"></div>
+
+<script>
+// ── PDF GENERATION ────────────────────────────────────────────────────────
+const PD_BADGE = {
+  'CORRECTIONS':'pd-b-r','PENDING ACTION':'pd-b-a','PENDING REVIEW':'pd-b-a',
+  'APPROVED':'pd-b-g','PRE-SUBMISSION':'pd-b-gray'
+};
+const PD_INT_BADGE = {
+  'Pending':'pd-b-gray','In Progress':'pd-b-blue','With Architect':'pd-b-a',
+  'With Engineer':'pd-b-a','With Owner':'pd-b-a','Submitted':'pd-b-purple','Resolved':'pd-b-g'
+};
+const PD_CITY_BADGE = {
+  'Unresolved':'pd-b-r','Resolved':'pd-b-g','Info Only':'pd-b-gray','Information':'pd-b-gray'
+};
+
+async function generatePDF() {
+  document.getElementById('pdfModal').classList.remove('open');
+
+  const detail = document.querySelector('input[name="pdfDetail"]:checked').value;
+  const propKeys = ['156','150','160','167'].filter(k =>
+    document.getElementById('pdfProp' + k)?.checked
+  );
+
+  const doc = document.getElementById('printDoc');
+  const now = new Date();
+  const nowStr = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) +
+    ' · ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  // Total open across selected props
+  const totalOpen = propKeys.reduce((s,k) => {
+    const p = PROPS.find(x=>x.key===k); return s + (p?.open||0);
+  }, 0);
+
+  let html = `
+    <div class="pd-cover">
+      <div class="pd-cover-brand">Portland Saxum</div>
+      <div class="pd-cover-sub">Permit Status Report — ${detail === 'full' ? 'Full Detail' : 'Summary'}</div>
+      <div class="pd-cover-meta">Generated: ${nowStr} &nbsp;·&nbsp; Properties: ${propKeys.length} &nbsp;·&nbsp; Total open comments: ${totalOpen}</div>
+    </div>`;
+
+  // One section per property
+  for (const propKey of propKeys) {
+    const prop = PROPS.find(p => p.key === propKey);
+    const discs = DISCIPLINES[propKey] || [];
+    const isPreSub = propKey === '167';
+    const pctColor = prop.pct === 0 ? 'r' : prop.pct < 50 ? 'a' : 'g';
+    const pctBarColor = prop.pct === 0 ? '#A32D2D' : prop.pct < 50 ? '#854F0B' : '#3B6D11';
+
+    html += `<div class="pd-prop-section">
+      <div class="pd-prop-header">
+        <div class="pd-prop-title">${prop.addr} &nbsp;<span style="font-size:10px;opacity:.7">${prop.permit}</span></div>
+        <div class="pd-prop-meta">${prop.cycle} · Workflow: ${prop.workflow} · ${prop.note}</div>
+      </div>`;
+
+    if (!isPreSub) {
+      html += `<div class="pd-prop-stats">
+        <div class="pd-stat"><div class="pd-stat-v">${prop.total}</div><div class="pd-stat-l">Total</div></div>
+        <div class="pd-stat"><div class="pd-stat-v r">${prop.open}</div><div class="pd-stat-l">Open</div></div>
+        <div class="pd-stat"><div class="pd-stat-v a">${prop.info}</div><div class="pd-stat-l">Info only</div></div>
+        <div class="pd-stat"><div class="pd-stat-v g">${prop.resolved}</div><div class="pd-stat-l">Resolved</div></div>
+        <div class="pd-stat">
+          <div class="pd-stat-v ${pctColor}">${prop.pct}%</div>
+          <div class="pd-stat-l">Done</div>
+          <div class="pd-bar-wrap"><div class="pd-bar-fill" style="width:${prop.pct}%;background:${pctBarColor}"></div></div>
+        </div>
+      </div>`;
+
+      // Discipline summary table
+      html += `<table class="pd-disc">
+        <thead><tr>
+          <th>Discipline</th><th>Reviewer</th><th>City Status</th>
+          <th class="c">Total</th><th class="c">Open</th><th class="c">Info</th>
+          <th>Our Status</th>
+        </tr></thead><tbody>`;
+
+      for (const d of discs) {
+        const cityClass = PD_BADGE[d.cityStatus] || 'pd-b-gray';
+        let ourLabel='—', ourClass='pd-b-gray';
+        if (d.comments.length > 0) {
+          let counts={};
+          for (const c of d.comments) {
+            const data = await getCommentData(propKey, d.code, c.ref);
+            counts[data.status] = (counts[data.status]||0)+1;
+          }
+          const res=counts['Resolved']||0, sub=counts['Submitted']||0;
+          const inp=counts['In Progress']||0;
+          const withT=(counts['With Architect']||0)+(counts['With Engineer']||0)+(counts['With Owner']||0);
+          if(res===d.comments.length){ourLabel='All resolved';ourClass='pd-b-g';}
+          else if(sub>0){ourLabel=`${sub} submitted`;ourClass='pd-b-purple';}
+          else if(withT>0){ourLabel=`${withT} assigned`;ourClass='pd-b-a';}
+          else if(inp>0){ourLabel=`${inp} in progress`;ourClass='pd-b-blue';}
+          else{ourLabel='Not started';ourClass='pd-b-gray';}
+        }
+        html += `<tr>
+          <td><strong>(${d.code}) ${d.name}</strong></td>
+          <td style="color:#666;font-size:10px">${d.reviewer}</td>
+          <td><span class="pd-badge ${cityClass}">${d.cityStatus}</span></td>
+          <td class="c">${d.total||'—'}</td>
+          <td class="${d.cityStatus==='APPROVED'?'ok':'hot'}">${d.cityStatus==='APPROVED'?'✓':(d.open||'—')}</td>
+          <td class="c">${d.info||'—'}</td>
+          <td><span class="pd-badge ${ourClass}">${ourLabel}</span></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+
+      // Alerts
+      if (prop.alerts.length > 0) {
+        html += `<div class="pd-alerts-title">Key actions required</div>`;
+        prop.alerts.forEach(a => {
+          html += `<div class="pd-alert ${a.level}">
+            <span class="pd-alert-pill ${a.level}">${a.level==='r'?'URGENT':'NOTE'}</span>
+            <div><strong>${a.title}</strong> — ${a.text}</div>
+          </div>`;
+        });
+      }
+
+      // Full detail: comment-by-comment breakdown
+      if (detail === 'full') {
+        html += `<div class="pd-comments-section pd-page-break">
+          <div style="font-size:11px;font-weight:600;color:#1B3A6B;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.04em">
+            ${prop.addr} — Comment Detail
+          </div>`;
+
+        for (const d of discs) {
+          if (d.comments.length === 0) continue;
+          html += `<div class="pd-disc-group">
+            <div class="pd-disc-group-title">(${d.code}) ${d.name} — ${d.reviewer}</div>
+            <div class="pd-comment-head">
+              <span>Ref</span><span>iBuild Comment</span>
+              <span>City</span><span>Assigned to</span><span>Our status · Notes</span>
+            </div>`;
+
+          for (const c of d.comments) {
+            const data = await getCommentData(propKey, d.code, c.ref);
+            const cityClass = PD_CITY_BADGE[c.cs]||'pd-b-gray';
+            const intClass  = PD_INT_BADGE[data.status]||'pd-b-gray';
+            const lastHist  = data.history?.length > 0 ? data.history[data.history.length-1] : null;
+            html += `<div class="pd-comment-row">
+              <div><span class="pd-comment-ref">REF #${c.ref}</span></div>
+              <div class="pd-comment-text">${c.text}</div>
+              <div><span class="pd-badge ${cityClass}">${c.cs}</span></div>
+              <div style="font-size:10px;color:#444">${data.assignee||'—'}</div>
+              <div>
+                <span class="pd-badge ${intClass}">${data.status}</span>
+                ${data.notes ? `<div style="font-size:9.5px;color:#666;margin-top:2px">${data.notes}</div>`:''}
+                ${lastHist ? `<div class="pd-hist-ts" style="margin-top:3px">${fmtDate(lastHist.ts)}</div>`:''}
+              </div>
+            </div>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+
+    } else {
+      // 167 pre-submission
+      html += `<div style="padding:16px;background:#F9F9F7;border:0.5px solid #E0E0D8;border-top:none;
+        font-size:11px;color:#888;font-style:italic">
+        Not yet submitted to the City of Miami. No permit number or iBuild review comments.
+      </div>`;
+    }
+
+    html += `</div>`; // pd-prop-section
+  }
+
+  html += `<div class="pd-footer">
+    <span>Portland Saxum Construction Management · Permit Tracker</span>
+    <span>${nowStr}</span>
+  </div>`;
+
+  doc.innerHTML = html;
+
+  // Small delay so DOM renders, then print
+  setTimeout(() => {
+    window.print();
+  }, 300);
+}
+</script>

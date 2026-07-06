@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permit Tracker — Casas · Portland Saxum</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#F0F2F5;color:#1a1a1a;min-height:100vh}
+
+/* ── Top bar ── */
+.topbar{background:#1B3A6B;color:#fff;padding:13px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.brand{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.brand span{font-weight:400;opacity:.6;margin-left:8px;font-size:13px}
+.sync-status{font-size:11px;display:flex;align-items:center;gap:6px;opacity:.8}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#6EE7B7;display:inline-block}
+.sync-dot.loading{background:#FCD34D;animation:pulse 1s infinite}
+.sync-dot.error{background:#FCA5A5}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── Layout ── */
+.container{max-width:1080px;margin:0 auto;padding:20px 18px}
+
+/* ── Property status bar ── */
+.prop-status-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.psb-card{background:#fff;border-radius:10px;padding:12px 14px;border:0.5px solid #E0E0D8;cursor:pointer;transition:all .15s;position:relative}
+.psb-card:hover{border-color:#1B3A6B;box-shadow:0 0 0 2px #E6F1FB}
+.psb-card.active{border:1.5px solid #1B3A6B;box-shadow:0 0 0 3px #E6F1FB}
+.psb-addr{font-size:13px;font-weight:600;color:#1B3A6B;margin-bottom:3px}
+.psb-permit{font-size:10.5px;color:#999;margin-bottom:8px}
+.psb-open{font-size:22px;font-weight:700;line-height:1}
+.psb-open.r{color:#A32D2D}.psb-open.a{color:#854F0B}.psb-open.g{color:#3B6D11}
+.psb-label{font-size:10px;color:#aaa;margin-top:2px}
+.psb-bar{height:3px;border-radius:999px;background:#EEE;margin-top:8px}
+.psb-bar-fill{height:3px;border-radius:999px}
+.psb-cycle{position:absolute;top:10px;right:10px}
+
+/* ── Panel ── */
+.panel{display:none}.panel.active{display:block}
+.panel-header{background:#fff;border:0.5px solid #E0E0D8;border-radius:12px 12px 0 0;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:none}
+.panel-title{font-size:14px;font-weight:600;color:#1B3A6B}
+.panel-meta{font-size:11px;color:#999;margin-top:2px}
+
+/* ── General notes section ── */
+.general-section{background:#fff;border:0.5px solid #E0E0D8;border-top:none;padding:0}
+.general-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:0.5px solid #F0F0EC;cursor:pointer;user-select:none;transition:background .1s}
+.general-header:hover{background:#FAFBFC}
+.general-header-left{display:flex;align-items:center;gap:8px}
+.general-header-title{font-size:12px;font-weight:600;color:#1B3A6B}
+.general-header-meta{font-size:11px;color:#999}
+.general-chevron{font-size:12px;color:#1B3A6B;transition:transform .2s}
+.general-chevron.open{transform:rotate(90deg)}
+.general-body{display:none;padding:14px 16px}
+.general-body.open{display:block}
+.general-tabs{display:flex;gap:0;border-bottom:0.5px solid #E8E8E4;margin-bottom:14px}
+.gtab{padding:6px 14px;font-size:11.5px;cursor:pointer;border:none;background:none;color:#888;border-bottom:2px solid transparent;margin-bottom:-0.5px;font-family:inherit;transition:color .15s}
+.gtab:hover{color:#1B3A6B}
+.gtab.active{color:#1B3A6B;border-bottom:2px solid #1B3A6B;font-weight:600}
+.gtab-panel{display:none}.gtab-panel.active{display:block}
+
+/* Notes tab */
+.notes-area{width:100%;min-height:90px;font-family:inherit;font-size:12.5px;padding:10px 12px;
+  border:0.5px solid #D8E0EE;border-radius:8px;resize:vertical;outline:none;
+  color:#1a1a1a;line-height:1.6;transition:border .15s;background:#FAFBFD}
+.notes-area:focus{border-color:#1B3A6B;background:#fff;box-shadow:0 0 0 2px #E6F1FB}
+.notes-save-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.notes-last-saved{font-size:10.5px;color:#aaa}
+.notes-save-btn{padding:5px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:6px;
+  font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.notes-save-btn:hover{background:#143059}
+.gsave-indicator{font-size:11px;color:#3B6D11;display:none;margin-left:8px}
+
+/* Tasks tab */
+.task-list{margin-bottom:10px}
+.task-item{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;background:#FAFBFD;
+  border:0.5px solid #E8E8E4;border-radius:7px;margin-bottom:6px}
+.task-item:last-child{margin-bottom:0}
+.task-cb{margin-top:2px;width:15px;height:15px;cursor:pointer;accent-color:#1B3A6B;flex-shrink:0}
+.task-content{flex:1;display:flex;flex-direction:column;gap:3px}
+.task-text{font-size:12.5px;color:#1a1a1a;line-height:1.4}
+.task-text.done{text-decoration:line-through;color:#aaa}
+.task-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.task-assignee{font-size:10.5px;color:#888}
+.task-due{font-size:10.5px;color:#854F0B;font-weight:500}
+.task-due.overdue{color:#A32D2D}
+.task-del{flex-shrink:0;background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;padding:0 2px;line-height:1}
+.task-del:hover{color:#A32D2D}
+.add-task-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.add-task-input{flex:1;min-width:180px;font-family:inherit;font-size:12px;padding:7px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff}
+.add-task-input:focus{border-color:#1B3A6B;box-shadow:0 0 0 2px #E6F1FB}
+.add-task-assignee{width:130px;font-family:inherit;font-size:12px;padding:7px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff;min-width:0}
+.add-task-due{width:130px;font-family:inherit;font-size:12px;padding:6px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff;min-width:0}
+.add-task-btn{padding:7px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;
+  font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.add-task-btn:hover{background:#143059}
+.tasks-empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
+
+/* Key dates tab */
+.dates-list{margin-bottom:10px}
+.date-item{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;background:#FAFBFD;
+  border:0.5px solid #E8E8E4;border-radius:7px;margin-bottom:6px}
+.date-badge{flex-shrink:0;min-width:80px;text-align:center;padding:3px 8px;border-radius:6px;
+  font-size:10px;font-weight:700;margin-top:1px}
+.date-badge.upcoming{background:#E6F1FB;color:#0C447C}
+.date-badge.soon{background:#FAEEDA;color:#854F0B}
+.date-badge.past{background:#FCEBEB;color:#A32D2D}
+.date-badge.ok{background:#EAF3DE;color:#3B6D11}
+.date-content{flex:1}
+.date-label{font-size:12.5px;font-weight:500;color:#1a1a1a}
+.date-val{font-size:11px;color:#888;margin-top:1px}
+.date-del{flex-shrink:0;background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;padding:0 2px}
+.date-del:hover{color:#A32D2D}
+.add-date-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.add-date-label{flex:1;min-width:160px;font-family:inherit;font-size:12px;padding:7px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff}
+.add-date-input{width:150px;font-family:inherit;font-size:12px;padding:6px 10px;
+  border:0.5px solid #D8E0EE;border-radius:7px;outline:none;background:#fff}
+.add-date-btn{padding:7px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;
+  font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.add-date-btn:hover{background:#143059}
+.dates-empty{font-size:12px;color:#bbb;font-style:italic;padding:8px 0}
+
+/* ── Discipline block ── */
+.disc-block{background:#fff;border:0.5px solid #E0E0D8;border-top:0.5px solid #EEE}
+.disc-header-row{display:grid;grid-template-columns:1fr 160px 130px 46px 46px 46px 34px;gap:0;padding:7px 14px;background:#F5F7FA;border-top:0.5px solid #E8ECF2;border-bottom:0.5px solid #E8ECF2}
+.disc-header-row span{font-size:10px;font-weight:600;color:#6B7A99;text-transform:uppercase;letter-spacing:.05em}
+.dh-c{text-align:center}
+.disc-row{display:grid;grid-template-columns:1fr 160px 130px 46px 46px 46px 34px;gap:0;padding:9px 14px;border-bottom:0.5px solid #F0F0EC;cursor:pointer;align-items:center;transition:background .1s}
+.disc-row:hover{background:#F8F9FC}
+.disc-row.is-open{background:#EEF3FA;border-bottom-color:#D8E4F5}
+.disc-row:last-child{border-bottom:none}
+.dname{font-size:12.5px;font-weight:600;color:#1a1a1a}
+.drev{font-size:11px;color:#999;margin-top:1px}
+.dc{text-align:center;font-size:12px;color:#aaa}
+.dc.hot{color:#A32D2D;font-weight:600}
+.dc.ok{color:#3B6D11;font-weight:500}
+.chevron{text-align:center;font-size:12px;color:#1B3A6B;transition:transform .2s}
+.chevron.open{transform:rotate(90deg)}
+
+/* ── Comments drawer ── */
+.drawer{display:none;border-bottom:0.5px solid #D8E4F5}
+.drawer.open{display:block}
+.drawer-inner{padding:10px 14px 12px 14px;background:#F3F7FC}
+.drawer-meta{font-size:10.5px;color:#7B8FB5;margin-bottom:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Comment card ── */
+.cc{background:#fff;border:0.5px solid #DDE3EE;border-radius:8px;margin-bottom:7px;overflow:hidden}
+.cc:last-child{margin-bottom:0}
+.cc-top{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;cursor:pointer;transition:background .1s}
+.cc-top:hover{background:#F8F9FC}
+.cc-ref{flex-shrink:0;font-size:10px;font-weight:700;color:#1B3A6B;background:#E6F1FB;padding:2px 7px;border-radius:999px;margin-top:1px;white-space:nowrap}
+.cc-body{flex:1;font-size:12px;color:#333;line-height:1.45}
+.cc-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+
+/* ── Internal panel ── */
+.cc-internal{display:none;border-top:0.5px solid #E8EEF7;background:#F8FAFD;padding:11px 12px 12px 34px}
+.cc-internal.open{display:block}
+.int-grid{display:grid;grid-template-columns:160px 160px 1fr;gap:10px;align-items:start;margin-bottom:10px}
+.fl{font-size:10px;font-weight:600;color:#6B7A99;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fi, .fs{width:100%;font-family:inherit;font-size:12px;padding:6px 9px;border:0.5px solid #D0D8E8;border-radius:6px;background:#fff;color:#1a1a1a;outline:none;transition:border .15s}
+.fi:focus,.fs:focus{border-color:#1B3A6B;box-shadow:0 0 0 2px #E6F1FB}
+.save-btn{padding:5px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
+.save-btn:hover{background:#143059}
+.saving-spinner{font-size:11px;color:#854F0B;margin-left:8px;display:none}
+
+/* ── History ── */
+.history{margin-top:10px;border-top:0.5px solid #E8EEF7;padding-top:8px}
+.history-title{font-size:10px;font-weight:600;color:#9AA5BE;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.history-entry{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:11px;color:#555}
+.history-ts{flex-shrink:0;color:#AAB0C0;font-size:10.5px;white-space:nowrap}
+.history-empty{font-size:11px;color:#C0C8D8;font-style:italic}
+
+/* ── Alerts ── */
+.alerts-block{border:0.5px solid #E0E0D8;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;background:#fff}
+.alert-item{display:grid;grid-template-columns:auto 1fr;gap:11px;padding:9px 16px;border-top:0.5px solid #F0F0EC;align-items:start}
+.apill{padding:2px 9px;border-radius:999px;font-size:9.5px;font-weight:700;white-space:nowrap;margin-top:2px}
+.ap-r{background:#FCEBEB;color:#A32D2D}.ap-a{background:#FAEEDA;color:#854F0B}
+.atext strong{font-size:12px;font-weight:600;color:#1a1a1a;display:block;margin-bottom:1px}
+.atext span{font-size:11px;color:#666;line-height:1.4}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:600}
+.b-r{background:#FCEBEB;color:#A32D2D}
+.b-a{background:#FAEEDA;color:#854F0B}
+.b-g{background:#EAF3DE;color:#3B6D11}
+.b-gray{background:#F1EFE8;color:#5F5E5A}
+.b-blue{background:#E6F1FB;color:#0C447C}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.b-teal{background:#E0F5F0;color:#1A6B55}
+
+/* ── Empty state ── */
+.empty-prop{padding:50px 20px;text-align:center;background:#fff;border:0.5px solid #E0E0D8;border-top:none;border-radius:0 0 12px 12px}
+.empty-prop h3{font-size:14px;font-weight:600;margin-bottom:6px;color:#444}
+.empty-prop p{font-size:12px;color:#999;max-width:300px;margin:0 auto;line-height:1.5}
+
+footer{text-align:center;font-size:11px;color:#bbb;padding:20px 0 12px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Casas <span>Permit Tracker · Portland Saxum</span></div>
+  <div class="sync-status" id="syncStatus">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncLabel">Connecting...</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Property cards -->
+  <div class="prop-status-bar" id="propBar"></div>
+
+  <!-- Panels -->
+  <div id="panel-3770" class="panel"></div>
+  <div id="panel-3801" class="panel"></div>
+  <div id="panel-3201" class="panel"></div>
+  <div id="panel-demo" class="panel"></div>
+
+</div>
+
+<footer>Portland Saxum · Casas · iBuild data June 9, 2026</footer>
+
+<script>
+// ── CLOUD STORAGE ─────────────────────────────────────────────────────────
+const STORAGE_KEY_PREFIX = 'ps_permit_';
+
+async function cloudGet(key) {
+  try {
+    const result = await window.storage.get(STORAGE_KEY_PREFIX + key, true);
+    return result ? JSON.parse(result.value) : null;
+  } catch(e) { return null; }
+}
+async function cloudSet(key, value) {
+  try {
+    await window.storage.set(STORAGE_KEY_PREFIX + key, JSON.stringify(value), true);
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── LOCAL CACHE ───────────────────────────────────────────────────────────
+let cache = {};
+
+async function getCommentData(prop, discCode, ref) {
+  const k = `${prop}_${discCode}_${ref}`;
+  if (cache[k]) return cache[k];
+  const d = await cloudGet(k);
+  const def = { assignee:'', status:'Pending', notes:'', history:[] };
+  cache[k] = d || def;
+  return cache[k];
+}
+
+async function saveCommentData(prop, discCode, ref, data) {
+  const k = `${prop}_${discCode}_${ref}`;
+  cache[k] = data;
+  return await cloudSet(k, data);
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────
+const PROPS = [
+  { key:'3770', addr:'3770 Oak Av', permit:'BD25019920001', cycle:'Cycle 3', cycleClass:'b-purple', workflow:'08/18/2025', note:'Waiver PZ-25-20026 pendiente · BBL Oak Av pendiente (Sandra Saez)',
+    total:20, open:9, info:3, resolved:8, pct:40,
+    alerts:[
+      {level:'r', title:'Waiver PZ-25-20026 — setback', text:'Pendiente desde Oct 2025. Planos estructurales sin viga (eliminada por zoning) en revisión — entrega hoy según David. Building permit no se aprueba hasta final decision del waiver.'},
+      {level:'r', title:'Carta del vecino para tala de aguacate', text:'Una vez entregado el waiver, única acción restante es la carta del vecino autorizando la remoción del árbol de aguacate en propiedad adyacente.'},
+      {level:'a', title:'Factura final pendiente aprobación waiver', text:'Cuando el waiver esté aprobado, no quedan más comentarios. Se manda la factura final del proyecto.'},
+      {level:'a', title:'BBL Oak Av — dedicación 10ft', text:'Contactar Sandra Saez · ssaez@miamigov.com · 305-416-1234 · proceso 14-16 semanas'},
+    ]
+  },
+  { key:'3801', addr:'3801 Oak Av', permit:'BD25024765001', cycle:'Cycle 2', cycleClass:'b-blue', workflow:'11/06/2025', note:'En revisión — entrega semana próxima',
+    total:32, open:20, info:2, resolved:10, pct:31,
+    alerts:[
+      {level:'a', title:'En revisión para entrega la semana próxima', text:'David confirma que la propiedad está siendo preparada para resubmittal. No hay comentarios críticos nuevos esta semana.'},
+      {level:'r', title:'Covenant doble folio — Zoning REF74', text:'Contactar Alicia T. Menardy · ATMenardy@miamigov.com. Building permit no se aprueba hasta covenant grabado en iBuild.'},
+      {level:'r', title:'BBL Oak Av — dedicación 10ft', text:'Contactar Sandra Saez · ssaez@miamigov.com · 305-416-1234 · proceso 14-16 semanas. Bloquea aprobación Public Works.'},
+      {level:'a', title:'MDC — M2026006184', text:'Files enviados a Miami-Dade County. DERM review pendiente.'},
+    ]
+  },
+  { key:'3201', addr:'3201 Day Av', permit:'BD25025864001', cycle:'Cycle 2', cycleClass:'b-blue', workflow:'10/29/2025', note:'En revisión por ciudad — Environmental',
+    total:18, open:8, info:2, resolved:8, pct:44,
+    alerts:[
+      {level:'a', title:'En revisión por Environmental — único bloqueador', text:'David confirma que no hay más comentarios. Una vez que Environmental apruebe, se manda la factura final del proyecto.'},
+      {level:'r', title:'Tree bond $36,000 — Demo BD25025865001', text:'Entregar en persona · 444 SW 2nd Ave, 4th floor · Environmental Resources Div. Pink Tabebuia $20k + Gumbo Limbo $16k.'},
+      {level:'r', title:'BBL McDonald St — dedicación 10ft', text:'Contactar Sandra Saez · ssaez@miamigov.com · 305-416-1234 · proceso 14-16 semanas. Bloquea aprobación Public Works.'},
+      {level:'a', title:'MDC — M2026004257', text:'DERM review pendiente (M2026004257).'},
+    ]
+  },
+  { key:'demo', addr:'3201 Day Av — Demo', permit:'BD25025865001', cycle:'Cycle 2', cycleClass:'b-blue', workflow:'10/29/2025', note:'Demo permit — tree bond pendiente',
+    total:5, open:2, info:2, resolved:1, pct:20,
+    alerts:[
+      {level:'r', title:'Tree bond $36,000 — acción inmediata', text:'Entregar bonding document EN PERSONA · 444 SW 2nd Ave, 4th floor · Environmental Resources Div. Pink Tabebuia #20 → $20,000 · Gumbo Limbo #23 → $16,000. Bloquea aprobación del demo permit.'},
+    ]
+  },
+];
+
+const DISCIPLINES = {
+  '3770': [
+    { code:'B',   name:'Building',         reviewer:'Alejandro Pascual',   cityStatus:'APPROVED',       open:0, info:0, total:4,  comments:[] },
+    { code:'Z',   name:'Zoning',           reviewer:'Hassan Perez',        cityStatus:'CORRECTIONS',    open:2, info:1, total:4,  comments:[
+      {ref:19, text:'Waiver PZ-25-20026 para setback — pendiente desde Oct 2025. Hassan Perez confirmó en Feb 2026 que sigue abierto. Building permit no se aprueba hasta final decision. Planos estructurales sin viga en revisión — entrega hoy según David.', cs:'Unresolved'},
+      {ref:26, text:'Additional comments may be provided upon review of a detailed re-submittal. City reserves the right to issue further comments.', cs:'Unresolved'},
+    ]},
+    { code:'E',   name:'Electrical',       reviewer:'Noel Ferro',          cityStatus:'APPROVED',       open:0, info:0, total:3,  comments:[] },
+    { code:'MA',  name:'Mechanical',       reviewer:'Juan Dalmau',         cityStatus:'APPROVED',       open:0, info:0, total:1,  comments:[] },
+    { code:'P',   name:'Plumbing',         reviewer:'Luis Sosa',           cityStatus:'APPROVED',       open:0, info:0, total:2,  comments:[] },
+    { code:'FF',  name:'Flood Plain',      reviewer:'Ana M. Gonzalez',     cityStatus:'APPROVED',       open:0, info:1, total:3,  comments:[] },
+    { code:'S',   name:'Structural',       reviewer:'Yanet Albelo',        cityStatus:'APPROVED',       open:0, info:0, total:1,  comments:[] },
+    { code:'MDC', name:'Miami-Dade Co.',   reviewer:'Angela Rolle',        cityStatus:'CORRECTIONS',    open:1, info:0, total:1,  comments:[
+      {ref:58, text:'M2025025727 — Cycle 3 files sent to Miami-Dade County. Pending MDC/DERM review.', cs:'Unresolved'},
+    ]},
+    { code:'DRP', name:'Public Works',     reviewer:'Anaily Carbonell',    cityStatus:'CORRECTIONS',    open:2, info:0, total:2,  comments:[
+      {ref:31, text:'BBL Oak Av — 10ft dedication required. Contact Sandra Saez ssaez@miamigov.com / 305-416-1234. Process 14-16 weeks. Still applies as of Feb 2026.', cs:'Unresolved'},
+      {ref:47, text:'Additional comments may apply on future submittals based on information provided at that time. Still applies.', cs:'Unresolved'},
+    ]},
+    { code:'LI',  name:'Env. Resources',   reviewer:'Keila Lopez',         cityStatus:'CORRECTIONS',    open:4, info:0, total:5,  comments:[
+      {ref:49, text:'Root pruning tree #2 — si pertenece a propiedad adyacente, no puede ser removido sin carta de autorización del propietario vecino. Carta pendiente. Si propietario acepta, clarificar si quiere árboles de reemplazo en su lote.', cs:'Unresolved'},
+      {ref:50, text:'Tree protection bond pendiente — completar y entregar en persona a Environmental Resources, 444 SW 2nd Ave 4th floor. Submission pendiente.', cs:'Unresolved'},
+      {ref:56, text:'Discrepancia en survey — posición de tronco contradice survey. Revisor: void Drawing V-01 si es incorrecto, dejar solo el tree boundary survey que representa correctamente las posiciones.', cs:'Unresolved'},
+      {ref:59, text:'Mitigation trees (Simpson Stoppers) — deben tener mínimo 12" DBH al momento de plantar e inspeccionar. Si se plantan de 10" y se inspeccionan, el tree permit no se finaliza.', cs:'Unresolved'},
+    ]},
+    { code:'BBL', name:'PW BBL',           reviewer:'Anaily Carbonell',    cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+    { code:'PC',  name:'Permitting Coord', reviewer:'Takiyah Belfort',     cityStatus:'APPROVED',       open:0, info:0, total:2,  comments:[] },
+  ],
+  '3801': [
+    { code:'B',   name:'Building',         reviewer:'Silvana Trigueros',   cityStatus:'CORRECTIONS',    open:1, info:1, total:5,  comments:[
+      {ref:14, text:'Add the wind load pressure to the elevations for the windows and exterior doors. Include the NOA or state approval number in the windows and doors schedule. Master permit shall have the structural wind load calculations. Window and door permit is a sub-permit — reviewer notes this still applies.', cs:'Unresolved'},
+    ]},
+    { code:'Z',   name:'Zoning',           reviewer:'Diana Agudelo',       cityStatus:'CORRECTIONS',    open:4, info:1, total:10, comments:[
+      {ref:57, text:'Revise required green space for 30%. Include square footage (sq ft) associated with each requirement in the Zoning Data table — reviewer confirmed provided but sq ft still missing.', cs:'Unresolved'},
+      {ref:61, text:'Driveway: 10ft max width within first 5ft of street-front setback. Reviewer asks to clarify reason for 10ft wide driveway in zigzag configuration where 5ft side green area setback is required.', cs:'Unresolved'},
+      {ref:63, text:'Interior lot second-story setback min 15ft required. Design proposed for approval through Waiver process — provide copy of signed waiver final decision and signed waiver and plans. Building permit grants after Waiver final decision uploaded by applicant.', cs:'Unresolved'},
+      {ref:74, text:'Property associated with two folio numbers — a covenant must be processed. Contact Alicia T. Menardy at ATMenardy@miamigov.com. Upload PZ number for this process as reference. Building permit will grant after Recorded Covenant is uploaded under Document folder.', cs:'Unresolved'},
+    ]},
+    { code:'MA',  name:'Mechanical',       reviewer:'Laura Ferrer',        cityStatus:'CORRECTIONS',    open:4, info:0, total:5,  comments:[
+      {ref:6,  text:'M-1.01: How is return air provided to AC closet? If through a louvered door, add note on plans. Sheet A-05 does not show AC closet doors as louvered — coordinate. FBC 107.2.1.', cs:'Unresolved'},
+      {ref:8,  text:'M-00: Grilles labeled as LBG not shown on air distribution table legend. Both floor plans labeled as 1st floor plan. Please coordinate. FBC 107.2.1. Reviewer: still pending.', cs:'Unresolved'},
+      {ref:9,  text:'FBCM 301.15 — Per Miami-Dade BORA interpretation: provide MDC NOA document or manufacturer technical evaluation report for proposed equipment exposed to wind (package units, CUs, cooling tower, rooftop fans). Demonstrate compliance with wind load resistance requirements. Reviewer: still pending.', cs:'Unresolved'},
+      {ref:10, text:'Provide building envelope values (R, U, SHGC) on mechanical set matching values on architectural set and Energy Conservation form. FBC 107.2.1. Reviewer: still pending.', cs:'Unresolved'},
+    ]},
+    { code:'E',   name:'Electrical',       reviewer:'Enrique Noa',         cityStatus:'CORRECTIONS',    open:2, info:0, total:7,  comments:[
+      {ref:72, text:'Sheet E-2.2: NFPA 72 recommends smoke detectors be installed at least 3 feet from any air supply diffuser or return vent. Compare physical location with sheet M1.01.', cs:'Unresolved'},
+      {ref:73, text:'Sheet E-2.2: Specify exterior light fixtures as waterproof and add symbol to symbol legend.', cs:'Unresolved'},
+    ]},
+    { code:'S',   name:'Structural',       reviewer:'Yanet Albelo',        cityStatus:'APPROVED',       open:0, info:0, total:2,  comments:[] },
+    { code:'LI',  name:'Env. Resources',   reviewer:'Karen Facey',         cityStatus:'CORRECTIONS',    open:5, info:2, total:8,  comments:[
+      {ref:25, text:'Survey, arborist report and tree disposition plan do not match — provide consistent information. Reviewer 4/14/26: comment not met.', cs:'Unresolved'},
+      {ref:27, text:'Applicant proposes to retain tree — however arborist report indicates 40% canopy requires pruning. City will not allow 40% canopy pruning. Either propose removal or update plan to show how tree and proposed structure will coincide. Reviewer 4/14/26: comment not met.', cs:'Unresolved'},
+      {ref:29, text:'Superimpose and label all proposed construction on landscape L sheets. Reviewer 4/14/26: partially met — unable to locate sewer, water, cable lines, swales, drain fields, septic tanks, fuel tanks. Superimpose and clearly label all utility lines on L sheets.', cs:'Unresolved'},
+      {ref:30, text:'Arborist report indicates trees #3 and #6 should not be affected. Tree Disposition Plan shows potential conflicts. Provide clarification on how construction will be installed without impacting trees. Reviewer 4/14/26: comment not met.', cs:'Unresolved'},
+      {ref:32, text:'Tree Disposition Plan not drawn to scale per surveyor measurements (lot 50x110ft scale 1"=20"). Landscape plan appears to use scale 1/16" resulting in 75x166ft lot. Provide consistent information. Reviewer 4/14/26: comment not met.', cs:'Unresolved'},
+    ]},
+    { code:'DRP', name:'Public Works',     reviewer:'Yomarlyn LLanos',     cityStatus:'CORRECTIONS',    open:3, info:1, total:4,  comments:[
+      {ref:37, text:'BBL Oak Av: City Municipal Atlas 47H indicates Base Building Line set 10ft within property. Dedication for public ROW required by Code 54-58. Contact Sandra Saez ssaez@miamigov.com / 305-416-1234. Process 14-16 weeks. Pending upload decision in iBuild (Survey Section).', cs:'Unresolved'},
+      {ref:49, text:'L2: No trees shall be planted within ROW. New sidewalk and parking area have not been depicted on plan L2 — reviewer 4/21/26.', cs:'Unresolved'},
+      {ref:78, text:'C-2: Elevations at back of sidewalk shall be no lower than crown of road. Update plan accordingly (back of sidewalk will be 1.25" higher than centerline of road).', cs:'Unresolved'},
+    ]},
+    { code:'MDC', name:'Miami-Dade Co.',   reviewer:'Angela Rolle',        cityStatus:'PENDING ACTION', open:1, info:0, total:1,  comments:[
+      {ref:75, text:'M2026006184 — New files sent to Miami-Dade County. Pending DERM review/approval.', cs:'Unresolved'},
+    ]},
+    { code:'FF',  name:'Flood Plain',      reviewer:'Ana M. Gonzalez',     cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+    { code:'BBL', name:'PW BBL',           reviewer:'—',                   cityStatus:'APPROVED',       open:0, info:0, total:1,  comments:[] },
+    { code:'P',   name:'Plumbing',         reviewer:'—',                   cityStatus:'APPROVED',       open:0, info:0, total:0,  comments:[] },
+    { code:'PC',  name:'Permitting Coord', reviewer:'G. Briz / K. Brown',  cityStatus:'APPROVED',       open:0, info:0, total:5,  comments:[] },
+  ],
+  '3201': [
+    { code:'Z',   name:'Zoning',           reviewer:'Travis Shiverdecker', cityStatus:'APPROVED',       open:0, info:0, total:10, comments:[] },
+    { code:'E',   name:'Electrical',       reviewer:'Noel Ferro',          cityStatus:'APPROVED',       open:0, info:0, total:3,  comments:[] },
+    { code:'FF',  name:'Flood Plain',      reviewer:'Ana M. Gonzalez',     cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+    { code:'MDC', name:'Miami-Dade Co.',   reviewer:'Rakeem McKinney',     cityStatus:'PENDING ACTION', open:1, info:0, total:1,  comments:[
+      {ref:47, text:'M2026004257 — Pending DERM review/approval.', cs:'Unresolved'},
+    ]},
+    { code:'DRP', name:'Public Works',     reviewer:'Yomarlyn LLanos',     cityStatus:'CORRECTIONS',    open:1, info:1, total:2,  comments:[
+      {ref:21, text:'BBL McDonald St: City Municipal Atlas 46B indicates Base Building Line set 10ft within property. Dedication required by Code 54-58. Contact Sandra Saez ssaez@miamigov.com / 305-416-1234. Process 14-16 weeks. Must be fully executed before this review process can be approved. Status: in process as of 6/5/26.', cs:'Unresolved'},
+    ]},
+    { code:'LI',  name:'Env. Resources',   reviewer:'Andres Franco',       cityStatus:'CORRECTIONS',    open:6, info:0, total:6,  comments:[
+      {ref:41, text:'Mitigation calculations will be addressed when all corrections to tree disposition plan have been made. Status: Tree Disposition Chart updated, mitigation calcs incorporated — reviewer cycle 2 still pending.', cs:'Unresolved'},
+      {ref:47, text:'M2026004257 — Pending DERM review/approval.', cs:'Unresolved'},
+      {ref:48, text:'Tree species incorrectly identified as New Zealand laurel — species endemic to New Zealand. Please identify tree correctly and correct in Tree Disposition Chart and Arborist Report.', cs:'Unresolved'},
+      {ref:49, text:'Please provide a better photo of tree no. 21 — updated Arborist Report with improved photo provided, reviewer confirmation pending.', cs:'Unresolved'},
+      {ref:50, text:'Tree #23 is a specimen tree under Chapter 17. Applicant must make every effort to preserve in place or relocate. Tree Relocation Report submitted evaluating feasibility per Chapter 17.', cs:'Unresolved'},
+      {ref:51, text:'Tree #4 will be 3ft from proposed structure (was 15ft from existing). Will this require root or canopy pruning? Tree #4 proposed for removal per Tree Relocation Report.', cs:'Unresolved'},
+    ]},
+    { code:'BBL', name:'PW BBL',           reviewer:'Yomarlyn LLanos',     cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+    { code:'PC',  name:'Permitting Coord', reviewer:'A. Carrillo / G. Briz',cityStatus:'APPROVED',      open:0, info:0, total:2,  comments:[] },
+  ],
+  'demo': [
+    { code:'LI',  name:'Env. Resources',   reviewer:'Ruben Colon',         cityStatus:'CORRECTIONS',    open:2, info:0, total:2,  comments:[
+      {ref:10, text:'Trees #4 and #5 are NOT specimen trees per current DBH — tree protection bond is NOT required for these. Remove bond amounts for items #4 and #5 from the tree disposition chart.', cs:'Unresolved'},
+      {ref:11, text:'Tree protection bond required for specimen trees being retained/relocated: #20 Pink Tabebuia 30"DBH → $20,000 · #23 Gumbo Limbo 23"DBH → $16,000. Total required: $36,000. Submit original bonding document IN PERSON to Environmental Resources Division, 444 SW 2nd Ave 4th floor. Template: miami.gov → Bonds and Letters of Credit.', cs:'Unresolved'},
+    ]},
+    { code:'DRP', name:'Public Works',     reviewer:'Eduardo Tome',        cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+    { code:'E',   name:'Electrical',       reviewer:'Noel Ferro',          cityStatus:'APPROVED',       open:0, info:0, total:1,  comments:[] },
+    { code:'Z',   name:'Zoning',           reviewer:'Rosana Casas',        cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+    { code:'B',   name:'Building',         reviewer:'Richard Mora',        cityStatus:'APPROVED',       open:0, info:1, total:1,  comments:[] },
+  ],
+};
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────
+const CITY_STATUS_CLASS = {
+  'Unresolved':'b-r','Resolved':'b-g','Info Only':'b-gray','Information':'b-gray'
+};
+const CITY_STATUS_BG = {
+  'CORRECTIONS':'b-r','PENDING ACTION':'b-a','PENDING REVIEW':'b-a','APPROVED':'b-g','PRE-SUBMISSION':'b-gray'
+};
+const INT_STATUS_OPTS = ['Pending','In Progress','With Architect','With Engineer','With Owner','Submitted','Resolved'];
+const INT_STATUS_CLASS = {
+  'Pending':'b-gray','In Progress':'b-blue','With Architect':'b-a',
+  'With Engineer':'b-a','With Owner':'b-a','Submitted':'b-purple','Resolved':'b-g'
+};
+
+function fmtDate(d) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' ' +
+         dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function renderPropBar(activeProp) {
+  const bar = document.getElementById('propBar');
+  bar.innerHTML = PROPS.map(p => {
+    const pctColor = p.pct === 0 ? 'r' : p.pct < 50 ? 'a' : 'g';
+    const pctBarColor = p.pct === 0 ? '#A32D2D' : p.pct < 50 ? '#854F0B' : '#3B6D11';
+    const isActive = p.key === activeProp;
+    return `<div class="psb-card${isActive?' active':''}" onclick="switchProp('${p.key}')">
+      <div class="psb-cycle"><span class="badge ${p.cycleClass}" style="font-size:9px">${p.cycle}</span></div>
+      <div class="psb-addr">${p.addr}</div>
+      <div class="psb-permit">${p.permit}</div>
+      ${p.total > 0 ? `
+        <div class="psb-open ${pctColor}">${p.open}</div>
+        <div class="psb-label">open comments</div>
+        <div class="psb-bar" style="margin-top:6px"><div class="psb-bar-fill" style="width:${p.pct}%;background:${pctBarColor}"></div></div>
+      ` : `<div class="psb-open" style="color:#bbb;font-size:14px;font-weight:500;margin-top:4px">No permit yet</div>`}
+    </div>`;
+  }).join('');
+}
+
+async function renderPanel(propKey) {
+  const panelEl = document.getElementById('panel-' + propKey);
+  const prop = PROPS.find(p => p.key === propKey);
+  const discs = DISCIPLINES[propKey] || [];
+
+  // Header
+  let html = `
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">${prop.addr}</div>
+        <div class="panel-meta">${prop.permit} · Workflow: ${prop.workflow} · ${prop.note}</div>
+      </div>
+      <span class="badge ${prop.cycleClass}">${prop.cycle}</span>
+    </div>
+    <div class="general-section" id="gen_${propKey}">
+      <div class="general-header" onclick="toggleGeneral('${propKey}')">
+        <div class="general-header-left">
+          <span class="general-chevron" id="genchev_${propKey}">▶</span>
+          <span class="general-header-title">General — notes, tasks & dates</span>
+          <span class="general-header-meta" id="gen_meta_${propKey}">click to expand</span>
+        </div>
+      </div>
+      <div class="general-body" id="genbody_${propKey}">
+        <div class="general-tabs">
+          <button class="gtab active" onclick="switchGTab('${propKey}','notes',this)">Notes</button>
+          <button class="gtab" onclick="switchGTab('${propKey}','tasks',this)">Tasks</button>
+          <button class="gtab" onclick="switchGTab('${propKey}','dates',this)">Key dates</button>
+        </div>
+
+        <!-- Notes -->
+        <div class="gtab-panel active" id="gtab_${propKey}_notes">
+          <textarea class="notes-area" id="gen_notes_${propKey}" placeholder="General notes for this property — next steps, context, decisions, open questions..."></textarea>
+          <div class="notes-save-row">
+            <span class="notes-last-saved" id="gen_notes_ts_${propKey}">Not saved yet</span>
+            <div>
+              <span class="gsave-indicator" id="gen_notes_ind_${propKey}">✓ Saved</span>
+              <button class="notes-save-btn" onclick="saveGenNotes('${propKey}')">Save notes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="gtab-panel" id="gtab_${propKey}_tasks">
+          <div class="task-list" id="gen_tasklist_${propKey}">
+            <div class="tasks-empty">No tasks yet — add one below.</div>
+          </div>
+          <div class="add-task-row">
+            <input class="add-task-input" id="new_task_text_${propKey}" placeholder="Task description..." onkeydown="if(event.key==='Enter') addTask('${propKey}')"/>
+            <input class="add-task-assignee" id="new_task_ass_${propKey}" placeholder="Assigned to"/>
+            <input class="add-task-due" id="new_task_due_${propKey}" type="date" title="Due date"/>
+            <button class="add-task-btn" onclick="addTask('${propKey}')">+ Add task</button>
+          </div>
+        </div>
+
+        <!-- Key dates -->
+        <div class="gtab-panel" id="gtab_${propKey}_dates">
+          <div class="dates-list" id="gen_datelist_${propKey}">
+            <div class="dates-empty">No dates added yet.</div>
+          </div>
+          <div class="add-date-row">
+            <input class="add-date-label" id="new_date_label_${propKey}" placeholder="e.g. Resubmittal deadline, BBL meeting..." onkeydown="if(event.key==='Enter') addDate('${propKey}')"/>
+            <input class="add-date-input" id="new_date_val_${propKey}" type="date"/>
+            <button class="add-date-btn" onclick="addDate('${propKey}')">+ Add date</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="disc-block">
+      <div class="disc-header-row">
+        <span>Discipline · Reviewer</span>
+        <span style="text-align:center">City status</span>
+        <span style="text-align:center">Our status</span>
+        <span class="dh-c">Total</span>
+        <span class="dh-c">Open</span>
+        <span class="dh-c">Info</span>
+        <span></span>
+      </div>`;
+
+  for (let di = 0; di < discs.length; di++) {
+    const d = discs[di];
+    const cityClass = CITY_STATUS_BG[d.cityStatus] || 'b-gray';
+
+    // Compute our status summary
+    let ourLabel = '—', ourClass = 'b-gray';
+    if (d.comments.length > 0) {
+      let counts = {};
+      for (const c of d.comments) {
+        const data = await getCommentData(propKey, d.code, c.ref);
+        counts[data.status] = (counts[data.status] || 0) + 1;
+      }
+      const res = counts['Resolved'] || 0;
+      const sub = counts['Submitted'] || 0;
+      const inp = counts['In Progress'] || 0;
+      const withT = (counts['With Architect']||0)+(counts['With Engineer']||0)+(counts['With Owner']||0);
+      if (res === d.comments.length) { ourLabel = 'All resolved'; ourClass = 'b-g'; }
+      else if (sub > 0) { ourLabel = `${sub} submitted`; ourClass = 'b-purple'; }
+      else if (withT > 0) { ourLabel = `${withT} assigned`; ourClass = 'b-a'; }
+      else if (inp > 0) { ourLabel = `${inp} in progress`; ourClass = 'b-blue'; }
+      else { ourLabel = 'Not started'; ourClass = 'b-gray'; }
+    }
+
+    html += `<div class="disc-row" id="discrow_${propKey}_${di}" onclick="toggleDisc('${propKey}',${di})">
+      <div><div class="dname">(${d.code}) ${d.name}</div><div class="drev">${d.reviewer}</div></div>
+      <div style="text-align:center"><span class="badge ${cityClass}">${d.cityStatus}</span></div>
+      <div style="text-align:center"><span class="badge ${ourClass}" id="our_${propKey}_${di}">${ourLabel}</span></div>
+      <div class="dc">${d.total || '—'}</div>
+      <div class="dc ${d.cityStatus==='APPROVED'?'ok':'hot'}">${d.cityStatus==='APPROVED'?'✓':(d.open||'—')}</div>
+      <div class="dc">${d.info||'—'}</div>
+      <div class="chevron" id="chev_${propKey}_${di}">▶</div>
+    </div>
+    <div class="drawer" id="drawer_${propKey}_${di}">
+      <div class="drawer-inner">
+        <div class="drawer-meta">iBuild comments — ${d.name} (${d.comments.length} comments) · click a comment to update internal tracking</div>
+        ${d.comments.length === 0
+          ? `<div style="font-size:12px;color:#bbb;font-style:italic">No open comments — discipline ${d.cityStatus.toLowerCase()}.</div>`
+          : d.comments.map(c => `
+          <div class="cc" id="cc_${propKey}_${d.code}_${c.ref}">
+            <div class="cc-top" onclick="toggleComment('${propKey}','${d.code}',${c.ref},${di})">
+              <span class="cc-ref">REF #${c.ref}</span>
+              <span class="cc-body">${c.text}</span>
+              <div class="cc-badges">
+                <span class="badge ${CITY_STATUS_CLASS[c.cs]||'b-gray'}" style="font-size:9.5px">${c.cs}</span>
+                <span class="badge b-gray" id="ibadge_${propKey}_${d.code}_${c.ref}" style="font-size:9.5px">Pending</span>
+              </div>
+            </div>
+            <div class="cc-internal" id="int_${propKey}_${d.code}_${c.ref}">
+              <div class="int-grid">
+                <div>
+                  <div class="fl">Assigned to</div>
+                  <input class="fi" id="ass_${propKey}_${d.code}_${c.ref}" placeholder="Name or team" />
+                </div>
+                <div>
+                  <div class="fl">Our status</div>
+                  <select class="fs" id="sta_${propKey}_${d.code}_${c.ref}">
+                    ${INT_STATUS_OPTS.map(s=>`<option value="${s}">${s}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <div class="fl">Notes</div>
+                  <input class="fi" id="not_${propKey}_${d.code}_${c.ref}" placeholder="Next step, deadline, context..." />
+                </div>
+              </div>
+              <button class="save-btn" onclick="saveComment('${propKey}','${d.code}',${c.ref},${di})">Save</button>
+              <span class="saving-spinner" id="spin_${propKey}_${d.code}_${c.ref}">Saving...</span>
+              <div class="history" id="hist_${propKey}_${d.code}_${c.ref}">
+                <div class="history-title">History</div>
+                <div class="history-empty">No history yet.</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  html += `</div>`;
+
+  // Alerts
+  if (prop.alerts.length > 0) {
+    html += `<div class="alerts-block" style="border-radius:0 0 12px 12px">`;
+    prop.alerts.forEach(a => {
+      html += `<div class="alert-item">
+        <span class="apill ap-${a.level}">${a.level==='r'?'URGENT':'NOTE'}</span>
+        <div class="atext"><strong>${a.title}</strong><span>${a.text}</span></div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div style="border-radius:0 0 12px 12px;border:0.5px solid #E0E0D8;border-top:none;height:6px;background:#fff"></div>`;
+  }
+
+  panelEl.innerHTML = html;
+
+  // Now populate saved data into inputs and badges
+  for (const d of discs) {
+    for (const c of d.comments) {
+      const data = await getCommentData(propKey, d.code, c.ref);
+      populateComment(propKey, d.code, c.ref, data);
+    }
+  }
+}
+
+function populateComment(prop, code, ref, data) {
+  const assEl = document.getElementById(`ass_${prop}_${code}_${ref}`);
+  const staEl = document.getElementById(`sta_${prop}_${code}_${ref}`);
+  const notEl = document.getElementById(`not_${prop}_${code}_${ref}`);
+  const ibEl  = document.getElementById(`ibadge_${prop}_${code}_${ref}`);
+  if (assEl) assEl.value = data.assignee || '';
+  if (staEl) staEl.value = data.status || 'Pending';
+  if (notEl) notEl.value = data.notes || '';
+  if (ibEl)  { ibEl.className = 'badge ' + (INT_STATUS_CLASS[data.status]||'b-gray'); ibEl.textContent = data.status||'Pending'; }
+  renderHistory(prop, code, ref, data.history || []);
+}
+
+function renderHistory(prop, code, ref, history) {
+  const el = document.getElementById(`hist_${prop}_${code}_${ref}`);
+  if (!el) return;
+  if (!history || history.length === 0) {
+    el.innerHTML = `<div class="history-title">History</div><div class="history-empty">No history yet.</div>`;
+    return;
+  }
+  let h = `<div class="history-title">History</div>`;
+  history.slice().reverse().forEach(entry => {
+    h += `<div class="history-entry">
+      <span class="history-ts">${fmtDate(entry.ts)}</span>
+      <span><strong>${entry.assignee||'—'}</strong> · <span class="badge ${INT_STATUS_CLASS[entry.status]||'b-gray'}" style="font-size:9px">${entry.status}</span>${entry.notes ? ' · ' + entry.notes : ''}</span>
+    </div>`;
+  });
+  el.innerHTML = h;
+}
+
+function toggleDisc(prop, di) {
+  const drawer = document.getElementById(`drawer_${prop}_${di}`);
+  const chev   = document.getElementById(`chev_${prop}_${di}`);
+  const row    = document.getElementById(`discrow_${prop}_${di}`);
+  const open   = drawer.classList.contains('open');
+  drawer.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+  row.classList.toggle('is-open', !open);
+}
+
+function toggleComment(prop, code, ref, di) {
+  const el = document.getElementById(`int_${prop}_${code}_${ref}`);
+  el.classList.toggle('open');
+}
+
+async function saveComment(prop, code, ref, di) {
+  const ass  = document.getElementById(`ass_${prop}_${code}_${ref}`).value.trim();
+  const sta  = document.getElementById(`sta_${prop}_${code}_${ref}`).value;
+  const not  = document.getElementById(`not_${prop}_${code}_${ref}`).value.trim();
+  const spin = document.getElementById(`spin_${prop}_${code}_${ref}`);
+
+  spin.style.display = 'inline';
+  spin.textContent = 'Saving...';
+
+  const existing = await getCommentData(prop, code, ref);
+  const history  = existing.history || [];
+  history.push({ ts: new Date().toISOString(), assignee: ass, status: sta, notes: not });
+
+  const newData = { assignee: ass, status: sta, notes: not, history };
+  const ok = await saveCommentData(prop, code, ref, newData);
+
+  spin.style.display = 'inline';
+  spin.textContent = ok ? '✓ Saved' : '⚠ Error saving';
+  spin.style.color  = ok ? '#3B6D11' : '#A32D2D';
+  setTimeout(() => { spin.style.display = 'none'; }, 2000);
+
+  // Update badge
+  const ibEl = document.getElementById(`ibadge_${prop}_${code}_${ref}`);
+  if (ibEl) { ibEl.className = 'badge ' + (INT_STATUS_CLASS[sta]||'b-gray'); ibEl.textContent = sta; }
+
+  // Update history
+  renderHistory(prop, code, ref, history);
+
+  // Update disc-level badge
+  await refreshDiscBadge(prop, di);
+
+  // Sync indicator
+  setSynced();
+}
+
+async function refreshDiscBadge(prop, di) {
+  const disc = DISCIPLINES[prop][di];
+  let counts = {};
+  for (const c of disc.comments) {
+    const d = await getCommentData(prop, disc.code, c.ref);
+    counts[d.status] = (counts[d.status]||0)+1;
+  }
+  const el = document.getElementById(`our_${prop}_${di}`);
+  if (!el) return;
+  let label='Not started', cls='b-gray';
+  const n = disc.comments.length;
+  if (n > 0) {
+    const res=counts['Resolved']||0, sub=counts['Submitted']||0, inp=counts['In Progress']||0;
+    const withT=(counts['With Architect']||0)+(counts['With Engineer']||0)+(counts['With Owner']||0);
+    if (res===n){label='All resolved';cls='b-g';}
+    else if(sub>0){label=`${sub} submitted`;cls='b-purple';}
+    else if(withT>0){label=`${withT} assigned`;cls='b-a';}
+    else if(inp>0){label=`${inp} in progress`;cls='b-blue';}
+  } else { label='—'; }
+  el.className='badge '+cls; el.textContent=label;
+}
+
+// ── GENERAL SECTION ───────────────────────────────────────────────────────
+function toggleGeneral(prop) {
+  const body = document.getElementById('genbody_' + prop);
+  const chev = document.getElementById('genchev_' + prop);
+  const meta = document.getElementById('gen_meta_' + prop);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+  if (!open) { meta.textContent = ''; loadGeneral(prop); }
+  else { updateGenMeta(prop); }
+}
+
+function switchGTab(prop, tab, btn) {
+  ['notes','tasks','dates'].forEach(t => {
+    document.getElementById(`gtab_${prop}_${t}`)?.classList.remove('active');
+  });
+  document.querySelectorAll(`#genbody_${prop} .gtab`).forEach(b => b.classList.remove('active'));
+  document.getElementById(`gtab_${prop}_${tab}`)?.classList.add('active');
+  btn.classList.add('active');
+}
+
+async function loadGeneral(prop) {
+  const data = await cloudGet(`gen_${prop}`) || { notes:'', notesTs:null, tasks:[], dates:[] };
+  // Notes
+  const notesEl = document.getElementById(`gen_notes_${prop}`);
+  if (notesEl) notesEl.value = data.notes || '';
+  const tsEl = document.getElementById(`gen_notes_ts_${prop}`);
+  if (tsEl) tsEl.textContent = data.notesTs ? 'Last saved: ' + fmtDate(data.notesTs) : 'Not saved yet';
+  // Tasks
+  renderTasks(prop, data.tasks || []);
+  // Dates
+  renderDates(prop, data.dates || []);
+  updateGenMeta(prop);
+}
+
+async function getGenData(prop) {
+  return await cloudGet(`gen_${prop}`) || { notes:'', notesTs:null, tasks:[], dates:[] };
+}
+async function setGenData(prop, data) {
+  return await cloudSet(`gen_${prop}`, data);
+}
+
+async function saveGenNotes(prop) {
+  setSyncing();
+  const data = await getGenData(prop);
+  data.notes = document.getElementById(`gen_notes_${prop}`).value;
+  data.notesTs = new Date().toISOString();
+  await setGenData(prop, data);
+  const tsEl = document.getElementById(`gen_notes_ts_${prop}`);
+  if (tsEl) tsEl.textContent = 'Last saved: ' + fmtDate(data.notesTs);
+  const ind = document.getElementById(`gen_notes_ind_${prop}`);
+  if (ind) { ind.style.display='inline'; setTimeout(()=>ind.style.display='none', 2000); }
+  setSynced();
+  updateGenMeta(prop);
+}
+
+async function addTask(prop) {
+  const textEl = document.getElementById(`new_task_text_${prop}`);
+  const assEl  = document.getElementById(`new_task_ass_${prop}`);
+  const dueEl  = document.getElementById(`new_task_due_${prop}`);
+  const text = textEl.value.trim();
+  if (!text) return;
+  setSyncing();
+  const data = await getGenData(prop);
+  data.tasks = data.tasks || [];
+  data.tasks.push({ id: Date.now(), text, assignee: assEl.value.trim(), due: dueEl.value, done: false, createdAt: new Date().toISOString() });
+  await setGenData(prop, data);
+  textEl.value = ''; assEl.value = ''; dueEl.value = '';
+  renderTasks(prop, data.tasks);
+  setSynced();
+  updateGenMeta(prop);
+}
+
+async function toggleTask(prop, id) {
+  const data = await getGenData(prop);
+  const task = data.tasks.find(t => t.id === id);
+  if (task) task.done = !task.done;
+  await setGenData(prop, data);
+  renderTasks(prop, data.tasks);
+  updateGenMeta(prop);
+}
+
+async function deleteTask(prop, id) {
+  const data = await getGenData(prop);
+  data.tasks = (data.tasks || []).filter(t => t.id !== id);
+  await setGenData(prop, data);
+  renderTasks(prop, data.tasks);
+  updateGenMeta(prop);
+}
+
+function renderTasks(prop, tasks) {
+  const el = document.getElementById(`gen_tasklist_${prop}`);
+  if (!el) return;
+  if (!tasks || tasks.length === 0) {
+    el.innerHTML = '<div class="tasks-empty">No tasks yet — add one below.</div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = tasks.map(t => {
+    let dueHtml = '';
+    if (t.due) {
+      const d = new Date(t.due + 'T00:00:00');
+      const diff = Math.ceil((d - today) / 86400000);
+      const cls = t.done ? 'ok' : diff < 0 ? 'overdue' : diff <= 7 ? 'soon' : 'upcoming';
+      const label = t.done ? 'Done' : diff < 0 ? `${Math.abs(diff)}d overdue` : diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      dueHtml = `<span class="task-due ${cls}">${label}</span>`;
+    }
+    return `<div class="task-item">
+      <input type="checkbox" class="task-cb" ${t.done?'checked':''} onchange="toggleTask('${prop}',${t.id})"/>
+      <div class="task-content">
+        <span class="task-text${t.done?' done':''}">${t.text}</span>
+        <div class="task-meta">
+          ${t.assignee ? `<span class="task-assignee">→ ${t.assignee}</span>` : ''}
+          ${dueHtml}
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask('${prop}',${t.id})" title="Delete">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function addDate(prop) {
+  const labelEl = document.getElementById(`new_date_label_${prop}`);
+  const valEl   = document.getElementById(`new_date_val_${prop}`);
+  const label = labelEl.value.trim();
+  const val   = valEl.value;
+  if (!label || !val) return;
+  setSyncing();
+  const data = await getGenData(prop);
+  data.dates = data.dates || [];
+  data.dates.push({ id: Date.now(), label, val });
+  data.dates.sort((a,b) => a.val.localeCompare(b.val));
+  await setGenData(prop, data);
+  labelEl.value = ''; valEl.value = '';
+  renderDates(prop, data.dates);
+  setSynced();
+  updateGenMeta(prop);
+}
+
+async function deleteDate(prop, id) {
+  const data = await getGenData(prop);
+  data.dates = (data.dates || []).filter(d => d.id !== id);
+  await setGenData(prop, data);
+  renderDates(prop, data.dates);
+  updateGenMeta(prop);
+}
+
+function renderDates(prop, dates) {
+  const el = document.getElementById(`gen_datelist_${prop}`);
+  if (!el) return;
+  if (!dates || dates.length === 0) {
+    el.innerHTML = '<div class="dates-empty">No dates added yet.</div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = dates.map(d => {
+    const dt = new Date(d.val + 'T00:00:00');
+    const diff = Math.ceil((dt - today) / 86400000);
+    const cls  = diff < 0 ? 'past' : diff <= 7 ? 'soon' : 'upcoming';
+    const badge = diff < 0 ? `${Math.abs(diff)}d ago` : diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    return `<div class="date-item">
+      <span class="date-badge ${cls}">${badge}</span>
+      <div class="date-content">
+        <div class="date-label">${d.label}</div>
+        <div class="date-val">${dt.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})}</div>
+      </div>
+      <button class="date-del" onclick="deleteDate('${prop}',${d.id})" title="Delete">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function updateGenMeta(prop) {
+  const meta = document.getElementById(`gen_meta_${prop}`);
+  if (!meta) return;
+  const body = document.getElementById(`genbody_${prop}`);
+  if (body.classList.contains('open')) { meta.textContent = ''; return; }
+  try {
+    const data = await getGenData(prop);
+    const parts = [];
+    const open = (data.tasks||[]).filter(t=>!t.done).length;
+    const dates = (data.dates||[]).length;
+    const hasNotes = (data.notes||'').trim().length > 0;
+    if (open) parts.push(`${open} task${open>1?'s':''} open`);
+    if (dates) parts.push(`${dates} date${dates>1?'s':''}`);
+    if (hasNotes) parts.push('notes');
+    meta.textContent = parts.length ? parts.join(' · ') : 'click to expand';
+  } catch(e) { meta.textContent = 'click to expand'; }
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+let activeProp = '156';
+let rendered = {};
+
+async function switchProp(key) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  activeProp = key;
+  renderPropBar(key);
+  const panelEl = document.getElementById('panel-' + key);
+  panelEl.classList.add('active');
+  if (!rendered[key] && DISCIPLINES[key]) {
+    setSyncing();
+    await renderPanel(key);
+    rendered[key] = true;
+    setSynced();
+  }
+}
+
+// ── SYNC STATUS ───────────────────────────────────────────────────────────
+function setSyncing() {
+  document.getElementById('syncDot').className = 'sync-dot loading';
+  document.getElementById('syncLabel').textContent = 'Syncing...';
+}
+function setSynced() {
+  document.getElementById('syncDot').className = 'sync-dot';
+  document.getElementById('syncLabel').textContent = 'All changes saved';
+}
+function setError() {
+  document.getElementById('syncDot').className = 'sync-dot error';
+  document.getElementById('syncLabel').textContent = 'Connection error';
+}
+
+// ── SEED: David's update 09/06/2026 ──────────────────────────────────────
+async function seedDavidUpdate() {
+  const SEED_KEY = 'ps_permit_seed_david_20260609';
+  try {
+    const already = await window.storage.get(SEED_KEY, true);
+    if (already) return; // already seeded
+  } catch(e) {}
+
+  const today    = new Date('2026-06-09').toISOString();
+  const tmrw     = '2026-06-10';
+  const eow      = '2026-06-15';
+  const noteText = (extra='') => `[09/06/2026 — David, arquitecto]\nEntrega hoy Civil, MEP y Estructural (tenían los últimos cambios de Pablo pendientes). Resubmittal de los tres edificios (156, 150, 160) programado para mañana 10/06/2026.${extra}`;
+
+  const updates = {
+    '156': { notes: noteText(), notesTs: today,
+      tasks:[ {id:1609156_1,text:'Confirmar recepción Civil + MEP + Estructural de David',assignee:'Equipo',due:'2026-06-09',done:false,createdAt:today},
+              {id:1609156_2,text:'Resubmittal a la Ciudad — 156, 150 y 160 NE 77 St',assignee:'Equipo',due:tmrw,done:false,createdAt:today} ],
+      dates:[ {id:1609156_3,label:'Resubmittal 156 · 150 · 160 NE 77 St',val:tmrw} ] },
+    '150': { notes: noteText(), notesTs: today,
+      tasks:[ {id:1609150_1,text:'Confirmar recepción Civil + MEP + Estructural de David',assignee:'Equipo',due:'2026-06-09',done:false,createdAt:today},
+              {id:1609150_2,text:'Resubmittal a la Ciudad — 156, 150 y 160 NE 77 St',assignee:'Equipo',due:tmrw,done:false,createdAt:today} ],
+      dates:[ {id:1609150_3,label:'Resubmittal 156 · 150 · 160 NE 77 St',val:tmrw} ] },
+    '160': { notes: noteText(), notesTs: today,
+      tasks:[ {id:1609160_1,text:'Confirmar recepción Civil + MEP + Estructural de David',assignee:'Equipo',due:'2026-06-09',done:false,createdAt:today},
+              {id:1609160_2,text:'Resubmittal a la Ciudad — 156, 150 y 160 NE 77 St',assignee:'Equipo',due:tmrw,done:false,createdAt:today} ],
+      dates:[ {id:1609160_3,label:'Resubmittal 156 · 150 · 160 NE 77 St',val:tmrw} ] },
+    '167': { notesTs: today,
+      notes: `[09/06/2026 — David, arquitecto]\nFinalizando base arquitectónica este fin de semana para mandar a Pablo y Luis. De ahí va a los ingenieros.\n\n⚠️ REVISIÓN REQUERIDA antes del envío a ingenieros — para evitar change orders, tiempo perdido y discrepancias entre planos.`,
+      tasks:[ {id:1609167_1,text:'⚠️ CRÍTICO: Revisar base arquitectónica antes de envío a ingenieros — evitar change orders y discrepancias entre planos',assignee:'Bruno + Pablo',due:eow,done:false,createdAt:today} ],
+      dates:[ {id:1609167_2,label:'David manda base a Pablo y Luis',val:'2026-06-14'},
+              {id:1609167_3,label:'⚠️ Deadline revisión base antes de ingenieros',val:eow} ] },
+  };
+
+  for (const [prop, data] of Object.entries(updates)) {
+    await cloudSet(`gen_${prop}`, data);
+  }
+
+  // Mark as seeded
+  try { await window.storage.set(SEED_KEY, 'done', true); } catch(e) {}
+}
+
+// ── SEED: Daily update — notas de hoy (cargado por Sole) ────────────────
+async function seedDailyUpdate() {
+  const SEED_KEY = 'ps_permit_seed_daily_update_v1';
+  try {
+    const already = await window.storage.get(SEED_KEY, true);
+    if (already) return; // already seeded
+  } catch(e) {}
+
+  const ts = new Date().toISOString();
+
+  const updates = {
+    '3770': {
+      notes: 'Activa. Todo ok, problema el aguacate del vecino porque está inclinado y tiene raíces de ese lado. Opciones: rediseñar la casa completa (muy complejo) o cortar el árbol pero hay que tener la carta del vecino (no se puede podar porque hay que podar más de un 25% y la ciudad no lo permite).',
+      notesTs: ts,
+      tasks: [
+        { id: '3770_t1', text: 'Definir camino: rediseñar la casa completa vs. cortar el aguacate del vecino', assignee: '', due: null, done: false, createdAt: ts },
+        { id: '3770_t2', text: 'Conseguir carta del vecino autorizando la tala (no se puede podar >25%, la Ciudad no lo permite)', assignee: '', due: null, done: false, createdAt: ts },
+      ],
+    },
+    '3801': {
+      notes: 'Salieron comentarios de la Ciudad. David va a entregarlos de acá a dos semanas.',
+      notesTs: ts,
+      tasks: [
+        { id: '3801_t1', text: 'Esperar entrega de comentarios por parte de David (~2 semanas)', assignee: 'David', due: null, done: false, createdAt: ts },
+      ],
+    },
+    '3201': {
+      notes: 'Activa. Problema: último comentario de Environmental, querían más fotos del árbol 23 en el reporte. Se entregaron los docs esta semana y hay que esperar a ver si lo aprueban.\nMASTER: Dedication pendiente (owner: Bruno).',
+      notesTs: ts,
+      tasks: [
+        { id: '3201_t1', text: 'Esperar aprobación de Environmental — fotos del árbol #23 ya entregadas esta semana', assignee: '', due: null, done: false, createdAt: ts },
+        { id: '3201_t2', text: 'Resolver Dedication', assignee: 'Bruno', due: null, done: false, createdAt: ts },
+      ],
+    },
+    'demo': {
+      notes: 'DEMO: Tree Protection Bond pendiente (owner: Bruno).',
+      notesTs: ts,
+      tasks: [
+        { id: 'demo_t1', text: 'Resolver Tree Protection Bond', assignee: 'Bruno', due: null, done: false, createdAt: ts },
+      ],
+    },
+  };
+
+  for (const [prop, newData] of Object.entries(updates)) {
+    const existing = await cloudGet(`gen_${prop}`) || { notes:'', notesTs:null, tasks:[], dates:[] };
+    const merged = {
+      notes: existing.notes ? existing.notes + '\n\n[Update ' + new Date().toLocaleDateString('es-AR') + ']\n' + newData.notes : newData.notes,
+      notesTs: newData.notesTs,
+      tasks: [...(existing.tasks||[]), ...newData.tasks],
+      dates: existing.dates || [],
+    };
+    await cloudSet(`gen_${prop}`, merged);
+  }
+
+  try { await window.storage.set(SEED_KEY, 'done', true); } catch(e) {}
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+(async () => {
+  renderPropBar('3770');
+  setSyncing();
+  try {
+    await seedDavidUpdate();
+    await seedDailyUpdate();
+    await renderPanel('3770');
+    rendered['3770'] = true;
+    setSynced();
+  } catch(e) {
+    setError();
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
+<!-- PDF EXPORT ADDITIONS -->
+<style>
+/* ── Print / PDF styles ── */
+#pdfBtn{
+  position:fixed;bottom:24px;right:24px;
+  background:#1B3A6B;color:#fff;border:none;
+  padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;
+  box-shadow:0 4px 14px rgba(27,58,107,.35);z-index:999;transition:background .15s
+}
+#pdfBtn:hover{background:#143059}
+#pdfBtn svg{flex-shrink:0}
+
+/* PDF modal overlay */
+#pdfModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;
+  align-items:center;justify-content:center}
+#pdfModal.open{display:flex}
+.pdf-dialog{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:90vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.pdf-dialog h3{font-size:15px;font-weight:600;color:#1B3A6B;margin-bottom:6px}
+.pdf-dialog p{font-size:12.5px;color:#666;margin-bottom:16px;line-height:1.5}
+.pdf-options{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.pdf-opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:0.5px solid #E0E0D8;
+  border-radius:8px;cursor:pointer;transition:border .15s}
+.pdf-opt:hover{border-color:#1B3A6B}
+.pdf-opt input{margin-top:2px;flex-shrink:0;accent-color:#1B3A6B}
+.pdf-opt-body strong{font-size:12.5px;font-weight:600;color:#1a1a1a;display:block;margin-bottom:2px}
+.pdf-opt-body span{font-size:11.5px;color:#888}
+.pdf-prop-checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px}
+.pdf-prop-check{display:flex;align-items:center;gap:7px;padding:7px 10px;border:0.5px solid #E0E0D8;
+  border-radius:7px;font-size:12px;cursor:pointer}
+.pdf-prop-check:hover{border-color:#1B3A6B}
+.pdf-prop-check input{accent-color:#1B3A6B}
+.pdf-label{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.pdf-actions{display:flex;gap:8px;justify-content:flex-end}
+.pdf-cancel{padding:7px 16px;background:none;border:0.5px solid #ccc;border-radius:7px;
+  font-size:12.5px;cursor:pointer;font-family:inherit;color:#555}
+.pdf-go{padding:7px 18px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;
+  font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit}
+.pdf-go:hover{background:#143059}
+
+/* ── Print document ── */
+#printDoc{display:none}
+
+@media print{
+  body > *:not(#printDoc){display:none!important}
+  #printDoc{display:block!important}
+  #pdfBtn,#pdfModal{display:none!important}
+  @page{margin:15mm 12mm;size:A4}
+}
+
+#printDoc{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  font-size:11px;color:#1a1a1a;line-height:1.4}
+.pd-cover{padding:20px 0 16px;border-bottom:2px solid #1B3A6B;margin-bottom:20px}
+.pd-cover-brand{font-size:20px;font-weight:700;color:#1B3A6B;margin-bottom:3px}
+.pd-cover-sub{font-size:12px;color:#666}
+.pd-cover-meta{font-size:10.5px;color:#999;margin-top:6px}
+.pd-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.pd-kpi{background:#F5F7FA;border-radius:7px;padding:9px 11px}
+.pd-kpi-l{font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.pd-kpi-v{font-size:18px;font-weight:700}
+.pd-kpi-v.r{color:#A32D2D}.pd-kpi-v.a{color:#854F0B}.pd-kpi-v.g{color:#3B6D11}
+.pd-prop-section{margin-bottom:24px;break-inside:avoid-page}
+.pd-prop-header{background:#1B3A6B;color:#fff;padding:8px 12px;border-radius:7px 7px 0 0;
+  display:flex;justify-content:space-between;align-items:center}
+.pd-prop-title{font-size:13px;font-weight:600}
+.pd-prop-meta{font-size:10px;opacity:.75}
+.pd-prop-stats{display:grid;grid-template-columns:repeat(5,1fr);background:#F0F4FA;
+  border:0.5px solid #D8E4F5;border-top:none;padding:8px 10px;gap:6px}
+.pd-stat{text-align:center}
+.pd-stat-v{font-size:14px;font-weight:700}
+.pd-stat-v.r{color:#A32D2D}.pd-stat-v.a{color:#854F0B}.pd-stat-v.g{color:#3B6D11}
+.pd-stat-l{font-size:9px;color:#888;text-transform:uppercase}
+.pd-bar-wrap{height:4px;background:#E8E8E4;border-radius:999px;margin-top:4px}
+.pd-bar-fill{height:4px;border-radius:999px}
+table.pd-disc{width:100%;border-collapse:collapse;border:0.5px solid #E0E0D8;border-top:none}
+table.pd-disc th{padding:5px 8px;background:#F5F7FA;font-size:9.5px;font-weight:600;
+  color:#1B3A6B;text-align:left;border-bottom:0.5px solid #D8E4F5;text-transform:uppercase;letter-spacing:.03em}
+table.pd-disc th.c{text-align:center}
+table.pd-disc td{padding:6px 8px;font-size:10.5px;border-bottom:0.5px solid #F0F0EC;vertical-align:top}
+table.pd-disc tr:last-child td{border-bottom:none}
+table.pd-disc td.c{text-align:center;color:#888}
+table.pd-disc td.hot{text-align:center;color:#A32D2D;font-weight:600}
+table.pd-disc td.ok{text-align:center;color:#3B6D11}
+.pd-badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:600}
+.pd-b-r{background:#FCEBEB;color:#A32D2D}
+.pd-b-a{background:#FAEEDA;color:#854F0B}
+.pd-b-g{background:#EAF3DE;color:#3B6D11}
+.pd-b-gray{background:#F1EFE8;color:#5F5E5A}
+.pd-b-blue{background:#E6F1FB;color:#0C447C}
+.pd-b-purple{background:#EEEDFE;color:#3C3489}
+.pd-comments-section{margin-top:0;break-inside:avoid}
+.pd-disc-group{margin-bottom:12px;break-inside:avoid}
+.pd-disc-group-title{font-size:10px;font-weight:700;color:#1B3A6B;background:#EEF3FA;
+  padding:4px 8px;border-radius:4px 4px 0 0;border:0.5px solid #D8E4F5;text-transform:uppercase;letter-spacing:.04em}
+.pd-comment-row{display:grid;grid-template-columns:48px 1fr 90px 100px 110px;gap:6px;
+  padding:5px 8px;border:0.5px solid #E8E8E4;border-top:none;align-items:start;background:#fff}
+.pd-comment-row:nth-child(even){background:#FAFAFA}
+.pd-comment-ref{font-size:9px;font-weight:700;color:#1B3A6B;background:#E6F1FB;
+  padding:1px 5px;border-radius:999px;white-space:nowrap;margin-top:1px}
+.pd-comment-text{font-size:10px;color:#333;line-height:1.4}
+.pd-comment-head{display:grid;grid-template-columns:48px 1fr 90px 100px 110px;gap:6px;
+  padding:4px 8px;border:0.5px solid #D8E4F5;border-top:none;background:#F5F7FA}
+.pd-comment-head span{font-size:9px;font-weight:600;color:#6B7A99;text-transform:uppercase;letter-spacing:.04em}
+.pd-alert{display:flex;gap:8px;align-items:flex-start;padding:6px 10px;
+  border-radius:5px;margin-bottom:5px;font-size:10px}
+.pd-alert.r{background:#FCEBEB;border:0.5px solid #F8D7DA}
+.pd-alert.a{background:#FAEEDA;border:0.5px solid #F5D9B0}
+.pd-alert strong{color:#1a1a1a;font-weight:600}
+.pd-alert-pill{flex-shrink:0;padding:1px 6px;border-radius:999px;font-size:8.5px;font-weight:700;margin-top:1px}
+.pd-alert-pill.r{background:#A32D2D;color:#fff}
+.pd-alert-pill.a{background:#854F0B;color:#fff}
+.pd-alerts-title{font-size:10px;font-weight:600;color:#1B3A6B;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px}
+.pd-hist-entry{font-size:9.5px;color:#555;margin-bottom:3px}
+.pd-hist-ts{color:#AAB0C0;font-size:9px}
+.pd-page-break{break-before:page}
+.pd-footer{margin-top:24px;padding-top:8px;border-top:0.5px solid #E0E0D8;
+  font-size:9.5px;color:#bbb;display:flex;justify-content:space-between}
+</style>
+
+<!-- Floating PDF button -->
+<button id="pdfBtn" onclick="document.getElementById('pdfModal').classList.add('open')">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Export PDF
+</button>
+
+<!-- PDF config modal -->
+<div id="pdfModal">
+  <div class="pdf-dialog">
+    <h3>Export Status Report</h3>
+    <p>Select which properties and level of detail to include in the PDF report.</p>
+
+    <div class="pdf-label">Properties to include</div>
+    <div class="pdf-prop-checks">
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp156" checked> 156 NE 77 St</label>
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp150" checked> 150 NE 77 St</label>
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp160" checked> 160 NE 77 St</label>
+      <label class="pdf-prop-check"><input type="checkbox" id="pdfProp167"> 167 NE 76 St</label>
+    </div>
+
+    <div class="pdf-label">Detail level</div>
+    <div class="pdf-options">
+      <label class="pdf-opt">
+        <input type="radio" name="pdfDetail" value="summary" checked>
+        <div class="pdf-opt-body">
+          <strong>Summary — discipline overview</strong>
+          <span>One page per property. Shows all disciplines, status, and open comment counts. Best for quick sharing.</span>
+        </div>
+      </label>
+      <label class="pdf-opt">
+        <input type="radio" name="pdfDetail" value="full">
+        <div class="pdf-opt-body">
+          <strong>Full — includes all comments + internal tracking</strong>
+          <span>Every iBuild comment with assigned person, our status, and history log. Best for team reviews.</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="pdf-actions">
+      <button class="pdf-cancel" onclick="document.getElementById('pdfModal').classList.remove('open')">Cancel</button>
+      <button class="pdf-go" onclick="generatePDF()">Generate PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print document (hidden until print) -->
+<div id="printDoc"></div>
+
+<script>
+// ── PDF GENERATION ────────────────────────────────────────────────────────
+const PD_BADGE = {
+  'CORRECTIONS':'pd-b-r','PENDING ACTION':'pd-b-a','PENDING REVIEW':'pd-b-a',
+  'APPROVED':'pd-b-g','PRE-SUBMISSION':'pd-b-gray'
+};
+const PD_INT_BADGE = {
+  'Pending':'pd-b-gray','In Progress':'pd-b-blue','With Architect':'pd-b-a',
+  'With Engineer':'pd-b-a','With Owner':'pd-b-a','Submitted':'pd-b-purple','Resolved':'pd-b-g'
+};
+const PD_CITY_BADGE = {
+  'Unresolved':'pd-b-r','Resolved':'pd-b-g','Info Only':'pd-b-gray','Information':'pd-b-gray'
+};
+
+async function generatePDF() {
+  document.getElementById('pdfModal').classList.remove('open');
+
+  const detail = document.querySelector('input[name="pdfDetail"]:checked').value;
+  const propKeys = ['156','150','160','167'].filter(k =>
+    document.getElementById('pdfProp' + k)?.checked
+  );
+
+  const doc = document.getElementById('printDoc');
+  const now = new Date();
+  const nowStr = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) +
+    ' · ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  // Total open across selected props
+  const totalOpen = propKeys.reduce((s,k) => {
+    const p = PROPS.find(x=>x.key===k); return s + (p?.open||0);
+  }, 0);
+
+  let html = `
+    <div class="pd-cover">
+      <div class="pd-cover-brand">Portland Saxum</div>
+      <div class="pd-cover-sub">Permit Status Report — ${detail === 'full' ? 'Full Detail' : 'Summary'}</div>
+      <div class="pd-cover-meta">Generated: ${nowStr} &nbsp;·&nbsp; Properties: ${propKeys.length} &nbsp;·&nbsp; Total open comments: ${totalOpen}</div>
+    </div>`;
+
+  // One section per property
+  for (const propKey of propKeys) {
+    const prop = PROPS.find(p => p.key === propKey);
+    const discs = DISCIPLINES[propKey] || [];
+    const isPreSub = false;
+    const pctColor = prop.pct === 0 ? 'r' : prop.pct < 50 ? 'a' : 'g';
+    const pctBarColor = prop.pct === 0 ? '#A32D2D' : prop.pct < 50 ? '#854F0B' : '#3B6D11';
+
+    html += `<div class="pd-prop-section">
+      <div class="pd-prop-header">
+        <div class="pd-prop-title">${prop.addr} &nbsp;<span style="font-size:10px;opacity:.7">${prop.permit}</span></div>
+        <div class="pd-prop-meta">${prop.cycle} · Workflow: ${prop.workflow} · ${prop.note}</div>
+      </div>`;
+
+    if (!isPreSub) {
+      html += `<div class="pd-prop-stats">
+        <div class="pd-stat"><div class="pd-stat-v">${prop.total}</div><div class="pd-stat-l">Total</div></div>
+        <div class="pd-stat"><div class="pd-stat-v r">${prop.open}</div><div class="pd-stat-l">Open</div></div>
+        <div class="pd-stat"><div class="pd-stat-v a">${prop.info}</div><div class="pd-stat-l">Info only</div></div>
+        <div class="pd-stat"><div class="pd-stat-v g">${prop.resolved}</div><div class="pd-stat-l">Resolved</div></div>
+        <div class="pd-stat">
+          <div class="pd-stat-v ${pctColor}">${prop.pct}%</div>
+          <div class="pd-stat-l">Done</div>
+          <div class="pd-bar-wrap"><div class="pd-bar-fill" style="width:${prop.pct}%;background:${pctBarColor}"></div></div>
+        </div>
+      </div>`;
+
+      // Discipline summary table
+      html += `<table class="pd-disc">
+        <thead><tr>
+          <th>Discipline</th><th>Reviewer</th><th>City Status</th>
+          <th class="c">Total</th><th class="c">Open</th><th class="c">Info</th>
+          <th>Our Status</th>
+        </tr></thead><tbody>`;
+
+      for (const d of discs) {
+        const cityClass = PD_BADGE[d.cityStatus] || 'pd-b-gray';
+        let ourLabel='—', ourClass='pd-b-gray';
+        if (d.comments.length > 0) {
+          let counts={};
+          for (const c of d.comments) {
+            const data = await getCommentData(propKey, d.code, c.ref);
+            counts[data.status] = (counts[data.status]||0)+1;
+          }
+          const res=counts['Resolved']||0, sub=counts['Submitted']||0;
+          const inp=counts['In Progress']||0;
+          const withT=(counts['With Architect']||0)+(counts['With Engineer']||0)+(counts['With Owner']||0);
+          if(res===d.comments.length){ourLabel='All resolved';ourClass='pd-b-g';}
+          else if(sub>0){ourLabel=`${sub} submitted`;ourClass='pd-b-purple';}
+          else if(withT>0){ourLabel=`${withT} assigned`;ourClass='pd-b-a';}
+          else if(inp>0){ourLabel=`${inp} in progress`;ourClass='pd-b-blue';}
+          else{ourLabel='Not started';ourClass='pd-b-gray';}
+        }
+        html += `<tr>
+          <td><strong>(${d.code}) ${d.name}</strong></td>
+          <td style="color:#666;font-size:10px">${d.reviewer}</td>
+          <td><span class="pd-badge ${cityClass}">${d.cityStatus}</span></td>
+          <td class="c">${d.total||'—'}</td>
+          <td class="${d.cityStatus==='APPROVED'?'ok':'hot'}">${d.cityStatus==='APPROVED'?'✓':(d.open||'—')}</td>
+          <td class="c">${d.info||'—'}</td>
+          <td><span class="pd-badge ${ourClass}">${ourLabel}</span></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+
+      // Alerts
+      if (prop.alerts.length > 0) {
+        html += `<div class="pd-alerts-title">Key actions required</div>`;
+        prop.alerts.forEach(a => {
+          html += `<div class="pd-alert ${a.level}">
+            <span class="pd-alert-pill ${a.level}">${a.level==='r'?'URGENT':'NOTE'}</span>
+            <div><strong>${a.title}</strong> — ${a.text}</div>
+          </div>`;
+        });
+      }
+
+      // Full detail: comment-by-comment breakdown
+      if (detail === 'full') {
+        html += `<div class="pd-comments-section pd-page-break">
+          <div style="font-size:11px;font-weight:600;color:#1B3A6B;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.04em">
+            ${prop.addr} — Comment Detail
+          </div>`;
+
+        for (const d of discs) {
+          if (d.comments.length === 0) continue;
+          html += `<div class="pd-disc-group">
+            <div class="pd-disc-group-title">(${d.code}) ${d.name} — ${d.reviewer}</div>
+            <div class="pd-comment-head">
+              <span>Ref</span><span>iBuild Comment</span>
+              <span>City</span><span>Assigned to</span><span>Our status · Notes</span>
+            </div>`;
+
+          for (const c of d.comments) {
+            const data = await getCommentData(propKey, d.code, c.ref);
+            const cityClass = PD_CITY_BADGE[c.cs]||'pd-b-gray';
+            const intClass  = PD_INT_BADGE[data.status]||'pd-b-gray';
+            const lastHist  = data.history?.length > 0 ? data.history[data.history.length-1] : null;
+            html += `<div class="pd-comment-row">
+              <div><span class="pd-comment-ref">REF #${c.ref}</span></div>
+              <div class="pd-comment-text">${c.text}</div>
+              <div><span class="pd-badge ${cityClass}">${c.cs}</span></div>
+              <div style="font-size:10px;color:#444">${data.assignee||'—'}</div>
+              <div>
+                <span class="pd-badge ${intClass}">${data.status}</span>
+                ${data.notes ? `<div style="font-size:9.5px;color:#666;margin-top:2px">${data.notes}</div>`:''}
+                ${lastHist ? `<div class="pd-hist-ts" style="margin-top:3px">${fmtDate(lastHist.ts)}</div>`:''}
+              </div>
+            </div>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+
+    } else {
+      // 167 pre-submission
+      html += `<div style="padding:16px;background:#F9F9F7;border:0.5px solid #E0E0D8;border-top:none;
+        font-size:11px;color:#888;font-style:italic">
+        Not yet submitted to the City of Miami. No permit number or iBuild review comments.
+      </div>`;
+    }
+
+    html += `</div>`; // pd-prop-section
+  }
+
+  html += `<div class="pd-footer">
+    <span>Portland Saxum Construction Management · Permit Tracker</span>
+    <span>${nowStr}</span>
+  </div>`;
+
+  doc.innerHTML = html;
+
+  // Small delay so DOM renders, then print
+  setTimeout(() => {
+    window.print();
+  }, 300);
+}
+</script>
