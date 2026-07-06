@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ *
+ * Portland Saxum — design tokens (brief §5)
+ * Brand + status/badge palette. Light dashboard only (no dark mode).
+ * ------------------------------------------------------------------ */
+@theme {
+  --color-brand: #1b3a6b;
+  --color-brand-hover: #143059;
+  --color-page: #f4f3ee;
+  --color-card: #ffffff;
+  --color-line: #e7e5df;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #f4f3ee;
+  --foreground: #1f1e1b;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ------------------------------------------------------------------ *
+ * Badge system — exact palette from brief §5 (validated with the team)
+ * ------------------------------------------------------------------ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-danger  { background: #fcebeb; color: #a32d2d; } /* Corrections / Unresolved / Pending / Urgent */
+.badge-amber   { background: #faeeda; color: #854f0b; } /* At Risk / In Progress */
+.badge-success { background: #eaf3de; color: #3b6d11; } /* Approved / Resolved / Paid / Done */
+.badge-neutral { background: #f1efe8; color: #5f5e5a; } /* Info / Neutral */
+.badge-cycle1  { background: #e6f1fb; color: #0c447c; } /* Cycle 1 / Blue */
+.badge-cycle2  { background: #eeedfe; color: #3c3489; } /* Cycle 2 / Purple */
