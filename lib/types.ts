@@ -155,6 +155,25 @@ export interface Payment {
   created_at: string;
 }
 
+export interface Meeting {
+  id: string;
+  title: string;
+  participants: string | null;
+  meeting_date: string; // ISO date
+  notes: string | null;
+  created_at: string;
+}
+
+export interface ActionItem {
+  id: string;
+  meeting_id: string;
+  text: string;
+  assignee: string | null;
+  due_date: string | null;
+  done: boolean;
+  created_at: string;
+}
+
 // -- Derived shape used by the property cards (aggregated from disciplines) --
 export interface PropertyWithStats extends Property {
   disc_count: number;
