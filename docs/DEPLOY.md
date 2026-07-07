@@ -1,15 +1,19 @@
 # Deploy & go-live checklist
 
-## Environment variables (set in Vercel → Project → Settings → Environment Variables)
+## Status: LIVE at portland-saxum.vercel.app (auth + RLS + rotated keys ✅)
+
+## Environment variables (Vercel → Project → Settings → Environment Variables)
 | Var | Value | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://ajiqfgmjewyaxdqcmxib.supabase.co` | public |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon JWT | public |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role (secret) | server only; **rotate before go-live** |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **publishable** key (`sb_publishable_…`) | public/browser-safe |
+| `SUPABASE_SERVICE_ROLE_KEY` | **secret** key (`sb_secret_…`) | server only; bypasses RLS |
 | `ANTHROPIC_API_KEY` | (later) | only when the AI note upload ships |
 
+Migrated off the legacy `anon`/`service_role` JWT keys to the new API-key system;
+legacy keys are **disabled** (the service_role exposed during setup is revoked).
 The same values are in local `.env.local` (gitignored). `NEXT_PUBLIC_*` are exposed to the
-browser by design; the service_role key must NEVER be `NEXT_PUBLIC_`.
+browser by design; the secret key must NEVER be `NEXT_PUBLIC_`.
 
 ## Auth
 - Email/password via Supabase. Both users share all data.
@@ -24,12 +28,17 @@ anon-permissive to **authenticated-only**. After this, logged-out requests retur
 no rows; the app requires login. Re-test by logging in — data should still load
 (the browser client sends the user's JWT automatically).
 
-## Rotate the service_role key (brief §12.8)
-1. Supabase → Project Settings → API → **generate new** service keys (or roll the
-   JWT secret). The old service_role key stops working.
-2. Update `SUPABASE_SERVICE_ROLE_KEY` in **both** `.env.local` and Vercel.
-3. Redeploy. (The anon/publishable keys can stay unless you rolled the JWT secret,
-   which would also invalidate them — then update those too.)
+## Rotate the service_role key (brief §12.8) — DONE ✅
+Rotated by migrating to the new API-key system (non-disruptive; JWT secret untouched
+so sessions survived):
+1. Created a new **secret key** (`sb_secret_…`) and pointed `SUPABASE_SERVICE_ROLE_KEY` at it;
+   switched `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the **publishable key** (`sb_publishable_…`).
+2. Updated both in `.env.local` + Vercel, redeployed.
+3. **Disabled legacy API keys** in Supabase → the old anon + service_role now return
+   `401 "Legacy API keys are disabled"`. Verified.
+
+To rotate again later: create a new secret key, swap it in `.env.local` + Vercel, redeploy,
+then revoke the previous secret key (Settings → API Keys → ⋯ → Revoke).
 
 ## Deploy to Vercel (Hobby, shared account, GitHub bcattorini)
 **Option A — GitHub + dashboard (auto-deploy on push):**
