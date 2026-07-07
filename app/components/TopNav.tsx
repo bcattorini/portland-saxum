@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import { signOut } from "@/app/auth/actions";
 
 const TABS = [
   { href: "/", label: "Resumen" },
@@ -10,7 +11,7 @@ const TABS = [
   { href: "/seguimiento", label: "Seguimiento" },
 ];
 
-export function TopNav() {
+export function TopNav({ userEmail }: { userEmail: string | null }) {
   const pathname = usePathname();
 
   return (
@@ -44,6 +45,20 @@ export function TopNav() {
             );
           })}
         </nav>
+
+        <div className="ml-auto flex items-center gap-3">
+          {userEmail && (
+            <span className="hidden text-xs text-white/70 sm:inline">{userEmail}</span>
+          )}
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-md px-2.5 py-1.5 text-sm font-medium text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              Salir
+            </button>
+          </form>
+        </div>
       </div>
     </header>
   );
