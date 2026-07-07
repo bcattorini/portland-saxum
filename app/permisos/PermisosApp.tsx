@@ -11,9 +11,17 @@ const PORTFOLIOS: { key: Portfolio; label: string }[] = [
   { key: "casas", label: "Casas" },
 ];
 
-export function PermisosApp({ properties }: { properties: PropertyWithStats[] }) {
-  const [portfolio, setPortfolio] = useState<Portfolio>("portland_saxum");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export function PermisosApp({
+  properties,
+  initialSelectedId = null,
+  initialPortfolio = "portland_saxum",
+}: {
+  properties: PropertyWithStats[];
+  initialSelectedId?: string | null;
+  initialPortfolio?: Portfolio;
+}) {
+  const [portfolio, setPortfolio] = useState<Portfolio>(initialPortfolio);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
 
   const visible = properties.filter((p) => p.portfolio === portfolio);
   const selected = properties.find((p) => p.id === selectedId) ?? null;

@@ -6,7 +6,12 @@ import { PermisosApp } from "./PermisosApp";
 
 export const dynamic = "force-dynamic";
 
-export default async function PermisosPage() {
+export default async function PermisosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ prop?: string }>;
+}) {
+  const { prop } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: properties, error: pErr }, { data: disciplines, error: dErr }] =
@@ -53,5 +58,13 @@ export default async function PermisosPage() {
     };
   });
 
-  return <PermisosApp properties={enriched} />;
+  const initial = prop ? enriched.find((p) => p.id === prop) : undefined;
+
+  return (
+    <PermisosApp
+      properties={enriched}
+      initialSelectedId={initial?.id ?? null}
+      initialPortfolio={initial?.portfolio}
+    />
+  );
 }
