@@ -100,7 +100,7 @@ export function MeetingForm({
         <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-neutral-400">Action items</div>
         <div className="space-y-2">
           {items.map((it, i) => (
-            <div key={i} className="grid grid-cols-[1fr_140px_150px_auto] gap-2">
+            <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_150px_auto]">
               <input value={it.text} onChange={(e) => setItem(i, "text", e.target.value)} placeholder="Acción — ej: Pablo confirma fecha de drywall"
                 className="rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
               <input value={it.assignee} onChange={(e) => setItem(i, "assignee", e.target.value)} placeholder="Responsable"

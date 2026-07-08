@@ -173,7 +173,7 @@ export function MeetingDetail({
           </ul>
 
           {/* Add item */}
-          <div className="mt-3 grid grid-cols-[1fr_130px_140px_auto] gap-2">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_130px_140px_auto]">
             <input value={newItem.text} onChange={(e) => setNewItem((p) => ({ ...p, text: e.target.value }))}
               onKeyDown={(e) => e.key === "Enter" && addItem()} placeholder="Nuevo action item…"
               className="rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
@@ -204,7 +204,7 @@ function ItemEditor({
   const [assignee, setAssignee] = useState(item.assignee ?? "");
   const [due, setDue] = useState(item.due_date ?? "");
   return (
-    <div className="grid grid-cols-[1fr_130px_140px_auto_auto] gap-2 rounded-md border border-brand/40 bg-page/40 p-2">
+    <div className="grid grid-cols-1 gap-2 rounded-md border border-brand/40 bg-page/40 p-2 sm:grid-cols-[1fr_130px_140px_auto_auto]">
       <input value={text} onChange={(e) => setText(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
       <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Responsable" className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
       <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />

@@ -16,14 +16,12 @@ export function TopNav({ userEmail }: { userEmail: string | null }) {
 
   return (
     <header className="bg-brand text-white">
-      <div className="mx-auto flex max-w-7xl items-center gap-8 px-6 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="grid h-7 w-7 place-items-center rounded bg-white/15 text-sm">
-            PS
-          </span>
-          Portland Saxum
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6 sm:py-3">
+        <Link href="/" className="order-1 flex shrink-0 items-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-white.png" alt="Portland Saxum" className="h-6 w-auto sm:h-7" />
         </Link>
-        <nav className="flex items-center gap-1">
+        <nav className="order-3 flex w-full items-center gap-1 overflow-x-auto sm:order-2 sm:ml-2 sm:w-auto">
           {TABS.map((tab) => {
             const active =
               tab.href === "/"
@@ -46,7 +44,7 @@ export function TopNav({ userEmail }: { userEmail: string | null }) {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="order-2 ml-auto flex shrink-0 items-center gap-3 sm:order-3">
           {userEmail && (
             <span className="hidden text-xs text-white/70 sm:inline">{userEmail}</span>
           )}

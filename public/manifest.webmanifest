@@ -1,0 +1,16 @@
+{
+  "name": "Portland Saxum",
+  "short_name": "Portland Saxum",
+  "description": "Sistema de gestión de permisos y proyectos",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#26272c",
+  "theme_color": "#1b3a6b",
+  "lang": "es",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

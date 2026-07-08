@@ -9,14 +9,12 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl border border-line bg-card p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-sm font-semibold text-white">
-            PS
-          </span>
-          <div>
-            <div className="font-semibold tracking-tight">Portland Saxum</div>
-            <div className="text-xs text-neutral-400">Sistema de gestión</div>
+        <div className="mb-6">
+          <div className="flex justify-center rounded-xl bg-brand px-6 py-5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-white.png" alt="Portland Saxum" className="h-9 w-auto" />
           </div>
+          <div className="mt-3 text-center text-xs text-neutral-400">Sistema de gestión</div>
         </div>
 
         <form action={action} className="space-y-3">
