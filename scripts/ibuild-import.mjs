@@ -86,7 +86,7 @@ for (const pdf of pdfs) {
   for (const r of kept) {
     const discId = discByCode.get(r.code);
     const ex = existByRef.get(r.ref);
-    const payload = { discipline_id: discId, ref_number: r.ref, text: r.text, filename: r.filename, city_status: r.status, sort_order: r.ref };
+    const payload = { discipline_id: discId, ref_number: r.ref, text: r.text, filename: r.filename, city_status: r.status || "Unresolved", sort_order: r.ref };
     if (ex) {
       const { error } = await sb.from("comments").update(payload).eq("id", ex.id);
       if (error) console.log(`  ERROR update #${r.ref}: ${error.message}`);
