@@ -60,7 +60,7 @@ export function PropertyPanel({ property }: { property: PropertyWithStats }) {
       <div className="p-5">
         {tab === "planos" && <PlanosTab property={property} />}
         {tab === "docs" && <DocumentosTab propertyId={property.id} />}
-        {tab === "pagos" && <PagosTab propertyId={property.id} />}
+        {tab === "pagos" && <PagosTab propertyId={property.id} propertyAddress={property.address} />}
       </div>
     </div>
   );

@@ -9,6 +9,11 @@ import { PaymentStatusBadge, PaymentTypeBadge } from "@/lib/badges";
 const money = (n: number, currency = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency }).format(n);
 
+const STATUS_ES: Record<PaymentStatus, string> = {
+  Pending: "Pendiente", Paid: "Pagado", Overdue: "Vencido", Cancelled: "Cancelado",
+};
+const TYPE_ES = (t: PaymentType) => (t === "vendor" ? "Proveedor" : "Cliente");
+
 type Draft = {
   description: string;
   payment_type: PaymentType;
@@ -53,13 +58,15 @@ const draftToRow = (dr: Draft) => ({
   notes: dr.notes.trim() || null,
 });
 
-export function PagosTab({ propertyId }: { propertyId: string }) {
+export function PagosTab({ propertyId, propertyAddress }: { propertyId: string; propertyAddress: string }) {
   const supabase = useMemo(() => createClient(), []);
   const [rows, setRows] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [exportMode, setExportMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +128,65 @@ export function PagosTab({ propertyId }: { propertyId: string }) {
     if (!error) setRows((prev) => prev.filter((r) => r.id !== id));
   }
 
+  function startExport() {
+    setSelectedIds(new Set(rows.map((r) => r.id)));
+    setAdding(false);
+    setEditingId(null);
+    setExportMode(true);
+  }
+  function toggleSel(id: string) {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
+  async function downloadPdf() {
+    const chosen = rows.filter((r) => selectedIds.has(r.id));
+    if (!chosen.length) return;
+    const { jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+    doc.setFontSize(16);
+    doc.setTextColor(27, 58, 107);
+    doc.text("Portland Saxum - Pagos", 40, 46);
+    doc.setFontSize(10);
+    doc.setTextColor(90, 90, 90);
+    doc.text(propertyAddress, 40, 64);
+    doc.text(`Generado: ${new Date().toLocaleDateString("es")}`, 40, 78);
+
+    const body = chosen.map((p) => [
+      p.description,
+      TYPE_ES(p.payment_type),
+      money(Number(p.amount), p.currency),
+      p.due_date ?? "-",
+      STATUS_ES[p.status],
+      p.quickbooks_code ?? "-",
+    ]);
+    const pending = chosen.filter((r) => r.status === "Pending" || r.status === "Overdue").reduce((s, r) => s + Number(r.amount || 0), 0);
+    const paid = chosen.filter((r) => r.status === "Paid").reduce((s, r) => s + Number(r.amount || 0), 0);
+    const right = "right" as const;
+
+    autoTable(doc, {
+      startY: 94,
+      head: [["Descripción", "Tipo", "Monto", "Vence", "Estado", "QB"]],
+      body,
+      foot: [
+        [{ content: "Total pendiente", colSpan: 2, styles: { halign: right } }, { content: money(pending), styles: { halign: right } }, { content: "", colSpan: 3 }],
+        [{ content: "Total pagado", colSpan: 2, styles: { halign: right } }, { content: money(paid), styles: { halign: right } }, { content: "", colSpan: 3 }],
+      ],
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [27, 58, 107] },
+      footStyles: { fillColor: [244, 243, 238], textColor: [31, 30, 27], fontStyle: "bold" },
+      columnStyles: { 2: { halign: right } },
+    });
+
+    doc.save(`Pagos_${propertyAddress.replace(/[^\w]+/g, "_")}.pdf`);
+    setExportMode(false);
+  }
+
   const pendingTotal = rows
     .filter((r) => r.status === "Pending" || r.status === "Overdue")
     .reduce((s, r) => s + Number(r.amount || 0), 0);
@@ -132,13 +198,59 @@ export function PagosTab({ propertyId }: { propertyId: string }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm text-neutral-500">{rows.length} pagos</span>
-        <button
-          onClick={() => setAdding((v) => !v)}
-          className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
-        >
-          {adding ? "Cancelar" : "+ Agregar pago"}
-        </button>
+        <div className="flex gap-2">
+          {rows.length > 0 && !exportMode && (
+            <button
+              onClick={startExport}
+              className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-page"
+            >
+              Exportar PDF
+            </button>
+          )}
+          <button
+            onClick={() => setAdding((v) => !v)}
+            className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
+          >
+            {adding ? "Cancelar" : "+ Agregar pago"}
+          </button>
+        </div>
       </div>
+
+      {exportMode && (
+        <div className="space-y-2 rounded-lg border border-brand/40 bg-page/40 p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Seleccioná los pagos a exportar</span>
+            <div className="flex gap-3 text-xs">
+              <button onClick={() => setSelectedIds(new Set(rows.map((r) => r.id)))} className="text-brand hover:underline">Todos</button>
+              <button onClick={() => setSelectedIds(new Set())} className="text-neutral-500 hover:underline">Ninguno</button>
+            </div>
+          </div>
+          <ul className="max-h-64 divide-y divide-line overflow-y-auto rounded-md border border-line bg-card">
+            {rows.map((p) => (
+              <li key={p.id}>
+                <label className="flex cursor-pointer items-center gap-2.5 px-3 py-2 hover:bg-page/50">
+                  <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSel(p.id)} className="h-4 w-4 accent-[#1b3a6b]" />
+                  <span className="flex-1 truncate text-sm">{p.description}</span>
+                  <span className="font-mono text-xs text-neutral-500">{money(Number(p.amount), p.currency)}</span>
+                  <PaymentStatusBadge status={p.status} />
+                </label>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2">
+            <button
+              onClick={downloadPdf}
+              disabled={selectedIds.size === 0}
+              className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
+            >
+              Descargar PDF ({selectedIds.size})
+            </button>
+            <button onClick={() => setExportMode(false)} className="rounded-md border border-line px-3 py-1.5 text-sm text-neutral-600 hover:bg-page">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {adding && <PayEditor initial={emptyDraft} onCancel={() => setAdding(false)} onSave={addPayment} saveLabel="Crear pago" />}
 
