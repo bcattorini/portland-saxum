@@ -16,7 +16,7 @@ import {
 } from "@/lib/badges";
 import { CommentDrawer } from "./CommentDrawer";
 import { DocumentosTab } from "./DocumentosTab";
-import { PagosTab } from "./PagosTab";
+import { PaymentsManager } from "@/app/components/PaymentsManager";
 
 type Tab = "planos" | "docs" | "pagos";
 
@@ -60,7 +60,7 @@ export function PropertyPanel({ property }: { property: PropertyWithStats }) {
       <div className="p-5">
         {tab === "planos" && <PlanosTab property={property} />}
         {tab === "docs" && <DocumentosTab propertyId={property.id} />}
-        {tab === "pagos" && <PagosTab propertyId={property.id} propertyAddress={property.address} />}
+        {tab === "pagos" && <PaymentsManager scope="property" propertyId={property.id} propertyAddress={property.address} />}
       </div>
     </div>
   );

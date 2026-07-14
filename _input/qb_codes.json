@@ -1,0 +1,1129 @@
+[
+  {
+    "category": "HARD COST",
+    "division": "HC - Contingency & GC Costs",
+    "code": "HC -",
+    "name": "Builder's Risk Insurance",
+    "full_path": "HARD COST:HC - Contingency & GC Costs:HC - Builder's Risk Insurance"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC - Contingency & GC Costs",
+    "code": "HC -",
+    "name": "Fee & Overhead",
+    "full_path": "HARD COST:HC - Contingency & GC Costs:HC - Fee & Overhead"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC - Contingency & GC Costs",
+    "code": "HC -",
+    "name": "General Liability Insurance",
+    "full_path": "HARD COST:HC - Contingency & GC Costs:HC - General Liability Insurance"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC - Contingency & GC Costs",
+    "code": "HC -",
+    "name": "Performance and Payment Bonds",
+    "full_path": "HARD COST:HC - Contingency & GC Costs:HC - Performance and Payment Bonds"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC - Contingency & GC Costs",
+    "code": "HC -",
+    "name": "Worker's Compensation Insurance",
+    "full_path": "HARD COST:HC - Contingency & GC Costs:HC - Worker's Compensation Insurance"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC - Contingency & GC Costs",
+    "code": "HC 100",
+    "name": "Construction Contingency",
+    "full_path": "HARD COST:HC - Contingency & GC Costs:HC 100 Construction Contingency"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 01 - General Requirements",
+    "code": "HC 1.1",
+    "name": "General Conditions / Project Management Team",
+    "full_path": "HARD COST:HC DIV 01 - General Requirements:HC 1.1 General Conditions / Project Management Team"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 01 - General Requirements",
+    "code": "HC 1.2",
+    "name": "General Requirements",
+    "full_path": "HARD COST:HC DIV 01 - General Requirements:HC 1.2 General Requirements"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 02 - Existing Conditions",
+    "code": "HC 2.1",
+    "name": "Demolition Existing Structure",
+    "full_path": "HARD COST:HC DIV 02 - Existing Conditions:HC 2.1 Demolition Existing Structure"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 02 - Existing Conditions",
+    "code": "HC 2.2",
+    "name": "Tree Removal / Protection",
+    "full_path": "HARD COST:HC DIV 02 - Existing Conditions:HC 2.2 Tree Removal / Protection"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 03 - Concrete",
+    "code": "HC 3.1",
+    "name": "Cast in Place Concrete",
+    "full_path": "HARD COST:HC DIV 03 - Concrete:HC 3.1 Cast in Place Concrete"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 03 - Concrete",
+    "code": "HC 3.2",
+    "name": "Sidewalks / Concrete Pads",
+    "full_path": "HARD COST:HC DIV 03 - Concrete:HC 3.2 Sidewalks / Concrete Pads"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 03 - Concrete",
+    "code": "HC 3.3",
+    "name": "Precast Concrete",
+    "full_path": "HARD COST:HC DIV 03 - Concrete:HC 3.3 Precast Concrete"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 03 - Concrete",
+    "code": "HC 3.4",
+    "name": "Lightweight Concrete Roof Insulation",
+    "full_path": "HARD COST:HC DIV 03 - Concrete:HC 3.4 Lightweight Concrete Roof Insulation"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 04 - Masonry",
+    "code": "HC 4.1",
+    "name": "Concrete Form Masonry Units (CMU)",
+    "full_path": "HARD COST:HC DIV 04 - Masonry:HC 4.1 Concrete Form Masonry Units (CMU)"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 05 - Metals",
+    "code": "HC 5.1",
+    "name": "Structural Steel Framing",
+    "full_path": "HARD COST:HC DIV 05 - Metals:HC 5.1 Structural Steel Framing"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 05 - Metals",
+    "code": "HC 5.2",
+    "name": "Metal Joist / Steel Joist Framing",
+    "full_path": "HARD COST:HC DIV 05 - Metals:HC 5.2 Metal Joist / Steel Joist Framing"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 05 - Metals",
+    "code": "HC 5.3",
+    "name": "Metal Fabrication",
+    "full_path": "HARD COST:HC DIV 05 - Metals:HC 5.3 Metal Fabrication"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 06 - Woods & Plastics",
+    "code": "HC 6.1",
+    "name": "Rough Carpentry",
+    "full_path": "HARD COST:HC DIV 06 - Woods & Plastics:HC 6.1 Rough Carpentry"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 06 - Woods & Plastics",
+    "code": "HC 6.2",
+    "name": "Prefab Wood Trusses",
+    "full_path": "HARD COST:HC DIV 06 - Woods & Plastics:HC 6.2 Prefab Wood Trusses"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 06 - Woods & Plastics",
+    "code": "HC 6.3",
+    "name": "Finish Trim Carpentry",
+    "full_path": "HARD COST:HC DIV 06 - Woods & Plastics:HC 6.3 Finish Trim Carpentry"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 06 - Woods & Plastics",
+    "code": "HC 6.4",
+    "name": "Architectural Woodwork",
+    "full_path": "HARD COST:HC DIV 06 - Woods & Plastics:HC 6.4 Architectural Woodwork"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 07 - Thermal & Moisture Protection",
+    "code": "HC 7.1",
+    "name": "Dampproofing and Waterproofing",
+    "full_path": "HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.1 Dampproofing and Waterproofing"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 07 - Thermal & Moisture Protection",
+    "code": "HC 7.2",
+    "name": "Thermal Protection / Insulation",
+    "full_path": "HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.2 Thermal Protection / Insulation"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 07 - Thermal & Moisture Protection",
+    "code": "HC 7.3",
+    "name": "Roofing System",
+    "full_path": "HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.3 Roofing System"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 07 - Thermal & Moisture Protection",
+    "code": "HC 7.4",
+    "name": "Fire and Smoke Protection",
+    "full_path": "HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.4 Fire and Smoke Protection"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 08 - Openings Doors & Windows",
+    "code": "HC 8.1",
+    "name": "Doors and Frames",
+    "full_path": "HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.1 Doors and Frames"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 08 - Openings Doors & Windows",
+    "code": "HC 8.3",
+    "name": "Garage Doors",
+    "full_path": "HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.3 Garage Doors"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 08 - Openings Doors & Windows",
+    "code": "HC 8.4",
+    "name": "Entrances, Storefronts and Curtain Walls",
+    "full_path": "HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.4 Entrances, Storefronts and Curtain Walls"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 08 - Openings Doors & Windows",
+    "code": "HC 8.5",
+    "name": "Windows Package",
+    "full_path": "HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.5 Windows Package"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 08 - Openings Doors & Windows",
+    "code": "HC 8.6",
+    "name": "Glazing",
+    "full_path": "HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.6 Glazing"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 08 - Openings Doors & Windows",
+    "code": "HC 8.7",
+    "name": "Louvers and Vents",
+    "full_path": "HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.7 Louvers and Vents"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.1",
+    "name": "Framing",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.1 Framing"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.2",
+    "name": "Insulation, Drywall & Plaster",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.2 Insulation, Drywall & Plaster"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.3",
+    "name": "Cement Plastering / Stucco",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.3 Cement Plastering / Stucco"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.4",
+    "name": "Ceilings",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.4 Ceilings"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.5",
+    "name": "Flooring / Wall Provision & Installation",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.5 Flooring / Wall Provision & Installation"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.6",
+    "name": "Wall Finishing",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.6 Wall Finishing"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 09 - Finishes",
+    "code": "HC 9.7",
+    "name": "Painting and Coating",
+    "full_path": "HARD COST:HC DIV 09 - Finishes:HC 9.7 Painting and Coating"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.1",
+    "name": "Visual Signage / Interior",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.1 Visual Signage / Interior"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.14",
+    "name": "Bike Racks",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.14 Bike Racks"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.2",
+    "name": "Toilet, Bath and Laundry Accessories",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.2 Toilet, Bath and Laundry Accessories"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.3",
+    "name": "Tub and Shower Enclosures",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.3 Tub and Shower Enclosures"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.4",
+    "name": "Mirrors",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.4 Mirrors"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.5",
+    "name": "Safety Specialties (ADA, Fire Cabinets)",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.5 Safety Specialties (ADA, Fire Cabinets)"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.7",
+    "name": "Postal Specialties",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.7 Postal Specialties"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 10 - Specialties",
+    "code": "HC 10.8",
+    "name": "Wardrobe and Closet Specialties",
+    "full_path": "HARD COST:HC DIV 10 - Specialties:HC 10.8 Wardrobe and Closet Specialties"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 11 - Equipment",
+    "code": "HC 11.1",
+    "name": "Vehicle and Pedestrian Equipment",
+    "full_path": "HARD COST:HC DIV 11 - Equipment:HC 11.1 Vehicle and Pedestrian Equipment"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 11 - Equipment",
+    "code": "HC 11.2",
+    "name": "Residential Equipment / Appliances",
+    "full_path": "HARD COST:HC DIV 11 - Equipment:HC 11.2 Residential Equipment / Appliances"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 12 - Furnishings",
+    "code": "HC 12.1",
+    "name": "Art / Murals",
+    "full_path": "HARD COST:HC DIV 12 - Furnishings:HC 12.1 Art / Murals"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 12 - Furnishings",
+    "code": "HC 12.2",
+    "name": "Window Treatments",
+    "full_path": "HARD COST:HC DIV 12 - Furnishings:HC 12.2 Window Treatments"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 12 - Furnishings",
+    "code": "HC 12.3",
+    "name": "Casework / Kitchen Cabinets",
+    "full_path": "HARD COST:HC DIV 12 - Furnishings:HC 12.3 Casework / Kitchen Cabinets"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 12 - Furnishings",
+    "code": "HC 12.4",
+    "name": "Countertops",
+    "full_path": "HARD COST:HC DIV 12 - Furnishings:HC 12.4 Countertops"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 12 - Furnishings",
+    "code": "HC 12.5",
+    "name": "Furniture",
+    "full_path": "HARD COST:HC DIV 12 - Furnishings:HC 12.5 Furniture"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 13 - Special Construction",
+    "code": "HC 13.1",
+    "name": "Swimming Pool",
+    "full_path": "HARD COST:HC DIV 13 - Special Construction:HC 13.1 Swimming Pool"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 14 - Conveying Equipment",
+    "code": "HC 14.1",
+    "name": "Elevators",
+    "full_path": "HARD COST:HC DIV 14 - Conveying Equipment:HC 14.1 Elevators"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 14 - Conveying Equipment",
+    "code": "HC 14.2",
+    "name": "ADA Elevator",
+    "full_path": "HARD COST:HC DIV 14 - Conveying Equipment:HC 14.2 ADA Elevator"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 14 - Conveying Equipment",
+    "code": "HC 14.3",
+    "name": "Facility Chutes",
+    "full_path": "HARD COST:HC DIV 14 - Conveying Equipment:HC 14.3 Facility Chutes"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 21 - Fire Suppression",
+    "code": "HC 21.1",
+    "name": "Water-Based Fire System",
+    "full_path": "HARD COST:HC DIV 21 - Fire Suppression:HC 21.1 Water-Based Fire System"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 21 - Fire Suppression",
+    "code": "HC 21.2",
+    "name": "Fire Underground / Backflow",
+    "full_path": "HARD COST:HC DIV 21 - Fire Suppression:HC 21.2 Fire Underground / Backflow"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 22 - Plumbing",
+    "code": "HC 22.1",
+    "name": "Plumbing Piping",
+    "full_path": "HARD COST:HC DIV 22 - Plumbing:HC 22.1 Plumbing Piping"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 22 - Plumbing",
+    "code": "HC 22.2",
+    "name": "Electric Domestic Water Heaters",
+    "full_path": "HARD COST:HC DIV 22 - Plumbing:HC 22.2 Electric Domestic Water Heaters"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 22 - Plumbing",
+    "code": "HC 22.3",
+    "name": "Plumbing Fixtures",
+    "full_path": "HARD COST:HC DIV 22 - Plumbing:HC 22.3 Plumbing Fixtures"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 23 - HVAC",
+    "code": "HC 23.1",
+    "name": "HVAC Air Distribution",
+    "full_path": "HARD COST:HC DIV 23 - HVAC:HC 23.1 HVAC Air Distribution"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 23 - HVAC",
+    "code": "HC 23.2",
+    "name": "Amenities, Corridors & Lobby HVAC",
+    "full_path": "HARD COST:HC DIV 23 - HVAC:HC 23.2 Amenities, Corridors & Lobby HVAC"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 26 - Electrical",
+    "code": "HC 26.0",
+    "name": "Electrical Installation",
+    "full_path": "HARD COST:HC DIV 26 - Electrical:HC 26.0 Electrical Installation"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 26 - Electrical",
+    "code": "HC 26.1",
+    "name": "Medium-Voltage Main Distribution",
+    "full_path": "HARD COST:HC DIV 26 - Electrical:HC 26.1 Medium-Voltage Main Distribution"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 26 - Electrical",
+    "code": "HC 26.2",
+    "name": "Medium-Voltage Unit Internal Distribution",
+    "full_path": "HARD COST:HC DIV 26 - Electrical:HC 26.2 Medium-Voltage Unit Internal Distribution"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 26 - Electrical",
+    "code": "HC 26.3",
+    "name": "Low-Voltage",
+    "full_path": "HARD COST:HC DIV 26 - Electrical:HC 26.3 Low-Voltage"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 26 - Electrical",
+    "code": "HC 26.4",
+    "name": "Light Fixtures",
+    "full_path": "HARD COST:HC DIV 26 - Electrical:HC 26.4 Light Fixtures"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 26 - Electrical",
+    "code": "HC 26.5",
+    "name": "BDA System",
+    "full_path": "HARD COST:HC DIV 26 - Electrical:HC 26.5 BDA System"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 28 - Electronic Safety & Security",
+    "code": "HC 28.1",
+    "name": "Access Control",
+    "full_path": "HARD COST:HC DIV 28 - Electronic Safety & Security:HC 28.1 Access Control"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 28 - Electronic Safety & Security",
+    "code": "HC 28.3",
+    "name": "Security Detection, Alarm & Monitoring",
+    "full_path": "HARD COST:HC DIV 28 - Electronic Safety & Security:HC 28.3 Security Detection, Alarm & Monitoring"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 28 - Electronic Safety & Security",
+    "code": "HC 28.4",
+    "name": "Life Safety / Fire Detection & Alarm",
+    "full_path": "HARD COST:HC DIV 28 - Electronic Safety & Security:HC 28.4 Life Safety / Fire Detection & Alarm"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 31 - Earthwork",
+    "code": "HC 31.1",
+    "name": "Site Clearing / Clear and Grub",
+    "full_path": "HARD COST:HC DIV 31 - Earthwork:HC 31.1 Site Clearing / Clear and Grub"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 31 - Earthwork",
+    "code": "HC 31.2",
+    "name": "Civil Earthwork",
+    "full_path": "HARD COST:HC DIV 31 - Earthwork:HC 31.2 Civil Earthwork"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.0",
+    "name": "Civil Mobilization",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.0 Civil Mobilization"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.1",
+    "name": "Paving, Driveways, Curb & Sidewalks",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.1 Paving, Driveways, Curb & Sidewalks"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.2",
+    "name": "Permanent Pavement Marking & Signage",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.2 Permanent Pavement Marking & Signage"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.3",
+    "name": "Fences and Gates",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.3 Fences and Gates"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.4",
+    "name": "Site Furnishings",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.4 Site Furnishings"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.5",
+    "name": "Sidewalks / Pavers Inside Property",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.5 Sidewalks / Pavers Inside Property"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.6",
+    "name": "Manufactured Site Specialties",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.6 Manufactured Site Specialties"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.7",
+    "name": "Irrigation",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.7 Irrigation"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 32 - Exterior Improvements",
+    "code": "HC 32.8",
+    "name": "New Landscape",
+    "full_path": "HARD COST:HC DIV 32 - Exterior Improvements:HC 32.8 New Landscape"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.1.1",
+    "name": "Drainage System - Public Right of Way",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.1.1 Drainage System - Public Right of Way"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.1.2",
+    "name": "Drainage System - Inside Property",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.1.2 Drainage System - Inside Property"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.2",
+    "name": "Water Domestic",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.2 Water Domestic"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.3",
+    "name": "Water Fire Line",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.3 Water Fire Line"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.4",
+    "name": "Water Main Line",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.4 Water Main Line"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.5",
+    "name": "Sanitary Sewer",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.5 Sanitary Sewer"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.6",
+    "name": "Electrical Utilities",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.6 Electrical Utilities"
+  },
+  {
+    "category": "HARD COST",
+    "division": "HC DIV 33 - Utilities",
+    "code": "HC 33.7",
+    "name": "Utility Restoration",
+    "full_path": "HARD COST:HC DIV 33 - Utilities:HC 33.7 Utility Restoration"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.0",
+    "name": "Feasibility and Zoning Analysis",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.0 Feasibility and Zoning Analysis"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.1",
+    "name": "Site Plans Design",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.1 Site Plans Design"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.2",
+    "name": "Traffic Studies",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.2 Traffic Studies"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.3",
+    "name": "Land Survey / Plat",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.3 Land Survey / Plat"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.4",
+    "name": "Zoning Attorney",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.4 Zoning Attorney"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.5",
+    "name": "Geo Technical Report",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.5 Geo Technical Report"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.6",
+    "name": "Utilities Review Assessment",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.6 Utilities Review Assessment"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.7",
+    "name": "Zoning / Site Plan Approval",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.7 Zoning / Site Plan Approval"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 01 - Land Development / Feasibility",
+    "code": "SC 1.8",
+    "name": "Other - Feasibility",
+    "full_path": "SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.8 Other - Feasibility"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.1",
+    "name": "Architectural",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.1 Architectural"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.2",
+    "name": "Structural",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.2 Structural"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.3",
+    "name": "MEP",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.3 MEP"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.4",
+    "name": "Civil Works",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.4 Civil Works"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.5",
+    "name": "Landscape Design",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.5 Landscape Design"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.6",
+    "name": "Interiors Design",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.6 Interiors Design"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.7",
+    "name": "Technical Services",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.7 Technical Services"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.8",
+    "name": "Fitness Consultant",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.8 Fitness Consultant"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 02 - Building Design Fees",
+    "code": "SC 2.9",
+    "name": "Other - Design Consultants",
+    "full_path": "SOFT COST:SC DIV 02 - Building Design Fees:SC 2.9 Other - Design Consultants"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 03 - Land Development / Preconstruction",
+    "code": "SC 3.1",
+    "name": "Land Survey",
+    "full_path": "SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.1 Land Survey"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 03 - Land Development / Preconstruction",
+    "code": "SC 3.2",
+    "name": "Zoning Attorney",
+    "full_path": "SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.2 Zoning Attorney"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 03 - Land Development / Preconstruction",
+    "code": "SC 3.3",
+    "name": "Geo Technical Report",
+    "full_path": "SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.3 Geo Technical Report"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 03 - Land Development / Preconstruction",
+    "code": "SC 3.4",
+    "name": "Opinion of Titles / Unity of Titles",
+    "full_path": "SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.4 Opinion of Titles / Unity of Titles"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 03 - Land Development / Preconstruction",
+    "code": "SC 3.5",
+    "name": "Other - Preconstruction",
+    "full_path": "SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.5 Other - Preconstruction"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 04 - Environmental",
+    "code": "SC 4.1",
+    "name": "Underground Tanks / Contaminated Soils",
+    "full_path": "SOFT COST:SC DIV 04 - Environmental:SC 4.1 Underground Tanks / Contaminated Soils"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 04 - Environmental",
+    "code": "SC 4.2",
+    "name": "Animal Removal / Relocation",
+    "full_path": "SOFT COST:SC DIV 04 - Environmental:SC 4.2 Animal Removal / Relocation"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 04 - Environmental",
+    "code": "SC 4.3",
+    "name": "Other - Environmental",
+    "full_path": "SOFT COST:SC DIV 04 - Environmental:SC 4.3 Other - Environmental"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 05 - Material Testing / 3rd Party Inspections",
+    "code": "SC 5.1",
+    "name": "Concrete Testing",
+    "full_path": "SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.1 Concrete Testing"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 05 - Material Testing / 3rd Party Inspections",
+    "code": "SC 5.2",
+    "name": "Special Engineers / Inspectors",
+    "full_path": "SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.2 Special Engineers / Inspectors"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 05 - Material Testing / 3rd Party Inspections",
+    "code": "SC 5.3",
+    "name": "State Inspection by 3rd Party",
+    "full_path": "SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.3 State Inspection by 3rd Party"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 05 - Material Testing / 3rd Party Inspections",
+    "code": "SC 5.4",
+    "name": "Other - Testing & Inspections",
+    "full_path": "SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.4 Other - Testing & Inspections"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 06 - Insurance & Bond",
+    "code": "SC 6.1",
+    "name": "Builder's Risk Insurance",
+    "full_path": "SOFT COST:SC DIV 06 - Insurance & Bond:SC 6.1 Builder's Risk Insurance"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 06 - Insurance & Bond",
+    "code": "SC 6.2",
+    "name": "General Liability Insurance",
+    "full_path": "SOFT COST:SC DIV 06 - Insurance & Bond:SC 6.2 General Liability Insurance"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 06 - Insurance & Bond",
+    "code": "SC 6.3",
+    "name": "Performance and Payment Bond",
+    "full_path": "SOFT COST:SC DIV 06 - Insurance & Bond:SC 6.3 Performance and Payment Bond"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 07 - Lender Fees",
+    "code": "SC 7.0",
+    "name": "Loan Commitment Fees",
+    "full_path": "SOFT COST:SC DIV 07 - Lender Fees:SC 7.0 Loan Commitment Fees"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 07 - Lender Fees",
+    "code": "SC 7.1",
+    "name": "Loan Closing Costs & Expenses",
+    "full_path": "SOFT COST:SC DIV 07 - Lender Fees:SC 7.1 Loan Closing Costs & Expenses"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 07 - Lender Fees",
+    "code": "SC 7.2",
+    "name": "Construction Loan Interest",
+    "full_path": "SOFT COST:SC DIV 07 - Lender Fees:SC 7.2 Construction Loan Interest"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 07 - Lender Fees",
+    "code": "SC 7.3",
+    "name": "Title / Taxes",
+    "full_path": "SOFT COST:SC DIV 07 - Lender Fees:SC 7.3 Title / Taxes"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 07 - Lender Fees",
+    "code": "SC 7.4",
+    "name": "Legal Fees / Lien Search",
+    "full_path": "SOFT COST:SC DIV 07 - Lender Fees:SC 7.4 Legal Fees / Lien Search"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 07 - Lender Fees",
+    "code": "SC 7.5",
+    "name": "Equity Fee",
+    "full_path": "SOFT COST:SC DIV 07 - Lender Fees:SC 7.5 Equity Fee"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.0",
+    "name": "Construction Monitoring & Management Fee",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.0 Construction Monitoring & Management Fee"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.1",
+    "name": "Arch/Eng - Construction Administration",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.1 Arch/Eng - Construction Administration"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.2",
+    "name": "Developer Fees",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.2 Developer Fees"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.3",
+    "name": "Accounting & Bookkeeping",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.3 Accounting & Bookkeeping"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.4",
+    "name": "Legal Fees",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.4 Legal Fees"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.5",
+    "name": "Administration Fees",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.5 Administration Fees"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.6",
+    "name": "LEED Consultant",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.6 LEED Consultant"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 08 - Professional Fees",
+    "code": "SC 8.7",
+    "name": "Permit Expeditors",
+    "full_path": "SOFT COST:SC DIV 08 - Professional Fees:SC 8.7 Permit Expeditors"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.0",
+    "name": "Leasing Fees During Construction",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.0 Leasing Fees During Construction"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.1",
+    "name": "Moving & Relocating Costs",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.1 Moving & Relocating Costs"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.2",
+    "name": "Marketing / PR / T&E",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.2 Marketing / PR / T&E"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.3",
+    "name": "Software Subscriptions",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.3 Software Subscriptions"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.4",
+    "name": "Reprographics & Printing",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.4 Reprographics & Printing"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.5",
+    "name": "Construction Parking Lease",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.5 Construction Parking Lease"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.6",
+    "name": "Construction Office",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.6 Construction Office"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 09 - Additional Costs",
+    "code": "SC 9.7",
+    "name": "Security / Vandalism & Theft",
+    "full_path": "SOFT COST:SC DIV 09 - Additional Costs:SC 9.7 Security / Vandalism & Theft"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.1",
+    "name": "Window Coverings",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.1 Window Coverings"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.2",
+    "name": "Parking Lot Signage",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.2 Parking Lot Signage"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.3",
+    "name": "Permanent Interior & Exterior Signage",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.3 Permanent Interior & Exterior Signage"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.4",
+    "name": "IT & Technology",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.4 IT & Technology"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.5",
+    "name": "Common Areas Furniture",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.5 Common Areas Furniture"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.6",
+    "name": "Sport Equipment",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.6 Sport Equipment"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.7",
+    "name": "Site Furnishing",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.7 Site Furnishing"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 10 - FF&E",
+    "code": "SC 10.8",
+    "name": "Other - FF&E",
+    "full_path": "SOFT COST:SC DIV 10 - FF&E:SC 10.8 Other - FF&E"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 11 - Permits, Taxes & Fees",
+    "code": "SC 11.1",
+    "name": "Building Impact Fees",
+    "full_path": "SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.1 Building Impact Fees"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 11 - Permits, Taxes & Fees",
+    "code": "SC 11.2",
+    "name": "Real Estate Taxes During Construction",
+    "full_path": "SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.2 Real Estate Taxes During Construction"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 11 - Permits, Taxes & Fees",
+    "code": "SC 11.3",
+    "name": "Runner",
+    "full_path": "SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.3 Runner"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 11 - Permits, Taxes & Fees",
+    "code": "SC 11.4",
+    "name": "Permit Fee",
+    "full_path": "SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.4 Permit Fee"
+  },
+  {
+    "category": "SOFT COST",
+    "division": "SC DIV 11 - Permits, Taxes & Fees",
+    "code": "SC 11.5",
+    "name": "WASA",
+    "full_path": "SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.5 WASA"
+  }
+]

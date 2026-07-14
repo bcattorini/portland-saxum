@@ -150,6 +150,35 @@ export interface Payment {
   paid_date: string | null;
   status: PaymentStatus;
   quickbooks_code: string | null;
+  quickbooks_code_id: string | null;
+  notes: string | null;
+  sort_order: number | null;
+  created_at: string;
+}
+
+export interface QuickbooksCode {
+  id: string;
+  category: "HARD COST" | "SOFT COST";
+  division: string;
+  code: string | null;
+  name: string;
+  full_path: string;
+  created_at: string;
+}
+
+// Company-level payment (not tied to a permit property)
+export interface GeneralPayment {
+  id: string;
+  description: string;
+  payment_type: PaymentType;
+  vendor_or_payer: string | null;
+  amount: number;
+  currency: string;
+  due_date: string | null;
+  paid_date: string | null;
+  status: PaymentStatus;
+  quickbooks_code: string | null;
+  quickbooks_code_id: string | null;
   notes: string | null;
   sort_order: number | null;
   created_at: string;

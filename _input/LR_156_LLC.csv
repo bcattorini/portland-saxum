@@ -1,0 +1,197 @@
+HARD COST,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs:HC - Builder's Risk Insurance,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs:HC - Fee & Overhead,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs:HC - General Liability Insurance,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs:HC - Performance and Payment Bonds,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs:HC - Worker's Compensation Insurance,Expenses,Other Business Expenses
+HARD COST:HC - Contingency & GC Costs:HC 100 Construction Contingency,Expenses,Other Business Expenses
+HARD COST:HC DIV 01 - General Requirements,Expenses,Other Business Expenses
+HARD COST:HC DIV 01 - General Requirements:HC 1.1 General Conditions / Project Management Team,Expenses,Other Business Expenses
+HARD COST:HC DIV 01 - General Requirements:HC 1.2 General Requirements,Expenses,Other Business Expenses
+HARD COST:HC DIV 02 - Existing Conditions,Expenses,Other Business Expenses
+HARD COST:HC DIV 02 - Existing Conditions:HC 2.1 Demolition Existing Structure,Expenses,Other Business Expenses
+HARD COST:HC DIV 02 - Existing Conditions:HC 2.2 Tree Removal / Protection,Expenses,Other Business Expenses
+HARD COST:HC DIV 03 - Concrete,Expenses,Other Business Expenses
+HARD COST:HC DIV 03 - Concrete:HC 3.1 Cast in Place Concrete,Expenses,Other Business Expenses
+HARD COST:HC DIV 03 - Concrete:HC 3.2 Sidewalks / Concrete Pads,Expenses,Other Business Expenses
+HARD COST:HC DIV 03 - Concrete:HC 3.3 Precast Concrete,Expenses,Other Business Expenses
+HARD COST:HC DIV 03 - Concrete:HC 3.4 Lightweight Concrete Roof Insulation,Expenses,Other Business Expenses
+HARD COST:HC DIV 04 - Masonry,Expenses,Other Business Expenses
+HARD COST:HC DIV 04 - Masonry:HC 4.1 Concrete Form Masonry Units (CMU),Expenses,Other Business Expenses
+HARD COST:HC DIV 05 - Metals,Expenses,Other Business Expenses
+HARD COST:HC DIV 05 - Metals:HC 5.1 Structural Steel Framing,Expenses,Other Business Expenses
+HARD COST:HC DIV 05 - Metals:HC 5.2 Metal Joist / Steel Joist Framing,Expenses,Other Business Expenses
+HARD COST:HC DIV 05 - Metals:HC 5.3 Metal Fabrication,Expenses,Other Business Expenses
+HARD COST:HC DIV 06 - Woods & Plastics,Expenses,Other Business Expenses
+HARD COST:HC DIV 06 - Woods & Plastics:HC 6.1 Rough Carpentry,Expenses,Other Business Expenses
+HARD COST:HC DIV 06 - Woods & Plastics:HC 6.2 Prefab Wood Trusses,Expenses,Other Business Expenses
+HARD COST:HC DIV 06 - Woods & Plastics:HC 6.3 Finish Trim Carpentry,Expenses,Other Business Expenses
+HARD COST:HC DIV 06 - Woods & Plastics:HC 6.4 Architectural Woodwork,Expenses,Other Business Expenses
+HARD COST:HC DIV 07 - Thermal & Moisture Protection,Expenses,Other Business Expenses
+HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.1 Dampproofing and Waterproofing,Expenses,Other Business Expenses
+HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.2 Thermal Protection / Insulation,Expenses,Other Business Expenses
+HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.3 Roofing System,Expenses,Other Business Expenses
+HARD COST:HC DIV 07 - Thermal & Moisture Protection:HC 7.4 Fire and Smoke Protection,Expenses,Other Business Expenses
+HARD COST:HC DIV 08 - Openings Doors & Windows,Expenses,Other Business Expenses
+HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.1 Doors and Frames,Expenses,Other Business Expenses
+HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.3 Garage Doors,Expenses,Other Business Expenses
+"HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.4 Entrances, Storefronts and Curtain Walls",Expenses,Other Business Expenses
+HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.5 Windows Package,Expenses,Other Business Expenses
+HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.6 Glazing,Expenses,Other Business Expenses
+HARD COST:HC DIV 08 - Openings Doors & Windows:HC 8.7 Louvers and Vents,Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes,Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes:HC 9.1 Framing,Expenses,Other Business Expenses
+"HARD COST:HC DIV 09 - Finishes:HC 9.2 Insulation, Drywall & Plaster",Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes:HC 9.3 Cement Plastering / Stucco,Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes:HC 9.4 Ceilings,Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes:HC 9.5 Flooring / Wall Provision & Installation,Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes:HC 9.6 Wall Finishing,Expenses,Other Business Expenses
+HARD COST:HC DIV 09 - Finishes:HC 9.7 Painting and Coating,Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties,Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties:HC 10.1 Visual Signage / Interior,Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties:HC 10.14 Bike Racks,Expenses,Other Business Expenses
+"HARD COST:HC DIV 10 - Specialties:HC 10.2 Toilet, Bath and Laundry Accessories",Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties:HC 10.3 Tub and Shower Enclosures,Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties:HC 10.4 Mirrors,Expenses,Other Business Expenses
+"HARD COST:HC DIV 10 - Specialties:HC 10.5 Safety Specialties (ADA, Fire Cabinets)",Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties:HC 10.7 Postal Specialties,Expenses,Other Business Expenses
+HARD COST:HC DIV 10 - Specialties:HC 10.8 Wardrobe and Closet Specialties,Expenses,Other Business Expenses
+HARD COST:HC DIV 11 - Equipment,Expenses,Other Business Expenses
+HARD COST:HC DIV 11 - Equipment:HC 11.1 Vehicle and Pedestrian Equipment,Expenses,Other Business Expenses
+HARD COST:HC DIV 11 - Equipment:HC 11.2 Residential Equipment / Appliances,Expenses,Other Business Expenses
+HARD COST:HC DIV 12 - Furnishings,Expenses,Other Business Expenses
+HARD COST:HC DIV 12 - Furnishings:HC 12.1 Art / Murals,Expenses,Other Business Expenses
+HARD COST:HC DIV 12 - Furnishings:HC 12.2 Window Treatments,Expenses,Other Business Expenses
+HARD COST:HC DIV 12 - Furnishings:HC 12.3 Casework / Kitchen Cabinets,Expenses,Other Business Expenses
+HARD COST:HC DIV 12 - Furnishings:HC 12.4 Countertops,Expenses,Other Business Expenses
+HARD COST:HC DIV 12 - Furnishings:HC 12.5 Furniture,Expenses,Other Business Expenses
+HARD COST:HC DIV 13 - Special Construction,Expenses,Other Business Expenses
+HARD COST:HC DIV 13 - Special Construction:HC 13.1 Swimming Pool,Expenses,Other Business Expenses
+HARD COST:HC DIV 14 - Conveying Equipment,Expenses,Other Business Expenses
+HARD COST:HC DIV 14 - Conveying Equipment:HC 14.1 Elevators,Expenses,Other Business Expenses
+HARD COST:HC DIV 14 - Conveying Equipment:HC 14.2 ADA Elevator,Expenses,Other Business Expenses
+HARD COST:HC DIV 14 - Conveying Equipment:HC 14.3 Facility Chutes,Expenses,Other Business Expenses
+HARD COST:HC DIV 21 - Fire Suppression,Expenses,Other Business Expenses
+HARD COST:HC DIV 21 - Fire Suppression:HC 21.1 Water-Based Fire System,Expenses,Other Business Expenses
+HARD COST:HC DIV 21 - Fire Suppression:HC 21.2 Fire Underground / Backflow,Expenses,Other Business Expenses
+HARD COST:HC DIV 22 - Plumbing,Expenses,Other Business Expenses
+HARD COST:HC DIV 22 - Plumbing:HC 22.1 Plumbing Piping,Expenses,Other Business Expenses
+HARD COST:HC DIV 22 - Plumbing:HC 22.2 Electric Domestic Water Heaters,Expenses,Other Business Expenses
+HARD COST:HC DIV 22 - Plumbing:HC 22.3 Plumbing Fixtures,Expenses,Other Business Expenses
+HARD COST:HC DIV 23 - HVAC,Expenses,Other Business Expenses
+HARD COST:HC DIV 23 - HVAC:HC 23.1 HVAC Air Distribution,Expenses,Other Business Expenses
+"HARD COST:HC DIV 23 - HVAC:HC 23.2 Amenities, Corridors & Lobby HVAC",Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical,Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical:HC 26.0 Electrical Installation,Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical:HC 26.1 Medium-Voltage Main Distribution,Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical:HC 26.2 Medium-Voltage Unit Internal Distribution,Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical:HC 26.3 Low-Voltage,Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical:HC 26.4 Light Fixtures,Expenses,Other Business Expenses
+HARD COST:HC DIV 26 - Electrical:HC 26.5 BDA System,Expenses,Other Business Expenses
+HARD COST:HC DIV 28 - Electronic Safety & Security,Expenses,Other Business Expenses
+HARD COST:HC DIV 28 - Electronic Safety & Security:HC 28.1 Access Control,Expenses,Other Business Expenses
+"HARD COST:HC DIV 28 - Electronic Safety & Security:HC 28.3 Security Detection, Alarm & Monitoring",Expenses,Other Business Expenses
+HARD COST:HC DIV 28 - Electronic Safety & Security:HC 28.4 Life Safety / Fire Detection & Alarm,Expenses,Other Business Expenses
+HARD COST:HC DIV 31 - Earthwork,Expenses,Other Business Expenses
+HARD COST:HC DIV 31 - Earthwork:HC 31.1 Site Clearing / Clear and Grub,Expenses,Other Business Expenses
+HARD COST:HC DIV 31 - Earthwork:HC 31.2 Civil Earthwork,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.0 Civil Mobilization,Expenses,Other Business Expenses
+"HARD COST:HC DIV 32 - Exterior Improvements:HC 32.1 Paving, Driveways, Curb & Sidewalks",Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.2 Permanent Pavement Marking & Signage,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.3 Fences and Gates,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.4 Site Furnishings,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.5 Sidewalks / Pavers Inside Property,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.6 Manufactured Site Specialties,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.7 Irrigation,Expenses,Other Business Expenses
+HARD COST:HC DIV 32 - Exterior Improvements:HC 32.8 New Landscape,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.1.1 Drainage System - Public Right of Way,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.1.2 Drainage System - Inside Property,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.2 Water Domestic,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.3 Water Fire Line,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.4 Water Main Line,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.5 Sanitary Sewer,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.6 Electrical Utilities,Expenses,Other Business Expenses
+HARD COST:HC DIV 33 - Utilities:HC 33.7 Utility Restoration,Expenses,Other Business Expenses
+SOFT COST,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.0 Feasibility and Zoning Analysis,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.1 Site Plans Design,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.2 Traffic Studies,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.3 Land Survey / Plat,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.4 Zoning Attorney,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.5 Geo Technical Report,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.6 Utilities Review Assessment,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.7 Zoning / Site Plan Approval,Expenses,Other Business Expenses
+SOFT COST:SC DIV 01 - Land Development / Feasibility:SC 1.8 Other - Feasibility,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.1 Architectural,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.2 Structural,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.3 MEP,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.4 Civil Works,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.5 Landscape Design,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.6 Interiors Design,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.7 Technical Services,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.8 Fitness Consultant,Expenses,Other Business Expenses
+SOFT COST:SC DIV 02 - Building Design Fees:SC 2.9 Other - Design Consultants,Expenses,Other Business Expenses
+SOFT COST:SC DIV 03 - Land Development / Preconstruction,Expenses,Other Business Expenses
+SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.1 Land Survey,Expenses,Other Business Expenses
+SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.2 Zoning Attorney,Expenses,Other Business Expenses
+SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.3 Geo Technical Report,Expenses,Other Business Expenses
+SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.4 Opinion of Titles / Unity of Titles,Expenses,Other Business Expenses
+SOFT COST:SC DIV 03 - Land Development / Preconstruction:SC 3.5 Other - Preconstruction,Expenses,Other Business Expenses
+SOFT COST:SC DIV 04 - Environmental,Expenses,Other Business Expenses
+SOFT COST:SC DIV 04 - Environmental:SC 4.1 Underground Tanks / Contaminated Soils,Expenses,Other Business Expenses
+SOFT COST:SC DIV 04 - Environmental:SC 4.2 Animal Removal / Relocation,Expenses,Other Business Expenses
+SOFT COST:SC DIV 04 - Environmental:SC 4.3 Other - Environmental,Expenses,Other Business Expenses
+SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections,Expenses,Other Business Expenses
+SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.1 Concrete Testing,Expenses,Other Business Expenses
+SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.2 Special Engineers / Inspectors,Expenses,Other Business Expenses
+SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.3 State Inspection by 3rd Party,Expenses,Other Business Expenses
+SOFT COST:SC DIV 05 - Material Testing / 3rd Party Inspections:SC 5.4 Other - Testing & Inspections,Expenses,Other Business Expenses
+SOFT COST:SC DIV 06 - Insurance & Bond,Expenses,Other Business Expenses
+SOFT COST:SC DIV 06 - Insurance & Bond:SC 6.1 Builder's Risk Insurance,Expenses,Other Business Expenses
+SOFT COST:SC DIV 06 - Insurance & Bond:SC 6.2 General Liability Insurance,Expenses,Other Business Expenses
+SOFT COST:SC DIV 06 - Insurance & Bond:SC 6.3 Performance and Payment Bond,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees:SC 7.0 Loan Commitment Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees:SC 7.1 Loan Closing Costs & Expenses,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees:SC 7.2 Construction Loan Interest,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees:SC 7.3 Title / Taxes,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees:SC 7.4 Legal Fees / Lien Search,Expenses,Other Business Expenses
+SOFT COST:SC DIV 07 - Lender Fees:SC 7.5 Equity Fee,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.0 Construction Monitoring & Management Fee,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.1 Arch/Eng - Construction Administration,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.2 Developer Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.3 Accounting & Bookkeeping,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.4 Legal Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.5 Administration Fees,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.6 LEED Consultant,Expenses,Other Business Expenses
+SOFT COST:SC DIV 08 - Professional Fees:SC 8.7 Permit Expeditors,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.0 Leasing Fees During Construction,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.1 Moving & Relocating Costs,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.2 Marketing / PR / T&E,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.3 Software Subscriptions,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.4 Reprographics & Printing,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.5 Construction Parking Lease,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.6 Construction Office,Expenses,Other Business Expenses
+SOFT COST:SC DIV 09 - Additional Costs:SC 9.7 Security / Vandalism & Theft,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.1 Window Coverings,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.2 Parking Lot Signage,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.3 Permanent Interior & Exterior Signage,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.4 IT & Technology,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.5 Common Areas Furniture,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.6 Sport Equipment,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.7 Site Furnishing,Expenses,Other Business Expenses
+SOFT COST:SC DIV 10 - FF&E:SC 10.8 Other - FF&E,Expenses,Other Business Expenses
+"SOFT COST:SC DIV 11 - Permits, Taxes & Fees",Expenses,Other Business Expenses
+"SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.1 Building Impact Fees",Expenses,Other Business Expenses
+"SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.2 Real Estate Taxes During Construction",Expenses,Other Business Expenses
+"SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.3 Runner",Expenses,Other Business Expenses
+"SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.4 Permit Fee",Expenses,Other Business Expenses
+"SOFT COST:SC DIV 11 - Permits, Taxes & Fees:SC 11.5 WASA",Expenses,Other Business Expenses
