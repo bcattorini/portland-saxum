@@ -13,6 +13,7 @@ export type PendingItem = {
   currency: string;
   due_date: string | null;
   status: "Pending" | "Overdue";
+  payment_type: "vendor" | "client";
   quickbooks_code: string | null;
   href: string;
 };
@@ -20,10 +21,27 @@ export type PendingItem = {
 const money = (n: number, c = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n);
 
+type EstadoF = "all" | "overdue" | "upcoming";
+type TipoF = "all" | "vendor" | "client";
+
 export function PendingPaymentsCard({ items }: { items: PendingItem[] }) {
   const [open, setOpen] = useState(false);
-  const total = items.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const [estado, setEstado] = useState<EstadoF>("all");
+  const [tipo, setTipo] = useState<TipoF>("all");
+  const [origen, setOrigen] = useState<string>("all");
   const today = new Date().toISOString().slice(0, 10);
+
+  const isOverdue = (i: PendingItem) => i.status === "Overdue" || (i.due_date != null && i.due_date < today);
+  const origins = [...new Set(items.map((i) => i.source))].sort((a, b) =>
+    a === "General" ? -1 : b === "General" ? 1 : a.localeCompare(b),
+  );
+  const filtered = items.filter(
+    (i) =>
+      (estado === "all" || (estado === "overdue" ? isOverdue(i) : !isOverdue(i))) &&
+      (tipo === "all" || i.payment_type === tipo) &&
+      (origen === "all" || i.source === origen),
+  );
+  const total = filtered.reduce((s, i) => s + Number(i.amount || 0), 0);
 
   useEffect(() => {
     if (!open) return;
@@ -48,7 +66,7 @@ export function PendingPaymentsCard({ items }: { items: PendingItem[] }) {
           <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
           <div className="relative flex max-h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-card shadow-xl">
             <div className="flex items-center justify-between border-b border-line px-5 py-3">
-              <div className="font-semibold">Pagos pendientes ({items.length})</div>
+              <div className="font-semibold">Pagos pendientes ({filtered.length})</div>
               <button
                 onClick={() => setOpen(false)}
                 className="rounded p-1 text-neutral-400 hover:bg-page hover:text-neutral-700"
@@ -60,9 +78,27 @@ export function PendingPaymentsCard({ items }: { items: PendingItem[] }) {
               </button>
             </div>
 
-            {items.length === 0 ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-5 py-2.5">
+              <FilterGroup label="Estado" value={estado} onChange={(v) => setEstado(v as EstadoF)}
+                options={[["all", "Todos"], ["overdue", "Vencidos"], ["upcoming", "Por vencer"]]} />
+              <FilterGroup label="Tipo" value={tipo} onChange={(v) => setTipo(v as TipoF)}
+                options={[["all", "Todos"], ["vendor", "Proveedor"], ["client", "Cliente"]]} />
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">Origen</span>
+                <select
+                  value={origen}
+                  onChange={(e) => setOrigen(e.target.value)}
+                  className="max-w-40 rounded-md border border-line bg-card px-2 py-1 text-xs outline-none focus:border-brand"
+                >
+                  <option value="all">Todos</option>
+                  {origins.map((o) => (<option key={o} value={o}>{o}</option>))}
+                </select>
+              </div>
+            </div>
+
+            {filtered.length === 0 ? (
               <div className="px-5 py-8 text-center text-sm text-neutral-500">
-                No hay pagos pendientes. 🎉
+                {items.length === 0 ? "No hay pagos pendientes. 🎉" : "Ningún pago coincide con los filtros."}
               </div>
             ) : (
               <div className="overflow-y-auto">
@@ -77,8 +113,8 @@ export function PendingPaymentsCard({ items }: { items: PendingItem[] }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((p) => {
-                      const overdue = p.status === "Overdue" || (p.due_date != null && p.due_date < today);
+                    {filtered.map((p) => {
+                      const overdue = isOverdue(p);
                       return (
                         <tr key={p.id} className="border-t border-line hover:bg-page/50">
                           <td className="px-4 py-2 align-top">
@@ -117,5 +153,37 @@ export function PendingPaymentsCard({ items }: { items: PendingItem[] }) {
         </div>
       )}
     </>
+  );
+}
+
+function FilterGroup({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: [string, string][];
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">{label}</span>
+      <div className="inline-flex rounded-md border border-line p-0.5">
+        {options.map(([v, lbl]) => (
+          <button
+            key={v}
+            onClick={() => onChange(v)}
+            className={clsx(
+              "rounded px-2 py-0.5 text-xs font-medium transition-colors",
+              value === v ? "bg-brand text-white" : "text-neutral-500 hover:text-neutral-800",
+            )}
+          >
+            {lbl}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

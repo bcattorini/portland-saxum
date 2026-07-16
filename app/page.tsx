@@ -30,8 +30,8 @@ export default async function OverviewPage() {
     supabase.from("properties").select("id, address, portfolio"),
     supabase.from("disciplines").select("property_id, open_comments"),
     supabase.from("property_documents").select("id, property_id, title, status, due_date, assignee"),
-    supabase.from("payments").select("id, property_id, description, amount, currency, due_date, status, quickbooks_code"),
-    supabase.from("general_payments").select("id, description, amount, currency, due_date, status, quickbooks_code"),
+    supabase.from("payments").select("id, property_id, description, amount, currency, due_date, status, payment_type, quickbooks_code"),
+    supabase.from("general_payments").select("id, description, amount, currency, due_date, status, payment_type, quickbooks_code"),
     supabase.from("meetings").select("*").order("meeting_date", { ascending: false }),
     supabase.from("action_items").select("*"),
   ]);
@@ -41,11 +41,11 @@ export default async function OverviewPage() {
   const docs = (documents ?? []) as Pick<PropertyDocument, "id" | "property_id" | "title" | "status" | "due_date" | "assignee">[];
   const pays = (payments ?? []) as Pick<
     Payment,
-    "id" | "property_id" | "description" | "amount" | "currency" | "due_date" | "status" | "quickbooks_code"
+    "id" | "property_id" | "description" | "amount" | "currency" | "due_date" | "status" | "payment_type" | "quickbooks_code"
   >[];
   const genPays = (generalPayments ?? []) as Pick<
     Payment,
-    "id" | "description" | "amount" | "currency" | "due_date" | "status" | "quickbooks_code"
+    "id" | "description" | "amount" | "currency" | "due_date" | "status" | "payment_type" | "quickbooks_code"
   >[];
   const mtgs = (meetings ?? []) as Meeting[];
   const items = (actionItems ?? []) as ActionItem[];
@@ -71,6 +71,7 @@ export default async function OverviewPage() {
       currency: p.currency ?? "USD",
       due_date: p.due_date,
       status: p.status as "Pending" | "Overdue",
+      payment_type: p.payment_type,
       quickbooks_code: p.quickbooks_code,
       href: `/permisos?prop=${p.property_id}`,
     })),
@@ -82,6 +83,7 @@ export default async function OverviewPage() {
       currency: p.currency ?? "USD",
       due_date: p.due_date,
       status: p.status as "Pending" | "Overdue",
+      payment_type: p.payment_type,
       quickbooks_code: p.quickbooks_code,
       href: "/pagos",
     })),
