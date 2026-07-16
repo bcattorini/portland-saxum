@@ -10,6 +10,7 @@ import type {
   Property,
   PropertyDocument,
 } from "@/lib/types";
+import { PendingPaymentsCard, type PendingItem } from "./components/PendingPaymentsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +23,15 @@ export default async function OverviewPage() {
     { data: disciplines },
     { data: documents },
     { data: payments },
+    { data: generalPayments },
     { data: meetings },
     { data: actionItems },
   ] = await Promise.all([
     supabase.from("properties").select("id, address, portfolio"),
     supabase.from("disciplines").select("property_id, open_comments"),
     supabase.from("property_documents").select("id, property_id, title, status, due_date, assignee"),
-    supabase.from("payments").select("id, property_id, description, amount, due_date, status"),
+    supabase.from("payments").select("id, property_id, description, amount, currency, due_date, status, quickbooks_code"),
+    supabase.from("general_payments").select("id, description, amount, currency, due_date, status, quickbooks_code"),
     supabase.from("meetings").select("*").order("meeting_date", { ascending: false }),
     supabase.from("action_items").select("*"),
   ]);
@@ -36,7 +39,14 @@ export default async function OverviewPage() {
   const props = (properties ?? []) as Pick<Property, "id" | "address" | "portfolio">[];
   const disc = (disciplines ?? []) as Pick<Discipline, "property_id" | "open_comments">[];
   const docs = (documents ?? []) as Pick<PropertyDocument, "id" | "property_id" | "title" | "status" | "due_date" | "assignee">[];
-  const pays = (payments ?? []) as Pick<Payment, "id" | "property_id" | "description" | "amount" | "due_date" | "status">[];
+  const pays = (payments ?? []) as Pick<
+    Payment,
+    "id" | "property_id" | "description" | "amount" | "currency" | "due_date" | "status" | "quickbooks_code"
+  >[];
+  const genPays = (generalPayments ?? []) as Pick<
+    Payment,
+    "id" | "description" | "amount" | "currency" | "due_date" | "status" | "quickbooks_code"
+  >[];
   const mtgs = (meetings ?? []) as Meeting[];
   const items = (actionItems ?? []) as ActionItem[];
 
@@ -48,8 +58,39 @@ export default async function OverviewPage() {
   // -- KPIs --
   const openComments = disc.reduce((s, d) => s + (d.open_comments ?? 0), 0);
   const pendingDocs = docs.filter((d) => d.status === "Pending" || d.status === "In Progress");
-  const pendingPays = pays.filter((p) => p.status === "Pending" || p.status === "Overdue");
   const openItems = items.filter((i) => !i.done);
+
+  // -- consolidated pending payments (permits + general), sorted by due date --
+  const isPending = (s: string) => s === "Pending" || s === "Overdue";
+  const pendingPayments: PendingItem[] = [
+    ...pays.filter((p) => isPending(p.status)).map((p) => ({
+      id: p.id,
+      source: addrOf.get(p.property_id) ?? "Propiedad",
+      description: p.description,
+      amount: Number(p.amount || 0),
+      currency: p.currency ?? "USD",
+      due_date: p.due_date,
+      status: p.status as "Pending" | "Overdue",
+      quickbooks_code: p.quickbooks_code,
+      href: `/permisos?prop=${p.property_id}`,
+    })),
+    ...genPays.filter((p) => isPending(p.status)).map((p) => ({
+      id: p.id,
+      source: "General",
+      description: p.description,
+      amount: Number(p.amount || 0),
+      currency: p.currency ?? "USD",
+      due_date: p.due_date,
+      status: p.status as "Pending" | "Overdue",
+      quickbooks_code: p.quickbooks_code,
+      href: "/pagos",
+    })),
+  ].sort((a, b) => {
+    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+    if (a.due_date) return -1; // dated first, undated last
+    if (b.due_date) return 1;
+    return 0;
+  });
 
   // -- open comments per property (for attention + linking) --
   const openByProp = new Map<string, number>();
@@ -119,13 +160,6 @@ export default async function OverviewPage() {
     ? items.filter((i) => i.meeting_id === lastMeeting.id && !i.done).length
     : 0;
 
-  const kpis = [
-    { value: openComments, label: "Comentarios iBuild abiertos", hint: "de todas las disciplinas", href: "/permisos" },
-    { value: pendingDocs.length, label: "Documentos pendientes", hint: "por entregar", href: "/permisos" },
-    { value: pendingPays.length, label: "Pagos pendientes", hint: "sin pagar", href: "/permisos" },
-    { value: openItems.length, label: "Action items abiertos", hint: "de reuniones", href: "/seguimiento" },
-  ];
-
   return (
     <div className="space-y-8">
       <div>
@@ -137,17 +171,10 @@ export default async function OverviewPage() {
 
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {kpis.map((k) => (
-          <Link
-            key={k.label}
-            href={k.href}
-            className="rounded-xl border border-line bg-card p-4 transition-all hover:border-neutral-300 hover:shadow-sm"
-          >
-            <div className="text-3xl font-semibold text-brand">{k.value}</div>
-            <div className="mt-2 text-sm font-medium">{k.label}</div>
-            <div className="text-xs text-neutral-400">{k.hint}</div>
-          </Link>
-        ))}
+        <KpiCard value={openComments} label="Comentarios iBuild abiertos" hint="de todas las disciplinas" href="/permisos" />
+        <KpiCard value={pendingDocs.length} label="Documentos pendientes" hint="por entregar" href="/permisos" />
+        <PendingPaymentsCard items={pendingPayments} />
+        <KpiCard value={openItems.length} label="Action items abiertos" hint="de reuniones" href="/seguimiento" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -204,5 +231,18 @@ export default async function OverviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function KpiCard({ value, label, hint, href }: { value: number; label: string; hint: string; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-xl border border-line bg-card p-4 transition-all hover:border-neutral-300 hover:shadow-sm"
+    >
+      <div className="text-3xl font-semibold text-brand">{value}</div>
+      <div className="mt-2 text-sm font-medium">{label}</div>
+      <div className="text-xs text-neutral-400">{hint}</div>
+    </Link>
   );
 }
