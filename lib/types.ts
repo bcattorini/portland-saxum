@@ -151,6 +151,8 @@ export interface Payment {
   status: PaymentStatus;
   quickbooks_code: string | null;
   quickbooks_code_id: string | null;
+  project: string | null;
+  invoice_url: string | null;
   notes: string | null;
   sort_order: number | null;
   created_at: string;
@@ -179,6 +181,8 @@ export interface GeneralPayment {
   status: PaymentStatus;
   quickbooks_code: string | null;
   quickbooks_code_id: string | null;
+  project: string | null;
+  invoice_url: string | null;
   notes: string | null;
   sort_order: number | null;
   created_at: string;
