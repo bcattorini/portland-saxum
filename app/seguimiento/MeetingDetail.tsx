@@ -50,6 +50,16 @@ export function MeetingDetail({
     if (!error) onMeetingDeleted(meeting.id);
   }
 
+  async function setMeetingFinalized(val: boolean) {
+    const { data, error } = await supabase
+      .from("meetings")
+      .update({ finalized_at: val ? new Date().toISOString() : null })
+      .eq("id", meeting.id)
+      .select()
+      .single();
+    if (!error && data) onMeetingUpdated(data as Meeting);
+  }
+
   async function toggleDone(it: ActionItem) {
     const { data } = await supabase
       .from("action_items")
@@ -125,10 +135,23 @@ export function MeetingDetail({
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-xs text-neutral-400">{meeting.meeting_date}</div>
-              <div className="mt-0.5 text-lg font-semibold tracking-tight">{meeting.title}</div>
+              <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                <span className="text-lg font-semibold tracking-tight">{meeting.title}</span>
+                {meeting.finalized_at && <span className="badge badge-success">✓ Finalizada</span>}
+              </div>
               {meeting.participants && <div className="mt-0.5 text-sm text-neutral-500">{meeting.participants}</div>}
+              {meeting.finalized_at && (
+                <div className="mt-1 text-xs text-[#3b6d11]">Finalizada el {fmtD(meeting.finalized_at)}</div>
+              )}
             </div>
-            <div className="flex gap-2 text-sm">
+            <div className="flex shrink-0 items-center gap-2 text-sm">
+              {meeting.finalized_at ? (
+                <button onClick={() => setMeetingFinalized(false)} className="text-brand hover:underline">Reabrir</button>
+              ) : (
+                <button onClick={() => setMeetingFinalized(true)} className="rounded-md bg-[#eaf3de] px-2.5 py-1 text-xs font-medium text-[#3b6d11] hover:bg-[#dfeecb]">
+                  ✓ Finalizar reunión
+                </button>
+              )}
               <button onClick={() => setEditing(true)} className="text-neutral-500 hover:underline">Editar</button>
               <button onClick={deleteMeeting} className="font-medium text-[#a32d2d] hover:underline">Eliminar</button>
             </div>

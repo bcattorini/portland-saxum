@@ -204,6 +204,7 @@ export interface Meeting {
   participants: string | null;
   meeting_date: string; // ISO date
   notes: string | null;
+  finalized_at: string | null;
   created_at: string;
 }
 
