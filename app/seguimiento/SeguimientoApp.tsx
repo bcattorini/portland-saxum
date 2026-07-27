@@ -130,7 +130,7 @@ export function SeguimientoApp() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-neutral-400">{m.meeting_date}</span>
                         {m.finalized_at ? (
-                          <span className="badge badge-success">✓ Finalizada</span>
+                          <span className="badge badge-success">✓ Finalizado</span>
                         ) : (
                           open > 0 && <span className="badge badge-danger">{open} abiertos</span>
                         )}

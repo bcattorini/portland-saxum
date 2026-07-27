@@ -137,11 +137,11 @@ export function MeetingDetail({
               <div className="text-xs text-neutral-400">{meeting.meeting_date}</div>
               <div className="mt-0.5 flex flex-wrap items-center gap-2">
                 <span className="text-lg font-semibold tracking-tight">{meeting.title}</span>
-                {meeting.finalized_at && <span className="badge badge-success">✓ Finalizada</span>}
+                {meeting.finalized_at && <span className="badge badge-success">✓ Finalizado</span>}
               </div>
               {meeting.participants && <div className="mt-0.5 text-sm text-neutral-500">{meeting.participants}</div>}
               {meeting.finalized_at && (
-                <div className="mt-1 text-xs text-[#3b6d11]">Finalizada el {fmtD(meeting.finalized_at)}</div>
+                <div className="mt-1 text-xs text-[#3b6d11]">Finalizado el {fmtD(meeting.finalized_at)}</div>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2 text-sm">
@@ -149,7 +149,7 @@ export function MeetingDetail({
                 <button onClick={() => setMeetingFinalized(false)} className="text-brand hover:underline">Reabrir</button>
               ) : (
                 <button onClick={() => setMeetingFinalized(true)} className="rounded-md bg-[#eaf3de] px-2.5 py-1 text-xs font-medium text-[#3b6d11] hover:bg-[#dfeecb]">
-                  ✓ Finalizar reunión
+                  ✓ Finalizar tema
                 </button>
               )}
               <button onClick={() => setEditing(true)} className="text-neutral-500 hover:underline">Editar</button>
