@@ -110,8 +110,18 @@ export interface CommentTracking {
   assignee: string | null;
   internal_status: InternalStatus;
   notes: string | null;
+  finalized_at: string | null;
   updated_at: string;
   updated_by: string | null;
+}
+
+// Dated note entry — the running follow-up record per comment
+export interface CommentNote {
+  id: string;
+  comment_id: string;
+  body: string;
+  created_at: string;
+  created_by: string | null;
 }
 
 export interface TrackingHistory {

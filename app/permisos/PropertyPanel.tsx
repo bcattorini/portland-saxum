@@ -225,7 +225,11 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
                               </span>
                               <span className="flex shrink-0 flex-col items-end gap-1">
                                 <CommentStatusBadge status={c.city_status} />
-                                {t && <InternalStatusBadge status={t.internal_status} />}
+                                {t?.finalized_at ? (
+                                  <span className="badge badge-success">✓ Finalizado</span>
+                                ) : (
+                                  t && <InternalStatusBadge status={t.internal_status} />
+                                )}
                               </span>
                             </button>
                           </li>
