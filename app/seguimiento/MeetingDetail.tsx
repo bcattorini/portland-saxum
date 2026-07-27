@@ -5,6 +5,8 @@ import clsx from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import type { ActionItem, Meeting } from "@/lib/types";
 
+const fmtD = (iso: string) => new Date(iso).toLocaleDateString("es");
+
 export function MeetingDetail({
   meeting,
   items,
@@ -52,6 +54,16 @@ export function MeetingDetail({
     const { data } = await supabase
       .from("action_items")
       .update({ done: !it.done })
+      .eq("id", it.id)
+      .select()
+      .single();
+    if (data) onItemsChanged(items.map((x) => (x.id === it.id ? (data as ActionItem) : x)));
+  }
+
+  async function setFinalized(it: ActionItem, val: boolean) {
+    const { data } = await supabase
+      .from("action_items")
+      .update({ finalized_at: val ? new Date().toISOString() : null, done: val })
       .eq("id", it.id)
       .select()
       .single();
@@ -152,10 +164,10 @@ export function MeetingDetail({
                   />
                 </li>
               ) : (
-                <li key={it.id} className="flex items-start gap-2.5 rounded-md border border-line px-3 py-2">
+                <li key={it.id} className={clsx("flex items-start gap-2.5 rounded-md border px-3 py-2", it.finalized_at ? "border-[#cfe3b6] bg-[#f6faf0]" : "border-line")}>
                   <input type="checkbox" checked={it.done} onChange={() => toggleDone(it)}
                     className="mt-0.5 h-4 w-4 accent-[#1b3a6b]" />
-                  <button onClick={() => setEditingItemId(it.id)} className="flex-1 text-left">
+                  <button onClick={() => setEditingItemId(it.id)} className="min-w-0 flex-1 text-left">
                     <span className={clsx("text-sm", it.done && "text-neutral-400 line-through")}>{it.text}</span>
                     <span className="mt-1 flex flex-wrap items-center gap-2">
                       {it.assignee && <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600">{it.assignee}</span>}
@@ -166,6 +178,20 @@ export function MeetingDetail({
                       )}
                     </span>
                   </button>
+                  <div className="shrink-0 text-right">
+                    {it.finalized_at ? (
+                      <>
+                        <div className="text-[11px] font-medium text-[#3b6d11]">✓ Finalizado</div>
+                        <div className="text-[10px] text-neutral-400">{fmtD(it.finalized_at)}</div>
+                        <button onClick={() => setFinalized(it, false)} className="text-[11px] text-brand hover:underline">Reabrir</button>
+                      </>
+                    ) : (
+                      <button onClick={() => setFinalized(it, true)}
+                        className="rounded-md bg-[#eaf3de] px-2 py-0.5 text-[11px] font-medium text-[#3b6d11] hover:bg-[#dfeecb]">
+                        ✓ Finalizar
+                      </button>
+                    )}
+                  </div>
                 </li>
               ),
             )}

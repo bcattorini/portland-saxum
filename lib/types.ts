@@ -214,6 +214,7 @@ export interface ActionItem {
   assignee: string | null;
   due_date: string | null;
   done: boolean;
+  finalized_at: string | null;
   created_at: string;
 }
 
