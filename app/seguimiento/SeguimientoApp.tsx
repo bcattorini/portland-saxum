@@ -15,6 +15,7 @@ export function SeguimientoApp() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +57,41 @@ export function SeguimientoApp() {
 
   const selected = meetings.find((m) => m.id === selectedId) ?? null;
   const selectedItems = items.filter((it) => it.meeting_id === selectedId);
+
+  // search + split (activos on top newest-first, finalizados grouped below)
+  const q = query.trim().toLowerCase();
+  const matches = (m: Meeting) =>
+    !q || `${m.title} ${m.participants ?? ""} ${m.notes ?? ""}`.toLowerCase().includes(q);
+  const visible = meetings.filter(matches); // already fetched by meeting_date desc (newest first)
+  const activos = visible.filter((m) => !m.finalized_at);
+  const finalizados = visible.filter((m) => m.finalized_at);
+
+  function renderMeetingItem(m: Meeting) {
+    const open = openCountByMeeting.get(m.id) ?? 0;
+    const isActive = m.id === selectedId && !creating;
+    return (
+      <li key={m.id}>
+        <button
+          onClick={() => { setSelectedId(m.id); setCreating(false); }}
+          className={clsx(
+            "w-full rounded-xl border bg-card p-3 text-left transition-all",
+            isActive ? "border-brand ring-1 ring-brand" : "border-line hover:border-neutral-300",
+          )}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-neutral-400">{m.meeting_date}</span>
+            {m.finalized_at ? (
+              <span className="badge badge-success">✓ Finalizado</span>
+            ) : (
+              open > 0 && <span className="badge badge-danger">{open} abiertos</span>
+            )}
+          </div>
+          <div className="mt-1 font-medium">{m.title}</div>
+          {m.participants && <div className="mt-0.5 text-xs text-neutral-500">{m.participants}</div>}
+        </button>
+      </li>
+    );
+  }
 
   function onCreated(meeting: Meeting, newItems: ActionItem[]) {
     setMeetings((prev) => [meeting, ...prev]);
@@ -105,6 +141,14 @@ export function SeguimientoApp() {
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         {/* Left: meeting list */}
         <div className="space-y-2">
+          {meetings.length > 0 && (
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por palabra clave…"
+              className="w-full rounded-md border border-line bg-card px-3 py-1.5 text-sm outline-none focus:border-brand"
+            />
+          )}
           {loading ? (
             <div className="rounded-xl border border-line bg-card p-4 text-sm text-neutral-400">Cargando…</div>
           ) : error ? (
@@ -113,37 +157,22 @@ export function SeguimientoApp() {
             <div className="rounded-xl border border-dashed border-line bg-card/50 p-4 text-sm text-neutral-500">
               Sin reuniones todavía. Creá la primera con “Nueva reunión”.
             </div>
+          ) : visible.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-line bg-card/50 p-4 text-sm text-neutral-500">
+              Ningún resultado para “{query}”.
+            </div>
           ) : (
-            <ul className="space-y-2">
-              {meetings.map((m) => {
-                const open = openCountByMeeting.get(m.id) ?? 0;
-                const active = m.id === selectedId && !creating;
-                return (
-                  <li key={m.id}>
-                    <button
-                      onClick={() => { setSelectedId(m.id); setCreating(false); }}
-                      className={clsx(
-                        "w-full rounded-xl border bg-card p-3 text-left transition-all",
-                        active ? "border-brand ring-1 ring-brand" : "border-line hover:border-neutral-300",
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-neutral-400">{m.meeting_date}</span>
-                        {m.finalized_at ? (
-                          <span className="badge badge-success">✓ Finalizado</span>
-                        ) : (
-                          open > 0 && <span className="badge badge-danger">{open} abiertos</span>
-                        )}
-                      </div>
-                      <div className="mt-1 font-medium">{m.title}</div>
-                      {m.participants && (
-                        <div className="mt-0.5 text-xs text-neutral-500">{m.participants}</div>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              {activos.length > 0 && <ul className="space-y-2">{activos.map(renderMeetingItem)}</ul>}
+              {finalizados.length > 0 && (
+                <div className="pt-2">
+                  <div className="mb-1.5 px-1 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+                    Finalizados ({finalizados.length})
+                  </div>
+                  <ul className="space-y-2 opacity-70">{finalizados.map(renderMeetingItem)}</ul>
+                </div>
+              )}
+            </>
           )}
         </div>
 
