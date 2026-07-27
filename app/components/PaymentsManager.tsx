@@ -13,6 +13,8 @@ const STATUS_ES: Record<PaymentStatus, string> = {
   Pending: "Pendiente", Paid: "Pagado", Overdue: "Vencido", Cancelled: "Cancelado",
 };
 const TYPE_ES = (t: PaymentType) => (t === "vendor" ? "Proveedor" : "Cliente");
+// default grouping: overdue + pending first, paid/cancelled last
+const STATUS_ORDER: Record<PaymentStatus, number> = { Overdue: 0, Pending: 1, Paid: 2, Cancelled: 3 };
 const fmtDate = (d: string) => {
   const [y, m, dd] = d.split("-");
   return `${dd}/${m}/${y}`;
@@ -104,6 +106,7 @@ export function PaymentsManager({
   const [exportMode, setExportMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState(emptyFilters);
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({ field: "status", dir: "asc" });
 
   useEffect(() => {
     let cancelled = false;
@@ -201,6 +204,37 @@ export function PaymentsManager({
   }
 
   const pendingTotal = filtered.filter((r) => r.status === "Pending" || r.status === "Overdue").reduce((s, r) => s + Number(r.amount || 0), 0);
+  const paidTotal = filtered.filter((r) => r.status === "Paid").reduce((s, r) => s + Number(r.amount || 0), 0);
+
+  // -- sort (click a column header) --
+  function toggleSort(field: string) {
+    setSort((s) => (s.field === field ? { field, dir: s.dir === "asc" ? "desc" : "asc" } : { field, dir: "asc" }));
+  }
+  const sorted = [...filtered].sort((a, b) => {
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const dueA = a.due_date ?? "9999-99-99", dueB = b.due_date ?? "9999-99-99";
+    let r = 0;
+    switch (sort.field) {
+      case "status": r = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]; if (r === 0) r = dueA < dueB ? -1 : dueA > dueB ? 1 : 0; break;
+      case "amount": r = Number(a.amount || 0) - Number(b.amount || 0); break;
+      case "due_date": r = dueA < dueB ? -1 : dueA > dueB ? 1 : 0; break;
+      case "project": r = (a.project ?? "").localeCompare(b.project ?? ""); break;
+      case "description": r = a.description.localeCompare(b.description); break;
+      case "type": r = a.payment_type.localeCompare(b.payment_type); break;
+    }
+    return r * dir;
+  });
+  const th = (field: string, label: string, right = false) => {
+    const active = sort.field === field;
+    return (
+      <th className={"px-3 py-2 " + (right ? "text-right" : "")}>
+        <button onClick={() => toggleSort(field)} className={"inline-flex items-center gap-1 font-medium uppercase tracking-wide hover:text-neutral-700 " + (active ? "text-neutral-700" : "")}>
+          {label}
+          {active && <span className="text-[8px]">{sort.dir === "asc" ? "▲" : "▼"}</span>}
+        </button>
+      </th>
+    );
+  };
 
   if (loading) return <div className="py-8 text-center text-sm text-neutral-400">Cargando…</div>;
   if (error) return <div className="py-4 text-sm text-[#a32d2d]">Error: {error}</div>;
@@ -311,18 +345,18 @@ export function PaymentsManager({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-page text-left text-[11px] uppercase tracking-wide text-neutral-400">
-                <th className="px-3 py-2 font-medium">Proyecto</th>
-                <th className="px-3 py-2 font-medium">Descripción</th>
-                <th className="px-3 py-2 font-medium">Tipo</th>
-                <th className="px-3 py-2 text-right font-medium">Monto</th>
-                <th className="px-3 py-2 font-medium">Vence</th>
-                <th className="px-3 py-2 font-medium">Estado</th>
+                {th("project", "Proyecto")}
+                {th("description", "Descripción")}
+                {th("type", "Tipo")}
+                {th("amount", "Monto", true)}
+                {th("due_date", "Vence")}
+                {th("status", "Estado")}
                 <th className="px-3 py-2 font-medium">QB</th>
                 <th className="px-3 py-2"></th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) =>
+              {sorted.map((p) =>
                 editingId === p.id ? (
                   <tr key={p.id}>
                     <td colSpan={8} className="p-3">
@@ -367,6 +401,11 @@ export function PaymentsManager({
               <tr className="border-t border-line bg-page/60">
                 <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total pendiente</td>
                 <td className="px-3 py-2 text-right font-mono font-semibold text-[#a32d2d]">{money(pendingTotal)}</td>
+                <td colSpan={4}></td>
+              </tr>
+              <tr className="bg-page/60">
+                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total pagado</td>
+                <td className="px-3 py-2 text-right font-mono font-semibold text-[#3b6d11]">{money(paidTotal)}</td>
                 <td colSpan={4}></td>
               </tr>
             </tfoot>
