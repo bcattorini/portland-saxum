@@ -1,0 +1,15 @@
+// No user-accounts table. Bruno + Sol have logins; we identify the logged-in
+// person by their auth email, and match action items by the free-text
+// "responsable" name. Everyone else is just free text.
+export type AppPerson = { email: string; name: string; aliases: string[] };
+
+export const PEOPLE: AppPerson[] = [
+  { email: "bcattorini@saxuminternational.com", name: "Bruno", aliases: ["bruno"] },
+  { email: "sgregor@saxuminternational.com", name: "Sol", aliases: ["sol"] },
+];
+
+export function personForEmail(email?: string | null): AppPerson | null {
+  if (!email) return null;
+  const e = email.toLowerCase();
+  return PEOPLE.find((p) => p.email.toLowerCase() === e) ?? null;
+}

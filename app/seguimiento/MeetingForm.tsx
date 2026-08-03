@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ActionItem, Meeting } from "@/lib/types";
+import { AssigneeInput } from "@/app/components/AssigneeInput";
 
 type ItemDraft = { text: string; assignee: string; due_date: string };
 const blankItem = (): ItemDraft => ({ text: "", assignee: "", due_date: "" });
@@ -103,8 +104,7 @@ export function MeetingForm({
             <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_150px_auto]">
               <input value={it.text} onChange={(e) => setItem(i, "text", e.target.value)} placeholder="Acción — ej: Pablo confirma fecha de drywall"
                 className="rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
-              <input value={it.assignee} onChange={(e) => setItem(i, "assignee", e.target.value)} placeholder="Responsable"
-                className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+              <AssigneeInput value={it.assignee} onChange={(v) => setItem(i, "assignee", v)} />
               <input type="date" value={it.due_date} onChange={(e) => setItem(i, "due_date", e.target.value)}
                 className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
               <button onClick={() => removeRow(i)} disabled={items.length === 1}

@@ -11,6 +11,7 @@ import type {
   PropertyDocument,
 } from "@/lib/types";
 import { PendingPaymentsCard, type PendingItem } from "./components/PendingPaymentsCard";
+import { personForEmail } from "@/lib/users";
 
 export const dynamic = "force-dynamic";
 
@@ -156,6 +157,25 @@ export default async function OverviewPage() {
 
   const attention = [...urgent, ...topProps, ...pendingDocItems].slice(0, 5);
 
+  // -- "mis action items" (matched by the logged-in person's name) --
+  type MyItem = ActionItem & { meetings?: { title: string; meeting_date: string } | null };
+  const { data: authUser } = await supabase.auth.getUser();
+  const me = personForEmail(authUser.user?.email);
+  let myItems: MyItem[] = [];
+  if (me) {
+    const { data } = await supabase
+      .from("action_items")
+      .select("id, text, due_date, urgent, done, finalized_at, meeting_id, meetings(title, meeting_date)")
+      .eq("done", false)
+      .is("finalized_at", null)
+      .or(me.aliases.map((a) => `assignee.ilike.%${a}%`).join(","));
+    myItems = ((data ?? []) as unknown as MyItem[]).sort((a, b) => {
+      if (!!a.urgent !== !!b.urgent) return a.urgent ? -1 : 1;
+      const ad = a.due_date ?? "9999-99-99", bd = b.due_date ?? "9999-99-99";
+      return ad < bd ? -1 : ad > bd ? 1 : 0;
+    });
+  }
+
   // -- last meeting --
   const lastMeeting = mtgs[0] ?? null;
   const lastMeetingOpen = lastMeeting
@@ -178,6 +198,44 @@ export default async function OverviewPage() {
         <PendingPaymentsCard items={pendingPayments} />
         <KpiCard value={openItems.length} label="Action items abiertos" hint="de reuniones" href="/seguimiento" />
       </div>
+
+      {/* Mis action items (del usuario logueado) */}
+      {me && (
+        <div className="rounded-xl border border-line bg-card">
+          <div className="border-b border-line px-5 py-3 text-sm font-semibold">
+            Mis action items — {me.name} ({myItems.length})
+          </div>
+          {myItems.length === 0 ? (
+            <div className="px-5 py-6 text-sm text-neutral-500">No tenés action items pendientes. 🎉</div>
+          ) : (
+            <ul className="divide-y divide-line">
+              {myItems.map((it) => {
+                const overdue = it.due_date != null && it.due_date < todayStr;
+                return (
+                  <li key={it.id}>
+                    <Link href="/seguimiento" className="flex items-start justify-between gap-3 px-5 py-3 hover:bg-page/50">
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-2">
+                          {it.urgent && <span className="badge badge-danger">🔴 Urgente</span>}
+                          <span className="text-sm font-medium">{it.text}</span>
+                        </span>
+                        {it.meetings && (
+                          <span className="mt-0.5 block text-xs text-neutral-400">{it.meetings.title} · {it.meetings.meeting_date}</span>
+                        )}
+                      </span>
+                      {it.due_date && (
+                        <span className={overdue ? "shrink-0 text-xs font-medium text-[#a32d2d]" : "shrink-0 text-xs text-neutral-500"}>
+                          Vence {it.due_date}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Necesita atención */}

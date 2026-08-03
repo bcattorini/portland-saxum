@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import type { ActionItem, Meeting } from "@/lib/types";
 import { UpdatesLog } from "@/app/components/UpdatesLog";
+import { AssigneeInput } from "@/app/components/AssigneeInput";
 
 const fmtD = (iso: string) => new Date(iso).toLocaleDateString("es");
 
@@ -81,6 +82,16 @@ export function MeetingDetail({
     if (data) onItemsChanged(items.map((x) => (x.id === it.id ? (data as ActionItem) : x)));
   }
 
+  async function toggleUrgent(it: ActionItem) {
+    const { data } = await supabase
+      .from("action_items")
+      .update({ urgent: !it.urgent })
+      .eq("id", it.id)
+      .select()
+      .single();
+    if (data) onItemsChanged(items.map((x) => (x.id === it.id ? (data as ActionItem) : x)));
+  }
+
   async function addItem() {
     if (!newItem.text.trim()) return;
     const { data } = await supabase
@@ -110,6 +121,13 @@ export function MeetingDetail({
   }
 
   const openCount = items.filter((i) => !i.done).length;
+  const closed = (i: ActionItem) => i.done || !!i.finalized_at;
+  const sortedItems = [...items].sort((a, b) => {
+    if (closed(a) !== closed(b)) return closed(a) ? 1 : -1; // open first
+    if (!!a.urgent !== !!b.urgent) return a.urgent ? -1 : 1; // urgent first
+    const ad = a.due_date ?? "9999-99-99", bd = b.due_date ?? "9999-99-99";
+    return ad < bd ? -1 : ad > bd ? 1 : 0;
+  });
 
   return (
     <div className="rounded-xl border border-line bg-card">
@@ -180,7 +198,7 @@ export function MeetingDetail({
           </div>
 
           <ul className="space-y-1.5">
-            {items.map((it) =>
+            {sortedItems.map((it) =>
               editingItemId === it.id ? (
                 <li key={it.id}>
                   <ItemEditor
@@ -191,12 +209,18 @@ export function MeetingDetail({
                   />
                 </li>
               ) : (
-                <li key={it.id} className={clsx("flex items-start gap-2.5 rounded-md border px-3 py-2", it.finalized_at ? "border-[#cfe3b6] bg-[#f6faf0]" : "border-line")}>
+                <li key={it.id} className={clsx(
+                  "flex items-start gap-2.5 rounded-md border px-3 py-2",
+                  it.finalized_at ? "border-[#cfe3b6] bg-[#f6faf0]"
+                    : it.urgent && !it.done ? "border-[#f0c9c9] bg-[#fdf5f5]"
+                    : "border-line",
+                )}>
                   <input type="checkbox" checked={it.done} onChange={() => toggleDone(it)}
                     className="mt-0.5 h-4 w-4 accent-[#1b3a6b]" />
                   <button onClick={() => setEditingItemId(it.id)} className="min-w-0 flex-1 text-left">
                     <span className={clsx("text-sm", it.done && "text-neutral-400 line-through")}>{it.text}</span>
                     <span className="mt-1 flex flex-wrap items-center gap-2">
+                      {it.urgent && !it.done && <span className="badge badge-danger">🔴 Urgente</span>}
                       {it.assignee && <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600">{it.assignee}</span>}
                       {it.due_date && (
                         <span className={clsx("badge", !it.done && it.due_date < today ? "badge-danger" : "badge-neutral")}>
@@ -205,13 +229,19 @@ export function MeetingDetail({
                       )}
                     </span>
                   </button>
-                  <div className="shrink-0 text-right">
+                  <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                    {!it.done && (
+                      <button onClick={() => toggleUrgent(it)} title="Marcar urgente"
+                        className={clsx("text-[11px]", it.urgent ? "font-medium text-[#a32d2d]" : "text-neutral-400 hover:text-[#a32d2d]")}>
+                        {it.urgent ? "Quitar urgente" : "Urgente"}
+                      </button>
+                    )}
                     {it.finalized_at ? (
-                      <>
+                      <div>
                         <div className="text-[11px] font-medium text-[#3b6d11]">✓ Finalizado</div>
                         <div className="text-[10px] text-neutral-400">{fmtD(it.finalized_at)}</div>
                         <button onClick={() => setFinalized(it, false)} className="text-[11px] text-brand hover:underline">Reabrir</button>
-                      </>
+                      </div>
                     ) : (
                       <button onClick={() => setFinalized(it, true)}
                         className="rounded-md bg-[#eaf3de] px-2 py-0.5 text-[11px] font-medium text-[#3b6d11] hover:bg-[#dfeecb]">
@@ -230,8 +260,7 @@ export function MeetingDetail({
             <input value={newItem.text} onChange={(e) => setNewItem((p) => ({ ...p, text: e.target.value }))}
               onKeyDown={(e) => e.key === "Enter" && addItem()} placeholder="Nuevo action item…"
               className="rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
-            <input value={newItem.assignee} onChange={(e) => setNewItem((p) => ({ ...p, assignee: e.target.value }))} placeholder="Responsable"
-              className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+            <AssigneeInput value={newItem.assignee} onChange={(v) => setNewItem((p) => ({ ...p, assignee: v }))} />
             <input type="date" value={newItem.due_date} onChange={(e) => setNewItem((p) => ({ ...p, due_date: e.target.value }))}
               className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
             <button onClick={addItem} className="rounded-md bg-brand px-3 text-sm font-medium text-white hover:bg-brand-hover">Añadir</button>
@@ -260,7 +289,7 @@ function ItemEditor({
     <div className="space-y-2 rounded-md border border-brand/40 bg-page/40 p-2">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_130px_140px_auto_auto]">
         <input value={text} onChange={(e) => setText(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
-        <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Responsable" className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+        <AssigneeInput value={assignee} onChange={setAssignee} />
         <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
         <button onClick={() => onSave({ text: text.trim(), assignee: assignee.trim() || null, due_date: due || null })}
           className="rounded-md bg-brand px-3 text-sm font-medium text-white hover:bg-brand-hover">OK</button>
