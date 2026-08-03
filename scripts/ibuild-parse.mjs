@@ -39,7 +39,7 @@ const CODE_NAME = {
   E: "Electrical", MA: "Mechanical", BBL: "PW BBL",
 };
 
-function resolveCode(area, reviewer) {
+export function resolveCode(area, reviewer) {
   for (const [re, code] of AREA_TO_CODE) if (re.test(area)) return code;
   const r = (reviewer || "").toLowerCase().trim();
   if (REVIEWER_TO_CODE[r]) return REVIEWER_TO_CODE[r];

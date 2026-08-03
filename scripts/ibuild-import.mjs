@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { parseReport } from "./ibuild-parse.mjs";
+import { parseXlsx } from "./ibuild-xlsx.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const env = {};
@@ -27,7 +28,7 @@ const CODE_NAME = {
 };
 const norm = (s) => (s || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
 const APPLY = process.argv.includes("--apply");
-const pdfs = process.argv.slice(2).filter((a) => a.toLowerCase().endsWith(".pdf"));
+const files = process.argv.slice(2).filter((a) => /\.(pdf|xlsx)$/i.test(a));
 
 // which comments have internal tracking (to report preservation)
 const { data: trackRows } = await sb.from("comment_tracking").select("comment_id");
@@ -35,8 +36,8 @@ const trackedIds = new Set((trackRows || []).map((t) => t.comment_id));
 
 const { data: allProps } = await sb.from("properties").select("id,address,permit_number");
 
-for (const pdf of pdfs) {
-  const { permit, records } = await parseReport(pdf);
+for (const file of files) {
+  const { permit, records } = file.toLowerCase().endsWith(".xlsx") ? parseXlsx(file) : await parseReport(file);
   const kept = records.filter((r) => r.code && r.code !== "SKIP");
   const prop = allProps.find((p) => norm(p.permit_number) === norm(permit));
   console.log(`\n================ ${permit} ================`);
