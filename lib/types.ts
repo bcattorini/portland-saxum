@@ -164,6 +164,8 @@ export interface Payment {
   project: string | null;
   invoice_url: string | null;
   notes: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
   sort_order: number | null;
   created_at: string;
 }
@@ -194,6 +196,8 @@ export interface GeneralPayment {
   project: string | null;
   invoice_url: string | null;
   notes: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
   sort_order: number | null;
   created_at: string;
 }

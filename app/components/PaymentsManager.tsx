@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { PaymentStatus, PaymentType } from "@/lib/types";
 import { PAYMENT_STATUSES } from "@/lib/types";
 import { PaymentStatusBadge, PaymentTypeBadge } from "@/lib/badges";
+import { personForEmail } from "@/lib/users";
 import { QbCodeInput } from "./QbCodeInput";
 
 const money = (n: number, currency = "USD") =>
@@ -35,10 +36,27 @@ type Row = {
   project: string | null;
   invoice_url: string | null;
   notes: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
   sort_order: number | null;
   created_at: string;
   property_id?: string;
 };
+
+// Approval workflow stage, derived from status + approved_at.
+type Stage = "cargado" | "por_pagar" | "pagado" | "cancelado";
+function stageOf(r: Row): Stage {
+  if (r.status === "Cancelled") return "cancelado";
+  if (r.status === "Paid") return "pagado";
+  if (r.approved_at) return "por_pagar";
+  return "cargado";
+}
+const STAGES: { key: Stage; label: string; hint: string }[] = [
+  { key: "cargado", label: "Cargados", hint: "esperando aprobación de Bruno" },
+  { key: "por_pagar", label: "Por pagar", hint: "aprobados, listos para pagar" },
+  { key: "pagado", label: "Pagados", hint: "" },
+  { key: "cancelado", label: "Cancelados", hint: "" },
+];
 
 type Draft = {
   description: string;
@@ -107,6 +125,12 @@ export function PaymentsManager({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState(emptyFilters);
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({ field: "status", dir: "asc" });
+  const [meEmail, setMeEmail] = useState<string | null>(null);
+  const isBruno = personForEmail(meEmail)?.name === "Bruno";
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMeEmail(data.user?.email ?? null));
+  }, [supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +167,18 @@ export function PaymentsManager({
   async function markPaid(p: Row) {
     const today = new Date().toISOString().slice(0, 10);
     const { data } = await supabase.from(table).update({ status: "Paid", paid_date: today }).eq("id", p.id).select().single();
+    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? (data as Row) : r)));
+  }
+  async function approve(p: Row) {
+    if (!isBruno) return;
+    const { data } = await supabase.from(table)
+      .update({ approved_at: new Date().toISOString(), approved_by: meEmail }).eq("id", p.id).select().single();
+    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? (data as Row) : r)));
+  }
+  async function unapprove(p: Row) {
+    if (!isBruno) return;
+    const { data } = await supabase.from(table)
+      .update({ approved_at: null, approved_by: null }).eq("id", p.id).select().single();
     if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? (data as Row) : r)));
   }
   async function remove(id: string) {
@@ -202,9 +238,38 @@ export function PaymentsManager({
     doc.save(`Pagos_${(subtitle || "empresa").replace(/[^\w]+/g, "_")}.pdf`);
     setExportMode(false);
   }
+  async function downloadExcel() {
+    const chosen = filtered.filter((r) => selectedIds.has(r.id));
+    if (!chosen.length) return;
+    const XLSX = await import("xlsx");
+    const stageLabel: Record<Stage, string> = { cargado: "Cargado", por_pagar: "Por pagar", pagado: "Pagado", cancelado: "Cancelado" };
+    const aoa = chosen.map((p) => ({
+      Proyecto: p.project ?? "",
+      Descripción: p.description,
+      Tipo: TYPE_ES(p.payment_type),
+      "Proveedor/Pagador": p.vendor_or_payer ?? "",
+      Monto: Number(p.amount || 0),
+      Moneda: p.currency,
+      Vence: p.due_date ?? "",
+      Etapa: stageLabel[stageOf(p)],
+      Estado: STATUS_ES[p.status],
+      "Aprobado por": p.approved_by ?? "",
+      "Fecha pago": p.paid_date ?? "",
+      QB: p.quickbooks_code ?? "",
+      Notas: p.notes ?? "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pagos");
+    const subtitle = scope === "property" ? propertyAddress ?? "propiedad" : "empresa";
+    XLSX.writeFile(wb, `Pagos_${subtitle.replace(/[^\w]+/g, "_")}.xlsx`);
+    setExportMode(false);
+  }
 
-  const pendingTotal = filtered.filter((r) => r.status === "Pending" || r.status === "Overdue").reduce((s, r) => s + Number(r.amount || 0), 0);
   const paidTotal = filtered.filter((r) => r.status === "Paid").reduce((s, r) => s + Number(r.amount || 0), 0);
+  const stageTotal = (stage: Stage) => filtered.filter((r) => stageOf(r) === stage).reduce((s, r) => s + Number(r.amount || 0), 0);
+  const cargadoTotal = stageTotal("cargado");
+  const porPagarTotal = stageTotal("por_pagar");
 
   // -- sort (click a column header) --
   function toggleSort(field: string) {
@@ -247,7 +312,7 @@ export function PaymentsManager({
         </span>
         <div className="flex gap-2">
           {filtered.length > 0 && !exportMode && (
-            <button onClick={startExport} className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-page">Exportar PDF</button>
+            <button onClick={startExport} className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-page">Exportar</button>
           )}
           <button onClick={() => setAdding((v) => !v)} className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover">
             {adding ? "Cancelar" : "+ Agregar pago"}
@@ -324,6 +389,9 @@ export function PaymentsManager({
             ))}
           </ul>
           <div className="flex gap-2">
+            <button onClick={downloadExcel} disabled={selectedIds.size === 0} className="rounded-md bg-[#1d6f42] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#175733] disabled:opacity-50">
+              Descargar Excel ({selectedIds.size})
+            </button>
             <button onClick={downloadPdf} disabled={selectedIds.size === 0} className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50">
               Descargar PDF ({selectedIds.size})
             </button>
@@ -356,51 +424,79 @@ export function PaymentsManager({
               </tr>
             </thead>
             <tbody>
-              {sorted.map((p) =>
-                editingId === p.id ? (
-                  <tr key={p.id}>
-                    <td colSpan={8} className="p-3">
-                      <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p.id, dr)} onDelete={() => remove(p.id)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} />
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={p.id} className="border-t border-line">
-                    <td className="px-3 py-2 text-neutral-600">{p.project ?? "—"}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-medium">{p.description}</span>
-                        {p.invoice_url && (
-                          <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
-                            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
-                          </button>
-                        )}
-                      </div>
-                      {p.vendor_or_payer && <div className="text-xs text-neutral-400">{p.vendor_or_payer}</div>}
-                    </td>
-                    <td className="px-3 py-2"><PaymentTypeBadge type={p.payment_type} /></td>
-                    <td className="px-3 py-2 text-right font-mono">{money(Number(p.amount), p.currency)}</td>
-                    <td className="px-3 py-2 text-neutral-500">{p.due_date ?? "—"}</td>
-                    <td className="px-3 py-2">
-                      <PaymentStatusBadge status={p.status} />
-                      {p.status === "Paid" && p.paid_date && (
-                        <div className="mt-0.5 text-[11px] text-neutral-400">Pagado el {fmtDate(p.paid_date)}</div>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-xs text-neutral-500">{p.quickbooks_code ?? "—"}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex justify-end gap-2 text-xs">
-                        {p.status !== "Paid" && <button onClick={() => markPaid(p)} className="font-medium text-[#3b6d11] hover:underline">Pagar</button>}
-                        <button onClick={() => setEditingId(p.id)} className="text-neutral-500 hover:underline">Editar</button>
-                      </div>
-                    </td>
-                  </tr>
-                ),
-              )}
+              {STAGES.map((st) => {
+                const group = sorted.filter((p) => stageOf(p) === st.key);
+                if (group.length === 0) return null;
+                const subtotal = group.reduce((s, r) => s + Number(r.amount || 0), 0);
+                return (
+                  <Fragment key={st.key}>
+                    <tr className="bg-page/70">
+                      <td colSpan={8} className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                        {st.label} <span className="font-normal text-neutral-400">({group.length}){st.hint ? ` · ${st.hint}` : ""}</span>
+                        <span className="ml-2 font-mono normal-case tracking-normal text-neutral-400">{money(subtotal)}</span>
+                      </td>
+                    </tr>
+                    {group.map((p) => {
+                      const stage = st.key;
+                      return editingId === p.id ? (
+                        <tr key={p.id}>
+                          <td colSpan={8} className="p-3">
+                            <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p.id, dr)} onDelete={() => remove(p.id)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} />
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr key={p.id} className="border-t border-line">
+                          <td className="px-3 py-2 text-neutral-600">{p.project ?? "—"}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium">{p.description}</span>
+                              {p.invoice_url && (
+                                <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
+                                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
+                                </button>
+                              )}
+                            </div>
+                            {p.vendor_or_payer && <div className="text-xs text-neutral-400">{p.vendor_or_payer}</div>}
+                          </td>
+                          <td className="px-3 py-2"><PaymentTypeBadge type={p.payment_type} /></td>
+                          <td className="px-3 py-2 text-right font-mono">{money(Number(p.amount), p.currency)}</td>
+                          <td className="px-3 py-2 text-neutral-500">{p.due_date ?? "—"}</td>
+                          <td className="px-3 py-2">
+                            <PaymentStatusBadge status={p.status} />
+                            {p.status === "Paid" && p.paid_date && (
+                              <div className="mt-0.5 text-[11px] text-neutral-400">Pagado el {fmtDate(p.paid_date)}</div>
+                            )}
+                            {(stage === "por_pagar" || stage === "pagado") && p.approved_by && (
+                              <div className="mt-0.5 text-[11px] text-neutral-400">Aprobó {personForEmail(p.approved_by)?.name ?? p.approved_by}</div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-xs text-neutral-500">{p.quickbooks_code ?? "—"}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex justify-end gap-2 text-xs">
+                              {stage === "cargado" && (isBruno
+                                ? <button onClick={() => approve(p)} className="font-medium text-[#1b3a6b] hover:underline">Aprobar</button>
+                                : <span className="text-neutral-400">Esperando a Bruno</span>)}
+                              {stage === "por_pagar" && <button onClick={() => markPaid(p)} className="font-medium text-[#3b6d11] hover:underline">Pagar</button>}
+                              {stage === "por_pagar" && isBruno && <button onClick={() => unapprove(p)} className="text-neutral-400 hover:underline">Quitar aprob.</button>}
+                              <button onClick={() => setEditingId(p.id)} className="text-neutral-500 hover:underline">Editar</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </Fragment>
+                );
+              })}
             </tbody>
             <tfoot>
               <tr className="border-t border-line bg-page/60">
-                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total pendiente</td>
-                <td className="px-3 py-2 text-right font-mono font-semibold text-[#a32d2d]">{money(pendingTotal)}</td>
+                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total cargado</td>
+                <td className="px-3 py-2 text-right font-mono font-semibold text-neutral-600">{money(cargadoTotal)}</td>
+                <td colSpan={4}></td>
+              </tr>
+              <tr className="bg-page/60">
+                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total por pagar</td>
+                <td className="px-3 py-2 text-right font-mono font-semibold text-[#a32d2d]">{money(porPagarTotal)}</td>
                 <td colSpan={4}></td>
               </tr>
               <tr className="bg-page/60">
