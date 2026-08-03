@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import type { ActionItem, Meeting } from "@/lib/types";
+import { UpdatesLog } from "@/app/components/UpdatesLog";
 
 const fmtD = (iso: string) => new Date(iso).toLocaleDateString("es");
 
@@ -168,6 +169,9 @@ export function MeetingDetail({
           </div>
         )}
 
+        {/* Actualizaciones de la reunión (fechadas) */}
+        {!editing && <UpdatesLog entityType="meeting" entityId={meeting.id} />}
+
         {/* Action items */}
         <div>
           <div className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
@@ -253,14 +257,19 @@ function ItemEditor({
   const [assignee, setAssignee] = useState(item.assignee ?? "");
   const [due, setDue] = useState(item.due_date ?? "");
   return (
-    <div className="grid grid-cols-1 gap-2 rounded-md border border-brand/40 bg-page/40 p-2 sm:grid-cols-[1fr_130px_140px_auto_auto]">
-      <input value={text} onChange={(e) => setText(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
-      <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Responsable" className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
-      <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
-      <button onClick={() => onSave({ text: text.trim(), assignee: assignee.trim() || null, due_date: due || null })}
-        className="rounded-md bg-brand px-3 text-sm font-medium text-white hover:bg-brand-hover">OK</button>
-      <button onClick={onDelete} className="rounded-md px-2 text-sm text-[#a32d2d] hover:bg-[#fcebeb]" title="Eliminar">✕</button>
-      <button onClick={onCancel} className="col-span-full text-left text-xs text-neutral-400 hover:underline">cancelar</button>
+    <div className="space-y-2 rounded-md border border-brand/40 bg-page/40 p-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_130px_140px_auto_auto]">
+        <input value={text} onChange={(e) => setText(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+        <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Responsable" className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+        <input type="date" value={due} onChange={(e) => setDue(e.target.value)} className="rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+        <button onClick={() => onSave({ text: text.trim(), assignee: assignee.trim() || null, due_date: due || null })}
+          className="rounded-md bg-brand px-3 text-sm font-medium text-white hover:bg-brand-hover">OK</button>
+        <button onClick={onDelete} className="rounded-md px-2 text-sm text-[#a32d2d] hover:bg-[#fcebeb]" title="Eliminar">✕</button>
+      </div>
+      <button onClick={onCancel} className="text-xs text-neutral-400 hover:underline">cancelar</button>
+      <div className="border-t border-line pt-2">
+        <UpdatesLog entityType="action_item" entityId={item.id} label="Updates de esta tarea" />
+      </div>
     </div>
   );
 }

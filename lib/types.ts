@@ -219,6 +219,16 @@ export interface ActionItem {
   created_at: string;
 }
 
+// Dated update entry attached to a meeting or an action item
+export interface Update {
+  id: string;
+  entity_type: "meeting" | "action_item";
+  entity_id: string;
+  body: string;
+  created_at: string;
+  created_by: string | null;
+}
+
 // -- Derived shape used by the property cards (aggregated from disciplines) --
 export interface PropertyWithStats extends Property {
   disc_count: number;
