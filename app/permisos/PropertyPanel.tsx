@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import type {
   Comment,
+  CommentCycle,
   CommentTracking,
   Discipline,
   PropertyWithStats,
@@ -73,6 +74,7 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [commentsByDisc, setCommentsByDisc] = useState<Record<string, Comment[]>>({});
   const [tracking, setTracking] = useState<Record<string, CommentTracking>>({});
+  const [cycles, setCycles] = useState<CommentCycle[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [drawer, setDrawer] = useState<{ comment: Comment; discipline: Discipline } | null>(null);
 
@@ -117,6 +119,12 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
         track = (tData ?? []) as CommentTracking[];
       }
 
+      const { data: cyData } = await supabase
+        .from("comment_cycles")
+        .select("*")
+        .eq("property_id", property.id)
+        .order("imported_at", { ascending: false });
+
       if (cancelled) return;
       const grouped: Record<string, Comment[]> = {};
       for (const c of comments) (grouped[c.discipline_id] ??= []).push(c);
@@ -126,6 +134,7 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
       setDisciplines(discList);
       setCommentsByDisc(grouped);
       setTracking(trackMap);
+      setCycles((cyData ?? []) as CommentCycle[]);
       setLoading(false);
     })();
     return () => {
@@ -151,6 +160,11 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
       </div>
     );
 
+  const totalNow = disciplines.reduce((s, d) => s + d.total_comments, 0);
+  const openNow = disciplines.reduce((s, d) => s + d.open_comments, 0);
+  const infoNow = disciplines.reduce((s, d) => s + d.info_comments, 0);
+  const resolvedNow = Math.max(0, totalNow - openNow - infoNow);
+
   return (
     <div className="space-y-2">
       <div className="flex justify-end">
@@ -160,6 +174,35 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
         >
           Exportar PDF
         </button>
+      </div>
+
+      {/* Ciclos de review — resolución por ciclo */}
+      <div className="rounded-lg border border-line bg-page/40 px-4 py-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <span className="text-sm font-semibold">Ciclos de review</span>
+          <span className="text-xs text-neutral-500">
+            Ahora: <span className="font-semibold text-[#3b6d11]">{resolvedNow}</span> resueltos ·{" "}
+            <span className="font-semibold text-[#a32d2d]">{openNow}</span> pendientes de {totalNow}
+            {infoNow > 0 && <span className="text-neutral-400"> · {infoNow} info</span>}
+          </span>
+        </div>
+        {cycles.length === 0 ? (
+          <p className="mt-1.5 text-xs text-neutral-400">
+            El historial se registra solo cada vez que se importa un reporte nuevo de iBuild.
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-1">
+            {cycles.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-baseline gap-x-2 text-xs">
+                <span className="font-medium text-neutral-600">Ciclo {c.cycle_no ?? "—"}</span>
+                <span className="text-neutral-400">{new Date(c.imported_at).toLocaleDateString("es")}</span>
+                <span className="text-[#3b6d11]">✓ {c.resolved_in_cycle} resueltos</span>
+                <span className="text-neutral-500">· quedaron {c.unresolved_after} pendientes</span>
+                {c.new_comments > 0 && <span className="text-neutral-400">· +{c.new_comments} nuevos</span>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Discipline table */}

@@ -104,6 +104,21 @@ export interface Comment {
   created_at: string;
 }
 
+export interface CommentCycle {
+  id: string;
+  property_id: string;
+  cycle_no: number | null;
+  imported_at: string;
+  source: string | null;
+  total_before: number;
+  unresolved_before: number;
+  resolved_in_cycle: number;
+  new_comments: number;
+  total_after: number;
+  unresolved_after: number;
+  created_at: string;
+}
+
 export interface CommentTracking {
   id: string;
   comment_id: string;

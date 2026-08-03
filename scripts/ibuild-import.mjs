@@ -56,7 +56,7 @@ for (const file of files) {
   const codesToCreate = codesInPdf.filter((c) => !discByCode.has(c));
 
   const pdfRefs = new Set(kept.map((r) => r.ref));
-  let toInsert = 0, toUpdate = 0, statusChanges = [], trackedTouched = [];
+  let toInsert = 0, toUpdate = 0, statusChanges = [], trackedTouched = [], resolvedInCycle = 0;
   for (const r of kept) {
     const ex = existByRef.get(r.ref);
     if (ex) {
@@ -64,14 +64,18 @@ for (const file of files) {
       // blank status in the report must NOT clobber an existing status; only new comments default to Unresolved
       const newStatus = r.status || ex.city_status || "Unresolved";
       if (ex.city_status !== newStatus) statusChanges.push(`#${r.ref} ${ex.city_status}→${newStatus}`);
+      if (ex.city_status !== "Resolved" && newStatus === "Resolved") resolvedInCycle++;
       if (trackedIds.has(ex.id)) trackedTouched.push(r.ref);
     } else toInsert++;
   }
   const staleRefs = existRows.filter((c) => !pdfRefs.has(c.ref_number)).map((c) => c.ref_number);
+  const totalBefore = existRows.length;
+  const unresolvedBefore = existRows.filter((c) => c.city_status === "Unresolved").length;
 
   console.log(`  disciplines to create: ${codesToCreate.length ? codesToCreate.join(", ") : "none"}`);
   console.log(`  comments: ${toUpdate} update, ${toInsert} insert, ${staleRefs.length} stale-in-db-not-in-pdf (kept as-is)`);
   console.log(`  status changes: ${statusChanges.length}${statusChanges.length ? " → " + statusChanges.slice(0, 12).join(", ") + (statusChanges.length > 12 ? " …" : "") : ""}`);
+  console.log(`  ► cycle: resolved ${resolvedInCycle} this import (was ${unresolvedBefore} unresolved of ${totalBefore}); +${toInsert} new comments`);
   console.log(`  tracked comments affected (preserved): ${trackedTouched.length ? trackedTouched.join(", ") : "none"}`);
 
   if (!APPLY) continue;
@@ -110,7 +114,25 @@ for (const file of files) {
     const city_status = total === 0 ? "PENDING_REVIEW" : open > 0 ? "CORRECTIONS" : "APPROVED";
     await sb.from("disciplines").update({ total_comments: total, open_comments: open, info_comments: info, city_status }).eq("id", d.id);
   }
-  console.log(`  ✓ applied.`);
+
+  // 4) snapshot this import as a review cycle (auto-tracks how many resolved vs before)
+  const discIdsNow = discNow.map((d) => d.id);
+  const { data: afterComments } = await sb.from("comments").select("city_status")
+    .in("discipline_id", discIdsNow.length ? discIdsNow : ["x"]);
+  const totalAfter = (afterComments || []).length;
+  const unresolvedAfter = (afterComments || []).filter((c) => c.city_status === "Unresolved").length;
+  const { data: lastCycle } = await sb.from("comment_cycles").select("cycle_no")
+    .eq("property_id", prop.id).order("cycle_no", { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
+  const cycleNo = ((lastCycle?.cycle_no) || 0) + 1;
+  const source = file.split(/[\\/]/).pop();
+  const { error: cyErr } = await sb.from("comment_cycles").insert({
+    property_id: prop.id, cycle_no: cycleNo, source,
+    total_before: totalBefore, unresolved_before: unresolvedBefore,
+    resolved_in_cycle: resolvedInCycle, new_comments: toInsert,
+    total_after: totalAfter, unresolved_after: unresolvedAfter,
+  });
+  if (cyErr) console.log(`  ⚠ could not save cycle snapshot: ${cyErr.message}`);
+  else console.log(`  ✓ applied. Saved cycle #${cycleNo} (resolved ${resolvedInCycle}, ${unresolvedAfter} still open).`);
 }
 
 console.log(`\n${APPLY ? "APPLIED changes." : "DRY-RUN only. Re-run with --apply to write."}`);
