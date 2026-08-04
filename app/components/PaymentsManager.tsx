@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { PaymentStatus, PaymentType } from "@/lib/types";
 import { PAYMENT_STATUSES } from "@/lib/types";
@@ -266,11 +266,6 @@ export function PaymentsManager({
     setExportMode(false);
   }
 
-  const paidTotal = filtered.filter((r) => r.status === "Paid").reduce((s, r) => s + Number(r.amount || 0), 0);
-  const stageTotal = (stage: Stage) => filtered.filter((r) => stageOf(r) === stage).reduce((s, r) => s + Number(r.amount || 0), 0);
-  const cargadoTotal = stageTotal("cargado");
-  const porPagarTotal = stageTotal("por_pagar");
-
   // -- sort (click a column header) --
   function toggleSort(field: string) {
     setSort((s) => (s.field === field ? { field, dir: s.dir === "asc" ? "desc" : "asc" } : { field, dir: "asc" }));
@@ -299,6 +294,57 @@ export function PaymentsManager({
         </button>
       </th>
     );
+  };
+
+  const rowEl = (p: Row, stage: Stage) =>
+    editingId === p.id ? (
+      <tr key={p.id}>
+        <td colSpan={8} className="p-3">
+          <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p.id, dr)} onDelete={() => remove(p.id)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} />
+        </td>
+      </tr>
+    ) : (
+      <tr key={p.id} className="border-t border-line">
+        <td className="px-3 py-2 text-neutral-600">{p.project ?? "—"}</td>
+        <td className="px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <span className="font-medium">{p.description}</span>
+            {p.invoice_url && (
+              <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
+              </button>
+            )}
+          </div>
+          {p.vendor_or_payer && <div className="text-xs text-neutral-400">{p.vendor_or_payer}</div>}
+        </td>
+        <td className="px-3 py-2"><PaymentTypeBadge type={p.payment_type} /></td>
+        <td className="px-3 py-2 text-right font-mono">{money(Number(p.amount), p.currency)}</td>
+        <td className="px-3 py-2 text-neutral-500">{p.due_date ?? "—"}</td>
+        <td className="px-3 py-2">
+          <PaymentStatusBadge status={p.status} />
+          {p.status === "Paid" && p.paid_date && (
+            <div className="mt-0.5 text-[11px] text-neutral-400">Pagado el {fmtDate(p.paid_date)}</div>
+          )}
+          {(stage === "por_pagar" || stage === "pagado") && p.approved_by && (
+            <div className="mt-0.5 text-[11px] text-neutral-400">Aprobó {personForEmail(p.approved_by)?.name ?? p.approved_by}</div>
+          )}
+        </td>
+        <td className="px-3 py-2 font-mono text-xs text-neutral-500">{p.quickbooks_code ?? "—"}</td>
+        <td className="px-3 py-2">
+          <div className="flex justify-end gap-2 text-xs">
+            {stage === "cargado" && (isBruno
+              ? <button onClick={() => approve(p)} className="font-medium text-[#1b3a6b] hover:underline">Aprobar</button>
+              : <span className="text-neutral-400">Esperando a Bruno</span>)}
+            {stage === "por_pagar" && <button onClick={() => markPaid(p)} className="font-medium text-[#3b6d11] hover:underline">Pagar</button>}
+            {stage === "por_pagar" && isBruno && <button onClick={() => unapprove(p)} className="text-neutral-400 hover:underline">Quitar aprob.</button>}
+            <button onClick={() => setEditingId(p.id)} className="text-neutral-500 hover:underline">Editar</button>
+          </div>
+        </td>
+      </tr>
+    );
+
+  const stageAmountClass: Record<Stage, string> = {
+    cargado: "text-neutral-600", por_pagar: "text-[#a32d2d]", pagado: "text-[#3b6d11]", cancelado: "text-neutral-400",
   };
 
   if (loading) return <div className="py-8 text-center text-sm text-neutral-400">Cargando…</div>;
@@ -409,103 +455,41 @@ export function PaymentsManager({
       ) : filtered.length === 0 ? (
         <div className="py-6 text-sm text-neutral-500">Ningún pago coincide con los filtros.</div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-line">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-page text-left text-[11px] uppercase tracking-wide text-neutral-400">
-                {th("project", "Proyecto")}
-                {th("description", "Descripción")}
-                {th("type", "Tipo")}
-                {th("amount", "Monto", true)}
-                {th("due_date", "Vence")}
-                {th("status", "Estado")}
-                <th className="px-3 py-2 font-medium">QB</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {STAGES.map((st) => {
-                const group = sorted.filter((p) => stageOf(p) === st.key);
-                if (group.length === 0) return null;
-                const subtotal = group.reduce((s, r) => s + Number(r.amount || 0), 0);
-                return (
-                  <Fragment key={st.key}>
-                    <tr className="bg-page/70">
-                      <td colSpan={8} className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-                        {st.label} <span className="font-normal text-neutral-400">({group.length}){st.hint ? ` · ${st.hint}` : ""}</span>
-                        <span className="ml-2 font-mono normal-case tracking-normal text-neutral-400">{money(subtotal)}</span>
-                      </td>
-                    </tr>
-                    {group.map((p) => {
-                      const stage = st.key;
-                      return editingId === p.id ? (
-                        <tr key={p.id}>
-                          <td colSpan={8} className="p-3">
-                            <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p.id, dr)} onDelete={() => remove(p.id)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} />
-                          </td>
-                        </tr>
-                      ) : (
-                        <tr key={p.id} className="border-t border-line">
-                          <td className="px-3 py-2 text-neutral-600">{p.project ?? "—"}</td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-medium">{p.description}</span>
-                              {p.invoice_url && (
-                                <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
-                                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
-                                </button>
-                              )}
-                            </div>
-                            {p.vendor_or_payer && <div className="text-xs text-neutral-400">{p.vendor_or_payer}</div>}
-                          </td>
-                          <td className="px-3 py-2"><PaymentTypeBadge type={p.payment_type} /></td>
-                          <td className="px-3 py-2 text-right font-mono">{money(Number(p.amount), p.currency)}</td>
-                          <td className="px-3 py-2 text-neutral-500">{p.due_date ?? "—"}</td>
-                          <td className="px-3 py-2">
-                            <PaymentStatusBadge status={p.status} />
-                            {p.status === "Paid" && p.paid_date && (
-                              <div className="mt-0.5 text-[11px] text-neutral-400">Pagado el {fmtDate(p.paid_date)}</div>
-                            )}
-                            {(stage === "por_pagar" || stage === "pagado") && p.approved_by && (
-                              <div className="mt-0.5 text-[11px] text-neutral-400">Aprobó {personForEmail(p.approved_by)?.name ?? p.approved_by}</div>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 font-mono text-xs text-neutral-500">{p.quickbooks_code ?? "—"}</td>
-                          <td className="px-3 py-2">
-                            <div className="flex justify-end gap-2 text-xs">
-                              {stage === "cargado" && (isBruno
-                                ? <button onClick={() => approve(p)} className="font-medium text-[#1b3a6b] hover:underline">Aprobar</button>
-                                : <span className="text-neutral-400">Esperando a Bruno</span>)}
-                              {stage === "por_pagar" && <button onClick={() => markPaid(p)} className="font-medium text-[#3b6d11] hover:underline">Pagar</button>}
-                              {stage === "por_pagar" && isBruno && <button onClick={() => unapprove(p)} className="text-neutral-400 hover:underline">Quitar aprob.</button>}
-                              <button onClick={() => setEditingId(p.id)} className="text-neutral-500 hover:underline">Editar</button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-            <tfoot>
-              <tr className="border-t border-line bg-page/60">
-                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total cargado</td>
-                <td className="px-3 py-2 text-right font-mono font-semibold text-neutral-600">{money(cargadoTotal)}</td>
-                <td colSpan={4}></td>
-              </tr>
-              <tr className="bg-page/60">
-                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total por pagar</td>
-                <td className="px-3 py-2 text-right font-mono font-semibold text-[#a32d2d]">{money(porPagarTotal)}</td>
-                <td colSpan={4}></td>
-              </tr>
-              <tr className="bg-page/60">
-                <td colSpan={3} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">Total pagado</td>
-                <td className="px-3 py-2 text-right font-mono font-semibold text-[#3b6d11]">{money(paidTotal)}</td>
-                <td colSpan={4}></td>
-              </tr>
-            </tfoot>
-          </table>
+        <div className="space-y-5">
+          {STAGES.map((st) => {
+            const group = sorted.filter((p) => stageOf(p) === st.key);
+            if (group.length === 0) return null;
+            const subtotal = group.reduce((s, r) => s + Number(r.amount || 0), 0);
+            return (
+              <div key={st.key}>
+                <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-semibold">
+                    {st.label} <span className="font-normal text-neutral-400">({group.length}){st.hint ? ` · ${st.hint}` : ""}</span>
+                  </span>
+                  <span className={"font-mono text-sm font-semibold " + stageAmountClass[st.key]}>{money(subtotal)}</span>
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-line">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-page text-left text-[11px] uppercase tracking-wide text-neutral-400">
+                        {th("project", "Proyecto")}
+                        {th("description", "Descripción")}
+                        {th("type", "Tipo")}
+                        {th("amount", "Monto", true)}
+                        {th("due_date", "Vence")}
+                        {th("status", "Estado")}
+                        <th className="px-3 py-2 font-medium">QB</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.map((p) => rowEl(p, st.key))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
