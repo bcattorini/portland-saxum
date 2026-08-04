@@ -29,9 +29,9 @@ export function PermisosApp({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Permisos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Preconstruction</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Proceso de permisos por propiedad: Planos &amp; Ciudad, Documentos y Pagos.
+          Proceso de preconstrucción por propiedad: Planos &amp; Ciudad, Documentos y Pagos.
         </p>
       </div>
 

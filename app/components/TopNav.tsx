@@ -7,7 +7,7 @@ import { signOut } from "@/app/auth/actions";
 
 const TABS = [
   { href: "/", label: "Resumen" },
-  { href: "/permisos", label: "Permisos" },
+  { href: "/permisos", label: "Preconstruction" },
   { href: "/pagos", label: "Pagos" },
   { href: "/seguimiento", label: "Seguimiento" },
 ];
