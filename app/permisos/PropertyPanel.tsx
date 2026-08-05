@@ -170,6 +170,24 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
   }
   const cycleKeys = [...resolvedByCycle.keys()].sort((a, b) => b - a);
 
+  // pendientes por resolver (Unresolved), ordenados por disciplina y luego ref
+  const discName = (id: string) => discById.get(id)?.name ?? discById.get(id)?.code ?? "—";
+  const pending = allComments
+    .filter((c) => c.city_status === "Unresolved")
+    .sort((a, b) => discName(a.discipline_id).localeCompare(discName(b.discipline_id)) || (a.ref_number ?? 0) - (b.ref_number ?? 0));
+
+  // línea de comentario con disciplina (nombre completo: Public Works, Environmental, etc.)
+  const commentLine = (c: Comment) => (
+    <li key={c.id} className="flex items-start gap-2 px-3 py-2">
+      <span className="w-9 shrink-0 font-mono text-xs text-neutral-400">#{c.ref_number}</span>
+      <span className="w-28 shrink-0 text-[11px] font-medium text-neutral-500">
+        <span className="mr-1 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{discById.get(c.discipline_id)?.code}</span>
+        {discName(c.discipline_id)}
+      </span>
+      <span className="flex-1 text-xs text-neutral-600">{c.text}</span>
+    </li>
+  );
+
   return (
     <div className="space-y-2">
       <div className="flex justify-end">
@@ -219,19 +237,41 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
                   </button>
                   {isOpen && (
                     <ul className="divide-y divide-line border-t border-line">
-                      {list.map((c) => (
-                        <li key={c.id} className="flex items-start gap-2 px-3 py-2">
-                          <span className="w-9 shrink-0 font-mono text-xs text-neutral-400">#{c.ref_number}</span>
-                          <span className="mt-0.5 shrink-0 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{discById.get(c.discipline_id)?.code}</span>
-                          <span className="flex-1 text-xs text-neutral-600">{c.text}</span>
-                        </li>
-                      ))}
+                      {list.map((c) => commentLine(c))}
                     </ul>
                   )}
                 </li>
               );
             })}
           </ul>
+        )}
+      </div>
+
+      {/* Comentarios pendientes por resolver (Unresolved) */}
+      <div className="rounded-lg border border-line bg-page/40 px-4 py-3">
+        <button
+          onClick={() => setCycleOpen((prev) => { const s = new Set(prev); s.has(-1) ? s.delete(-1) : s.add(-1); return s; })}
+          className="flex w-full items-center justify-between gap-2 text-left"
+        >
+          <span className="text-sm font-semibold">
+            Pendientes por resolver
+            {maxCycle > 0 && <span className="ml-1 font-normal text-neutral-400">· ciclo actual {maxCycle}</span>}
+          </span>
+          <span className="flex items-center gap-2 text-xs">
+            <span className="font-semibold text-[#a32d2d]">{pending.length} pendientes</span>
+            <svg className={clsx("h-4 w-4 text-neutral-400 transition-transform", cycleOpen.has(-1) && "rotate-90")} viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+            </svg>
+          </span>
+        </button>
+        {cycleOpen.has(-1) && (
+          pending.length === 0 ? (
+            <p className="mt-1.5 text-xs text-neutral-400">No quedan comentarios abiertos. 🎉</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-line rounded-md border border-line bg-card">
+              {pending.map((c) => commentLine(c))}
+            </ul>
+          )
         )}
       </div>
 
