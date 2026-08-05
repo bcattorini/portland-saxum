@@ -48,7 +48,7 @@ for (const file of files) {
   const discByCode = new Map(discRows.map((d) => [d.code, d.id]));
   const { data: existRows } = await sb
     .from("comments")
-    .select("id,ref_number,city_status,discipline_id")
+    .select("id,ref_number,city_status,discipline_id,cycle")
     .in("discipline_id", discRows.length ? discRows.map((d) => d.id) : ["x"]);
   const existByRef = new Map(existRows.map((c) => [c.ref_number, c]));
 
@@ -94,7 +94,8 @@ for (const file of files) {
     const discId = discByCode.get(r.code);
     const ex = existByRef.get(r.ref);
     const newStatus = r.status || (ex ? ex.city_status : null) || "Unresolved";
-    const payload = { discipline_id: discId, ref_number: r.ref, text: r.text, filename: r.filename, city_status: newStatus, sort_order: r.ref };
+    const newCycle = r.cycle ?? (ex ? ex.cycle : null);
+    const payload = { discipline_id: discId, ref_number: r.ref, text: r.text, filename: r.filename, city_status: newStatus, cycle: newCycle, sort_order: r.ref };
     if (ex) {
       const { error } = await sb.from("comments").update(payload).eq("id", ex.id);
       if (error) console.log(`  ERROR update #${r.ref}: ${error.message}`);

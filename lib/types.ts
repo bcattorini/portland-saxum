@@ -99,6 +99,7 @@ export interface Comment {
   ref_number: number | null;
   text: string | null; // verbatim City text — keep in English
   city_status: CommentCityStatus;
+  cycle: number | null; // iBuild report CYCLE column (cycle of last city action)
   filename: string | null;
   sort_order: number | null;
   created_at: string;

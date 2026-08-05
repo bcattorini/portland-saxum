@@ -5,7 +5,6 @@ import clsx from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import type {
   Comment,
-  CommentCycle,
   CommentTracking,
   Discipline,
   PropertyWithStats,
@@ -74,8 +73,8 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [commentsByDisc, setCommentsByDisc] = useState<Record<string, Comment[]>>({});
   const [tracking, setTracking] = useState<Record<string, CommentTracking>>({});
-  const [cycles, setCycles] = useState<CommentCycle[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [cycleOpen, setCycleOpen] = useState<Set<number>>(new Set());
   const [drawer, setDrawer] = useState<{ comment: Comment; discipline: Discipline } | null>(null);
 
   useEffect(() => {
@@ -119,12 +118,6 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
         track = (tData ?? []) as CommentTracking[];
       }
 
-      const { data: cyData } = await supabase
-        .from("comment_cycles")
-        .select("*")
-        .eq("property_id", property.id)
-        .order("imported_at", { ascending: false });
-
       if (cancelled) return;
       const grouped: Record<string, Comment[]> = {};
       for (const c of comments) (grouped[c.discipline_id] ??= []).push(c);
@@ -134,7 +127,6 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
       setDisciplines(discList);
       setCommentsByDisc(grouped);
       setTracking(trackMap);
-      setCycles((cyData ?? []) as CommentCycle[]);
       setLoading(false);
     })();
     return () => {
@@ -165,6 +157,19 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
   const infoNow = disciplines.reduce((s, d) => s + d.info_comments, 0);
   const resolvedNow = Math.max(0, totalNow - openNow - infoNow);
 
+  // resueltos agrupados por el ciclo del reporte (comments.cycle)
+  const discById = new Map(disciplines.map((d) => [d.id, d]));
+  const allComments = Object.values(commentsByDisc).flat();
+  const maxCycle = allComments.reduce((m, c) => Math.max(m, c.cycle ?? 0), 0);
+  const resolvedByCycle = new Map<number, Comment[]>();
+  for (const c of allComments) {
+    if (c.city_status !== "Resolved") continue;
+    const k = c.cycle ?? 0; // 0 = sin ciclo (dato viejo)
+    if (!resolvedByCycle.has(k)) resolvedByCycle.set(k, []);
+    resolvedByCycle.get(k)!.push(c);
+  }
+  const cycleKeys = [...resolvedByCycle.keys()].sort((a, b) => b - a);
+
   return (
     <div className="space-y-2">
       <div className="flex justify-end">
@@ -176,31 +181,56 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
         </button>
       </div>
 
-      {/* Ciclos de review — resolución por ciclo */}
+      {/* Comentarios resueltos por ciclo (del reporte de iBuild) */}
       <div className="rounded-lg border border-line bg-page/40 px-4 py-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="text-sm font-semibold">Ciclos de review</span>
+          <span className="text-sm font-semibold">
+            Comentarios resueltos por ciclo
+            {maxCycle > 0 && <span className="ml-1 font-normal text-neutral-400">· ciclo actual {maxCycle}</span>}
+          </span>
           <span className="text-xs text-neutral-500">
             Ahora: <span className="font-semibold text-[#3b6d11]">{resolvedNow}</span> resueltos ·{" "}
             <span className="font-semibold text-[#a32d2d]">{openNow}</span> pendientes de {totalNow}
             {infoNow > 0 && <span className="text-neutral-400"> · {infoNow} info</span>}
           </span>
         </div>
-        {cycles.length === 0 ? (
+        {cycleKeys.length === 0 ? (
           <p className="mt-1.5 text-xs text-neutral-400">
-            El historial se registra solo cada vez que se importa un reporte nuevo de iBuild.
+            Todavía no hay comentarios resueltos registrados. Se completan al importar el reporte de iBuild.
           </p>
         ) : (
-          <ul className="mt-2 space-y-1">
-            {cycles.map((c) => (
-              <li key={c.id} className="flex flex-wrap items-baseline gap-x-2 text-xs">
-                <span className="font-medium text-neutral-600">Ciclo {c.cycle_no ?? "—"}</span>
-                <span className="text-neutral-400">{new Date(c.imported_at).toLocaleDateString("es")}</span>
-                <span className="text-[#3b6d11]">✓ {c.resolved_in_cycle} resueltos</span>
-                <span className="text-neutral-500">· quedaron {c.unresolved_after} pendientes</span>
-                {c.new_comments > 0 && <span className="text-neutral-400">· +{c.new_comments} nuevos</span>}
-              </li>
-            ))}
+          <ul className="mt-2 space-y-1.5">
+            {cycleKeys.map((n) => {
+              const list = resolvedByCycle.get(n)!.slice().sort((a, b) => (a.ref_number ?? 0) - (b.ref_number ?? 0));
+              const isOpen = cycleOpen.has(n);
+              return (
+                <li key={n} className="rounded-md border border-line bg-card">
+                  <button
+                    onClick={() => setCycleOpen((prev) => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; })}
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-page/60"
+                  >
+                    <span className="text-sm font-medium text-neutral-700">{n === 0 ? "Sin ciclo asignado" : `Ciclo ${n}`}</span>
+                    <span className="flex items-center gap-2 text-xs">
+                      <span className="font-semibold text-[#3b6d11]">✓ {list.length} resueltos</span>
+                      <svg className={clsx("h-4 w-4 text-neutral-400 transition-transform", isOpen && "rotate-90")} viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <ul className="divide-y divide-line border-t border-line">
+                      {list.map((c) => (
+                        <li key={c.id} className="flex items-start gap-2 px-3 py-2">
+                          <span className="w-9 shrink-0 font-mono text-xs text-neutral-400">#{c.ref_number}</span>
+                          <span className="mt-0.5 shrink-0 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{discById.get(c.discipline_id)?.code}</span>
+                          <span className="flex-1 text-xs text-neutral-600">{c.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
