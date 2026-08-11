@@ -12,8 +12,9 @@ const TABS = [
   { href: "/seguimiento", label: "Seguimiento" },
 ];
 
-export function TopNav({ userEmail }: { userEmail: string | null }) {
+export function TopNav({ userEmail, isViewer = false }: { userEmail: string | null; isViewer?: boolean }) {
   const pathname = usePathname();
+  const tabs = isViewer ? TABS.filter((t) => t.href === "/permisos") : TABS;
 
   return (
     <header className="bg-brand text-white">
@@ -23,7 +24,7 @@ export function TopNav({ userEmail }: { userEmail: string | null }) {
           <img src="/logo-white.png" alt="Portland Saxum" className="h-6 w-auto sm:h-7" />
         </Link>
         <nav className="order-3 flex w-full items-center gap-1 overflow-x-auto sm:order-2 sm:ml-2 sm:w-auto">
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const active =
               tab.href === "/"
                 ? pathname === "/"

@@ -13,3 +13,13 @@ export function personForEmail(email?: string | null): AppPerson | null {
   const e = email.toLowerCase();
   return PEOPLE.find((p) => p.email.toLowerCase() === e) ?? null;
 }
+
+// Viewer role: read-only access limited to Preconstruction. Add emails here
+// (lowercase). Everyone not listed is a full member (Bruno / Sol).
+export const VIEWER_EMAILS = new Set<string>([
+  // "cliente@ejemplo.com",
+]);
+
+export function isViewer(email?: string | null): boolean {
+  return !!email && VIEWER_EMAILS.has(email.toLowerCase());
+}

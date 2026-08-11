@@ -47,7 +47,7 @@ function draftToRow(dr: Draft) {
   };
 }
 
-export function DocumentosTab({ propertyId }: { propertyId: string }) {
+export function DocumentosTab({ propertyId, readOnly = false }: { propertyId: string; readOnly?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
   const [docs, setDocs] = useState<PropertyDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,12 +111,14 @@ export function DocumentosTab({ propertyId }: { propertyId: string }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm text-neutral-500">{docs.length} documentos</span>
-        <button
-          onClick={() => setAdding((v) => !v)}
-          className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
-        >
-          {adding ? "Cancelar" : "+ Agregar documento"}
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => setAdding((v) => !v)}
+            className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
+          >
+            {adding ? "Cancelar" : "+ Agregar documento"}
+          </button>
+        )}
       </div>
 
       {adding && (
@@ -132,40 +134,49 @@ export function DocumentosTab({ propertyId }: { propertyId: string }) {
         <div className="py-6 text-sm text-neutral-500">Sin documentos para esta propiedad.</div>
       ) : (
         <ul className="space-y-2">
-          {docs.map((d) => (
-            <li key={d.id} className="rounded-lg border border-line">
-              {editingId === d.id ? (
-                <div className="p-3">
-                  <DocEditor
-                    initial={toDraft(d)}
-                    onCancel={() => setEditingId(null)}
-                    onSave={(dr) => saveEdit(d.id, dr)}
-                    onDelete={() => remove(d.id)}
-                    saveLabel="Guardar"
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setEditingId(d.id)}
-                  className="flex w-full items-start justify-between gap-3 p-3 text-left hover:bg-page/50"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium">{d.title}</div>
-                    {d.description && (
-                      <div className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{d.description}</div>
+          {docs.map((d) => {
+            const rowBody = (
+              <>
+                <div className="min-w-0">
+                  <div className="font-medium">{d.title}</div>
+                  {d.description && (
+                    <div className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{d.description}</div>
+                  )}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+                    {d.assignee && (
+                      <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">{d.assignee}</span>
                     )}
-                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
-                      {d.assignee && (
-                        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">{d.assignee}</span>
-                      )}
-                      {d.due_date && <span>Vence: {d.due_date}</span>}
-                    </div>
+                    {d.due_date && <span>Vence: {d.due_date}</span>}
                   </div>
-                  <DocumentStatusBadge status={d.status} />
-                </button>
-              )}
-            </li>
-          ))}
+                </div>
+                <DocumentStatusBadge status={d.status} />
+              </>
+            );
+            return (
+              <li key={d.id} className="rounded-lg border border-line">
+                {editingId === d.id && !readOnly ? (
+                  <div className="p-3">
+                    <DocEditor
+                      initial={toDraft(d)}
+                      onCancel={() => setEditingId(null)}
+                      onSave={(dr) => saveEdit(d.id, dr)}
+                      onDelete={() => remove(d.id)}
+                      saveLabel="Guardar"
+                    />
+                  </div>
+                ) : readOnly ? (
+                  <div className="flex w-full items-start justify-between gap-3 p-3">{rowBody}</div>
+                ) : (
+                  <button
+                    onClick={() => setEditingId(d.id)}
+                    className="flex w-full items-start justify-between gap-3 p-3 text-left hover:bg-page/50"
+                  >
+                    {rowBody}
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

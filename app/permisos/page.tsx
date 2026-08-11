@@ -2,6 +2,7 @@
 // comment stats from disciplines, then hands off to the client app.
 import { createClient } from "@/lib/supabase/server";
 import type { Discipline, Property, PropertyWithStats } from "@/lib/types";
+import { isViewer } from "@/lib/users";
 import { PermisosApp } from "./PermisosApp";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ export default async function PermisosPage({
 }) {
   const { prop } = await searchParams;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const readOnly = isViewer(user?.email);
 
   const [{ data: properties, error: pErr }, { data: disciplines, error: dErr }] =
     await Promise.all([
@@ -65,6 +68,7 @@ export default async function PermisosPage({
       properties={enriched}
       initialSelectedId={initial?.id ?? null}
       initialPortfolio={initial?.portfolio}
+      readOnly={readOnly}
     />
   );
 }

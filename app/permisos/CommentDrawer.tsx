@@ -13,12 +13,14 @@ export function CommentDrawer({
   comment,
   discipline,
   tracking,
+  readOnly = false,
   onClose,
   onSaved,
 }: {
   comment: Comment;
   discipline: Discipline;
   tracking: CommentTracking | null;
+  readOnly?: boolean;
   onClose: () => void;
   onSaved: (t: CommentTracking) => void;
 }) {
@@ -133,51 +135,68 @@ export function CommentDrawer({
           <div className="space-y-3 rounded-lg border border-line p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">Seguimiento interno</span>
-              {finalizedAt ? (
+              {!readOnly && (finalizedAt ? (
                 <button onClick={reopen} disabled={saving} className="text-xs font-medium text-brand hover:underline disabled:opacity-50">Reabrir</button>
               ) : (
                 <button onClick={finalize} disabled={saving} className="rounded-md bg-[#eaf3de] px-2.5 py-1 text-xs font-medium text-[#3b6d11] hover:bg-[#dfeecb] disabled:opacity-50">
                   ✓ Finalizar seguimiento
                 </button>
-              )}
+              ))}
             </div>
             {finalizedAt && (
               <div className="rounded-md bg-[#eaf3de] px-3 py-1.5 text-xs text-[#3b6d11]">Finalizado el {fmtDT(finalizedAt)}</div>
             )}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-xs text-neutral-500">Responsable</span>
-                <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Ej: David, Owner…"
-                  className="mt-1 w-full rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
-              </label>
-              <label className="block">
-                <span className="text-xs text-neutral-500">Nuestro estado</span>
-                <select value={status} onChange={(e) => setStatus(e.target.value as InternalStatus)}
-                  className="mt-1 w-full rounded-md border border-line bg-card px-3 py-1.5 text-sm outline-none focus:border-brand">
-                  {INTERNAL_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
-                </select>
-              </label>
-            </div>
-            {error && <div className="text-xs text-[#a32d2d]">Error: {error}</div>}
-            <button onClick={saveTracking} disabled={saving}
-              className="w-full rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-60">
-              {saving ? "Guardando…" : "Guardar responsable / estado"}
-            </button>
+            {readOnly ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <span className="text-xs text-neutral-500">Responsable</span>
+                  <div className="mt-1 text-sm text-neutral-800">{assignee || "—"}</div>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">Nuestro estado</span>
+                  <div className="mt-1 text-sm text-neutral-800">{status}</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-xs text-neutral-500">Responsable</span>
+                    <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Ej: David, Owner…"
+                      className="mt-1 w-full rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-neutral-500">Nuestro estado</span>
+                    <select value={status} onChange={(e) => setStatus(e.target.value as InternalStatus)}
+                      className="mt-1 w-full rounded-md border border-line bg-card px-3 py-1.5 text-sm outline-none focus:border-brand">
+                      {INTERNAL_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
+                  </label>
+                </div>
+                {error && <div className="text-xs text-[#a32d2d]">Error: {error}</div>}
+                <button onClick={saveTracking} disabled={saving}
+                  className="w-full rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-60">
+                  {saving ? "Guardando…" : "Guardar responsable / estado"}
+                </button>
+              </>
+            )}
           </div>
 
           {/* Registro fechado de notas */}
           <div>
             <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-neutral-400">Registro de seguimiento ({notesList.length})</div>
-            <div className="rounded-lg border border-line p-3">
-              <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} rows={2} placeholder="Nueva nota… (se guarda con fecha)"
-                className="w-full resize-y rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
-              <div className="mt-2 flex justify-end">
-                <button onClick={addNote} disabled={addingNote || !newNote.trim()}
-                  className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50">
-                  {addingNote ? "Agregando…" : "Agregar nota"}
-                </button>
+            {!readOnly && (
+              <div className="rounded-lg border border-line p-3">
+                <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} rows={2} placeholder="Nueva nota… (se guarda con fecha)"
+                  className="w-full resize-y rounded-md border border-line px-3 py-1.5 text-sm outline-none focus:border-brand" />
+                <div className="mt-2 flex justify-end">
+                  <button onClick={addNote} disabled={addingNote || !newNote.trim()}
+                    className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50">
+                    {addingNote ? "Agregando…" : "Agregar nota"}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {notesList.length === 0 ? (
               <div className="mt-3 text-xs text-neutral-400">Sin notas todavía. Agregá la primera arriba.</div>

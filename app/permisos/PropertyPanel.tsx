@@ -26,8 +26,9 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "pagos", label: "Pagos" },
 ];
 
-export function PropertyPanel({ property }: { property: PropertyWithStats }) {
+export function PropertyPanel({ property, readOnly = false }: { property: PropertyWithStats; readOnly?: boolean }) {
   const [tab, setTab] = useState<Tab>("planos");
+  const tabs = readOnly ? TABS.filter((t) => t.key !== "pagos") : TABS;
 
   return (
     <div className="rounded-xl border border-line bg-card">
@@ -40,7 +41,7 @@ export function PropertyPanel({ property }: { property: PropertyWithStats }) {
           </div>
         </div>
         <div className="inline-flex rounded-lg border border-line p-1 text-sm">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
@@ -58,15 +59,15 @@ export function PropertyPanel({ property }: { property: PropertyWithStats }) {
       </div>
 
       <div className="p-5">
-        {tab === "planos" && <PlanosTab property={property} />}
-        {tab === "docs" && <DocumentosTab propertyId={property.id} />}
-        {tab === "pagos" && <PaymentsManager scope="property" propertyId={property.id} propertyAddress={property.address} />}
+        {tab === "planos" && <PlanosTab property={property} readOnly={readOnly} />}
+        {tab === "docs" && <DocumentosTab propertyId={property.id} readOnly={readOnly} />}
+        {tab === "pagos" && !readOnly && <PaymentsManager scope="property" propertyId={property.id} propertyAddress={property.address} />}
       </div>
     </div>
   );
 }
 
-function PlanosTab({ property }: { property: PropertyWithStats }) {
+function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats; readOnly?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -362,6 +363,7 @@ function PlanosTab({ property }: { property: PropertyWithStats }) {
           comment={drawer.comment}
           discipline={drawer.discipline}
           tracking={tracking[drawer.comment.id] ?? null}
+          readOnly={readOnly}
           onClose={() => setDrawer(null)}
           onSaved={(t) => setTracking((prev) => ({ ...prev, [t.comment_id]: t }))}
         />

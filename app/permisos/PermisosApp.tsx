@@ -15,10 +15,12 @@ export function PermisosApp({
   properties,
   initialSelectedId = null,
   initialPortfolio = "portland_saxum",
+  readOnly = false,
 }: {
   properties: PropertyWithStats[];
   initialSelectedId?: string | null;
   initialPortfolio?: Portfolio;
+  readOnly?: boolean;
 }) {
   const [portfolio, setPortfolio] = useState<Portfolio>(initialPortfolio);
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
@@ -69,7 +71,7 @@ export function PermisosApp({
       </div>
 
       {/* Property panel */}
-      {selected && <PropertyPanel property={selected} />}
+      {selected && <PropertyPanel property={selected} readOnly={readOnly} />}
     </div>
   );
 }
