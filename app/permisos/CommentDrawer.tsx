@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { personForEmail } from "@/lib/users";
 import type { Comment, CommentNote, CommentTracking, Discipline, InternalStatus } from "@/lib/types";
 import { INTERNAL_STATUSES } from "@/lib/types";
 import { CommentStatusBadge } from "@/lib/badges";
@@ -34,6 +35,13 @@ export function CommentDrawer({
   const [saving, setSaving] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authorName, setAuthorName] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setAuthorName(personForEmail(data.user?.email)?.name ?? data.user?.email ?? null);
+    });
+  }, [supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,7 +99,7 @@ export function CommentDrawer({
     setError(null);
     const { data, error } = await supabase
       .from("comment_notes")
-      .insert({ comment_id: comment.id, body: newNote.trim() })
+      .insert({ comment_id: comment.id, body: newNote.trim(), created_by: authorName })
       .select()
       .single();
     if (error) setError(error.message);

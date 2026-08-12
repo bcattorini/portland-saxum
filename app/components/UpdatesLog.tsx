@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { personForEmail } from "@/lib/users";
 import type { Update } from "@/lib/types";
 
 const fmtDT = (iso: string) =>
@@ -20,6 +21,13 @@ export function UpdatesLog({
   const [list, setList] = useState<Update[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [authorName, setAuthorName] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setAuthorName(personForEmail(data.user?.email)?.name ?? data.user?.email ?? null);
+    });
+  }, [supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +48,7 @@ export function UpdatesLog({
     setBusy(true);
     const { data } = await supabase
       .from("updates")
-      .insert({ entity_type: entityType, entity_id: entityId, body: text.trim() })
+      .insert({ entity_type: entityType, entity_id: entityId, body: text.trim(), created_by: authorName })
       .select()
       .single();
     if (data) { setList((prev) => [data as Update, ...prev]); setText(""); }
@@ -72,7 +80,10 @@ export function UpdatesLog({
         <ul className="mt-2 space-y-1.5">
           {list.map((u) => (
             <li key={u.id} className="rounded-md border border-line px-3 py-1.5">
-              <div className="text-[11px] text-neutral-400">{fmtDT(u.created_at)}</div>
+              <div className="flex items-center justify-between text-[11px] text-neutral-400">
+                <span>{fmtDT(u.created_at)}</span>
+                {u.created_by && <span className="font-medium text-neutral-500">{u.created_by}</span>}
+              </div>
               <div className="whitespace-pre-wrap text-sm text-neutral-700">{u.body}</div>
             </li>
           ))}
