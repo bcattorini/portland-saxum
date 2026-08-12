@@ -17,7 +17,7 @@ export function personForEmail(email?: string | null): AppPerson | null {
 // Viewer role: read-only access limited to Preconstruction. Add emails here
 // (lowercase). Everyone not listed is a full member (Bruno / Sol).
 export const VIEWER_EMAILS = new Set<string>([
-  // "cliente@ejemplo.com",
+  "lmarin@saxuminternational.com",
 ]);
 
 export function isViewer(email?: string | null): boolean {

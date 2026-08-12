@@ -33,8 +33,9 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isLogin = path.startsWith("/login");
+  const isAuthRoute = path.startsWith("/auth"); // confirm link + set-password flow
 
-  if (!user && !isLogin) {
+  if (!user && !isLogin && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -45,7 +46,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   // Viewers are limited to Preconstruction (/permisos). Any other page → redirect.
-  if (user && isViewer(user.email) && !isLogin && !path.startsWith("/permisos")) {
+  if (user && isViewer(user.email) && !isLogin && !isAuthRoute && !path.startsWith("/permisos")) {
     const url = request.nextUrl.clone();
     url.pathname = "/permisos";
     return NextResponse.redirect(url);
