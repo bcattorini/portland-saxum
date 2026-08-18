@@ -186,8 +186,28 @@ export function PaymentsManager({
     if (!error) setRows((prev) => prev.filter((r) => r.id !== id));
   }
   async function openInvoice(path: string) {
-    const { data } = await supabase.storage.from("invoices").createSignedUrl(path, 120);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener");
+    // Open the tab synchronously (inside the click) so the popup blocker doesn't
+    // kill it after the async signed-URL call.
+    const win = window.open("", "_blank");
+    const { data, error } = await supabase.storage.from("invoices").createSignedUrl(path, 120);
+    if (error || !data?.signedUrl) {
+      win?.close();
+      alert("No se pudo abrir el invoice: " + (error?.message ?? "archivo no encontrado"));
+      return;
+    }
+    if (win) win.location.href = data.signedUrl;
+    else window.location.href = data.signedUrl; // fallback if popup was blocked
+  }
+  async function downloadInvoice(path: string) {
+    const name = path.split("/").pop() || "invoice.pdf";
+    const { data, error } = await supabase.storage.from("invoices").createSignedUrl(path, 120, { download: name });
+    if (error || !data?.signedUrl) { alert("No se pudo descargar el invoice: " + (error?.message ?? "archivo no encontrado")); return; }
+    const a = document.createElement("a");
+    a.href = data.signedUrl;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   // -- filters (client-side) --
@@ -310,9 +330,14 @@ export function PaymentsManager({
           <div className="flex items-center gap-1.5">
             <span className="font-medium">{p.description}</span>
             {p.invoice_url && (
-              <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
-                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
-              </button>
+              <>
+                <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
+                </button>
+                <button onClick={() => downloadInvoice(p.invoice_url!)} title="Descargar invoice (PDF)" className="text-neutral-400 hover:text-neutral-700">
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v6.586l1.293-1.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586V4a1 1 0 011-1z" /><path d="M3 14a1 1 0 011 1v1a1 1 0 001 1h10a1 1 0 001-1v-1a1 1 0 112 0v1a3 3 0 01-3 3H5a3 3 0 01-3-3v-1a1 1 0 011-1z" /></svg>
+                </button>
+              </>
             )}
           </div>
           {p.vendor_or_payer && <div className="text-xs text-neutral-400">{p.vendor_or_payer}</div>}
