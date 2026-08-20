@@ -36,6 +36,7 @@ type Row = {
   project: string | null;
   invoice_url: string | null;
   notes: string | null;
+  priority: string | null;
   approved_at: string | null;
   approved_by: string | null;
   sort_order: number | null;
@@ -61,6 +62,21 @@ const STAGES: { key: Stage; label: string; hint: string }[] = [
   { key: "cancelado", label: "Cancelados", hint: "" },
 ];
 
+// Priority categories (color-coded).
+const PRIORITIES = [
+  { key: "urgent", label: "🔴 Urgente", color: "#a32d2d", bg: "#fdecec" },
+  { key: "important", label: "🟡 Importante", color: "#8a6d00", bg: "#fbf3d0" },
+  { key: "can_wait", label: "🟢 Puede esperar", color: "#3b6d11", bg: "#eaf3de" },
+] as const;
+const PRIO_ORDER: Record<string, number> = { urgent: 0, important: 1, can_wait: 2 };
+const prioRank = (r: { priority?: string | null }) => PRIO_ORDER[r.priority ?? ""] ?? 3;
+const prioMeta = (k?: string | null) => PRIORITIES.find((x) => x.key === k);
+const byDue = (a: Row, b: Row) => {
+  const da = a.due_date ?? "9999-99-99", db = b.due_date ?? "9999-99-99";
+  if (da !== db) return da < db ? -1 : 1;
+  return prioRank(a) - prioRank(b);
+};
+
 type Draft = {
   description: string;
   payment_type: PaymentType;
@@ -74,11 +90,12 @@ type Draft = {
   property_id: string | null;
   invoice_url: string | null;
   notes: string;
+  priority: string;
 };
 
 const emptyDraft: Draft = {
   description: "", payment_type: "vendor", vendor_or_payer: "", amount: "", due_date: "",
-  status: "Pending", quickbooks_code: "", quickbooks_code_id: null, project: "", property_id: null, invoice_url: null, notes: "",
+  status: "Pending", quickbooks_code: "", quickbooks_code_id: null, project: "", property_id: null, invoice_url: null, notes: "", priority: "",
 };
 const toDraft = (p: Row): Draft => ({
   description: p.description,
@@ -93,6 +110,7 @@ const toDraft = (p: Row): Draft => ({
   property_id: p.property_id ?? null,
   invoice_url: p.invoice_url ?? null,
   notes: p.notes ?? "",
+  priority: p.priority ?? "",
 });
 const draftToRow = (dr: Draft) => ({
   description: dr.description.trim(),
@@ -106,6 +124,7 @@ const draftToRow = (dr: Draft) => ({
   project: dr.project.trim() || null,
   invoice_url: dr.invoice_url || null,
   notes: dr.notes.trim() || null,
+  priority: dr.priority || null,
 });
 
 const emptyFilters = { project: "", status: "all", type: "all", dueFrom: "", dueTo: "", paidFrom: "", paidTo: "" };
@@ -131,6 +150,7 @@ export function PaymentsManager({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState(emptyFilters);
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({ field: "status", dir: "asc" });
+  const [viewMode, setViewMode] = useState<"etapa" | "propiedad" | "vencimiento">("etapa");
   const [meEmail, setMeEmail] = useState<string | null>(null);
   const isBruno = personForEmail(meEmail)?.name === "Bruno";
 
@@ -213,6 +233,11 @@ export function PaymentsManager({
   async function remove(row: Row) {
     const { error } = await supabase.from(srcOf(row)).delete().eq("id", row.id);
     if (!error) setRows((prev) => prev.filter((r) => r.id !== row.id));
+  }
+  async function updatePriority(row: Row, value: string | null) {
+    const src = srcOf(row);
+    const { data } = await supabase.from(src).update({ priority: value }).eq("id", row.id).select().single();
+    if (data) setRows((prev) => prev.map((r) => (r.id === row.id ? { ...(data as Row), _src: src } : r)));
   }
   async function openInvoice(path: string) {
     // Open the tab synchronously (inside the click) so the popup blocker doesn't
@@ -302,6 +327,7 @@ export function PaymentsManager({
       Vence: p.due_date ?? "",
       Etapa: stageLabel[stageOf(p)],
       Estado: STATUS_ES[p.status],
+      Prioridad: prioMeta(p.priority)?.label ?? "",
       "Aprobado por": p.approved_by ?? "",
       "Fecha pago": p.paid_date ?? "",
       QB: p.quickbooks_code ?? "",
@@ -327,6 +353,7 @@ export function PaymentsManager({
       case "status": r = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]; if (r === 0) r = dueA < dueB ? -1 : dueA > dueB ? 1 : 0; break;
       case "amount": r = Number(a.amount || 0) - Number(b.amount || 0); break;
       case "due_date": r = dueA < dueB ? -1 : dueA > dueB ? 1 : 0; break;
+      case "priority": r = prioRank(a) - prioRank(b); if (r === 0) r = dueA < dueB ? -1 : dueA > dueB ? 1 : 0; break;
       case "project": r = (a.project ?? "").localeCompare(b.project ?? ""); break;
       case "description": r = a.description.localeCompare(b.description); break;
       case "type": r = a.payment_type.localeCompare(b.payment_type); break;
@@ -345,10 +372,12 @@ export function PaymentsManager({
     );
   };
 
-  const rowEl = (p: Row, stage: Stage) =>
-    editingId === p.id ? (
+  const rowEl = (p: Row) => {
+    const stage = stageOf(p);
+    const pm = prioMeta(p.priority);
+    return editingId === p.id ? (
       <tr key={p.id}>
-        <td colSpan={8} className="p-3">
+        <td colSpan={9} className="p-3">
           <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p, dr)} onDelete={() => remove(p)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} properties={properties} />
         </td>
       </tr>
@@ -383,6 +412,18 @@ export function PaymentsManager({
             <div className="mt-0.5 text-[11px] text-neutral-400">Aprobó {personForEmail(p.approved_by)?.name ?? p.approved_by}</div>
           )}
         </td>
+        <td className="px-3 py-2">
+          <select
+            value={p.priority ?? ""}
+            onChange={(e) => updatePriority(p, e.target.value || null)}
+            title="Prioridad"
+            style={pm ? { color: pm.color, backgroundColor: pm.bg, borderColor: pm.bg } : undefined}
+            className="rounded-md border border-line px-1.5 py-1 text-xs font-medium outline-none focus:border-brand"
+          >
+            <option value="">— Prioridad</option>
+            {PRIORITIES.map((x) => (<option key={x.key} value={x.key}>{x.label}</option>))}
+          </select>
+        </td>
         <td className="px-3 py-2 font-mono text-xs text-neutral-500">{p.quickbooks_code ?? "—"}</td>
         <td className="px-3 py-2">
           <div className="flex justify-end gap-2 text-xs">
@@ -396,10 +437,24 @@ export function PaymentsManager({
         </td>
       </tr>
     );
+  };
 
   const stageAmountClass: Record<Stage, string> = {
     cargado: "text-neutral-600", por_pagar: "text-[#a32d2d]", pagado: "text-[#3b6d11]", cancelado: "text-neutral-400",
   };
+
+  // groups to render, depending on the selected view
+  type Grp = { key: string; label: string; hint?: string; amountClass?: string; rows: Row[] };
+  let groups: Grp[] = [];
+  if (viewMode === "etapa") {
+    groups = STAGES.map((st) => ({ key: st.key, label: st.label, hint: st.hint, amountClass: stageAmountClass[st.key], rows: sorted.filter((p) => stageOf(p) === st.key) })).filter((g) => g.rows.length);
+  } else if (viewMode === "propiedad") {
+    const keys = [...new Set(filtered.map((p) => p.project?.trim() || "__none__"))];
+    keys.sort((a, b) => (a === "__none__" ? 1 : b === "__none__" ? -1 : a.localeCompare(b)));
+    groups = keys.map((k) => ({ key: k, label: k === "__none__" ? "Sin proyecto" : k, rows: filtered.filter((p) => (p.project?.trim() || "__none__") === k).sort(byDue) })).filter((g) => g.rows.length);
+  } else {
+    groups = [{ key: "all", label: "Por vencimiento (más próximos primero)", rows: [...filtered].sort(byDue) }];
+  }
 
   if (loading) return <div className="py-8 text-center text-sm text-neutral-400">Cargando…</div>;
   if (error) return <div className="py-4 text-sm text-[#a32d2d]">Error: {error}</div>;
@@ -419,6 +474,23 @@ export function PaymentsManager({
           </button>
         </div>
       </div>
+
+      {/* Vista: agrupar / ordenar */}
+      {rows.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-neutral-500">Vista:</span>
+          <div className="inline-flex rounded-md border border-line p-0.5">
+            {([["etapa", "Etapa"], ["propiedad", "Propiedad"], ["vencimiento", "Vencimiento"]] as const)
+              .filter(([k]) => !(k === "propiedad" && scope === "property"))
+              .map(([k, l]) => (
+                <button key={k} onClick={() => setViewMode(k)}
+                  className={"rounded px-2.5 py-1 font-medium transition-colors " + (viewMode === k ? "bg-brand text-white" : "text-neutral-500 hover:text-neutral-800")}>
+                  {l}
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Filtros tipo Excel */}
       {rows.length > 0 && (
@@ -510,17 +582,15 @@ export function PaymentsManager({
         <div className="py-6 text-sm text-neutral-500">Ningún pago coincide con los filtros.</div>
       ) : (
         <div className="space-y-5">
-          {STAGES.map((st) => {
-            const group = sorted.filter((p) => stageOf(p) === st.key);
-            if (group.length === 0) return null;
-            const subtotal = group.reduce((s, r) => s + Number(r.amount || 0), 0);
+          {groups.map((g) => {
+            const subtotal = g.rows.reduce((s, r) => s + Number(r.amount || 0), 0);
             return (
-              <div key={st.key}>
+              <div key={g.key}>
                 <div className="mb-1.5 flex items-baseline justify-between gap-2">
                   <span className="text-sm font-semibold">
-                    {st.label} <span className="font-normal text-neutral-400">({group.length}){st.hint ? ` · ${st.hint}` : ""}</span>
+                    {g.label} <span className="font-normal text-neutral-400">({g.rows.length}){g.hint ? ` · ${g.hint}` : ""}</span>
                   </span>
-                  <span className={"font-mono text-sm font-semibold " + stageAmountClass[st.key]}>{money(subtotal)}</span>
+                  <span className={"font-mono text-sm font-semibold " + (g.amountClass ?? "text-neutral-600")}>{money(subtotal)}</span>
                 </div>
                 <div className="overflow-x-auto rounded-lg border border-line">
                   <table className="w-full text-sm">
@@ -532,12 +602,13 @@ export function PaymentsManager({
                         {th("amount", "Monto", true)}
                         {th("due_date", "Vence")}
                         {th("status", "Estado")}
+                        {th("priority", "Prioridad")}
                         <th className="px-3 py-2 font-medium">QB</th>
                         <th className="px-3 py-2"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {group.map((p) => rowEl(p, st.key))}
+                      {g.rows.map((p) => rowEl(p))}
                     </tbody>
                   </table>
                 </div>
@@ -627,6 +698,12 @@ function PaymentEditor({
         </label>
         <label className="text-xs text-neutral-500">Vencimiento
           <input type="date" value={dr.due_date} onChange={(e) => set("due_date", e.target.value)} className="mt-1 w-full rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
+        </label>
+        <label className="text-xs text-neutral-500">Prioridad
+          <select value={dr.priority} onChange={(e) => set("priority", e.target.value)} className="mt-1 w-full rounded-md border border-line bg-card px-2 py-1.5 text-sm outline-none focus:border-brand">
+            <option value="">— Sin prioridad</option>
+            {PRIORITIES.map((x) => (<option key={x.key} value={x.key}>{x.label}</option>))}
+          </select>
         </label>
       </div>
       {scope === "general" && (
