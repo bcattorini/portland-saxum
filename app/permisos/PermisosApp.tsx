@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { Portfolio, PropertyWithStats } from "@/lib/types";
 import { CycleBadge } from "@/lib/badges";
 import { PropertyPanel } from "./PropertyPanel";
+import { IbuildUpload } from "./IbuildUpload";
 
 const PORTFOLIOS: { key: Portfolio; label: string }[] = [
   { key: "portland_saxum", label: "Portland Saxum" },
@@ -36,6 +37,8 @@ export function PermisosApp({
           Proceso de preconstrucción por propiedad: Planos &amp; Ciudad, Documentos y Pagos.
         </p>
       </div>
+
+      {!readOnly && <IbuildUpload />}
 
       {/* Portfolio switcher */}
       <div className="inline-flex rounded-lg border border-line bg-card p-1 text-sm">
