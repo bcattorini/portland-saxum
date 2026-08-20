@@ -40,8 +40,11 @@ type Row = {
   approved_by: string | null;
   sort_order: number | null;
   created_at: string;
-  property_id?: string;
+  property_id?: string | null;
+  _src?: "payments" | "general_payments";
 };
+
+type SrcTable = "payments" | "general_payments";
 
 // Approval workflow stage, derived from status + approved_at.
 type Stage = "cargado" | "por_pagar" | "pagado" | "cancelado";
@@ -68,13 +71,14 @@ type Draft = {
   quickbooks_code: string;
   quickbooks_code_id: string | null;
   project: string;
+  property_id: string | null;
   invoice_url: string | null;
   notes: string;
 };
 
 const emptyDraft: Draft = {
   description: "", payment_type: "vendor", vendor_or_payer: "", amount: "", due_date: "",
-  status: "Pending", quickbooks_code: "", quickbooks_code_id: null, project: "", invoice_url: null, notes: "",
+  status: "Pending", quickbooks_code: "", quickbooks_code_id: null, project: "", property_id: null, invoice_url: null, notes: "",
 };
 const toDraft = (p: Row): Draft => ({
   description: p.description,
@@ -86,6 +90,7 @@ const toDraft = (p: Row): Draft => ({
   quickbooks_code: p.quickbooks_code ?? "",
   quickbooks_code_id: p.quickbooks_code_id ?? null,
   project: p.project ?? "",
+  property_id: p.property_id ?? null,
   invoice_url: p.invoice_url ?? null,
   notes: p.notes ?? "",
 });
@@ -115,7 +120,8 @@ export function PaymentsManager({
   propertyAddress?: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const table = scope === "property" ? "payments" : "general_payments";
+  const srcOf = (r: Row): SrcTable => r._src ?? (scope === "property" ? "payments" : "general_payments");
+  const [properties, setProperties] = useState<{ id: string; address: string }[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,58 +138,81 @@ export function PaymentsManager({
     supabase.auth.getUser().then(({ data }) => setMeEmail(data.user?.email ?? null));
   }, [supabase]);
 
+  // properties for the "vincular a propiedad" dropdown (general scope only)
+  useEffect(() => {
+    if (scope !== "general") return;
+    supabase.from("properties").select("id,address").order("address").then(({ data }) => setProperties(data ?? []));
+  }, [scope, supabase]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      let q = supabase.from(table).select("*");
-      if (scope === "property") q = q.eq("property_id", propertyId!);
-      const { data, error } = await q.order("sort_order", { nullsFirst: false }).order("created_at");
-      if (cancelled) return;
-      if (error) setError(error.message);
-      else setRows((data ?? []) as Row[]);
+      const tag = (data: Row[] | null, src: SrcTable) => (data ?? []).map((r) => ({ ...r, _src: src }));
+      if (scope === "property") {
+        // property view = its own native payments + general payments linked to it
+        const [own, gen] = await Promise.all([
+          supabase.from("payments").select("*").eq("property_id", propertyId!),
+          supabase.from("general_payments").select("*").eq("property_id", propertyId!),
+        ]);
+        if (cancelled) return;
+        if (own.error || gen.error) setError(own.error?.message || gen.error?.message || null);
+        else setRows([...tag(own.data as Row[], "payments"), ...tag(gen.data as Row[], "general_payments")]);
+      } else {
+        // general view = master list of all company payments
+        const { data, error } = await supabase.from("general_payments").select("*").order("sort_order", { nullsFirst: false }).order("created_at");
+        if (cancelled) return;
+        if (error) setError(error.message);
+        else setRows(tag(data as Row[], "general_payments"));
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [table, scope, propertyId, supabase]);
+  }, [scope, propertyId, supabase]);
 
   async function addPayment(dr: Draft) {
     const nextSort = (rows.reduce((m, r) => Math.max(m, r.sort_order ?? 0), 0) || 0) + 1;
+    const dest: SrcTable = scope === "property" ? "payments" : "general_payments";
     const base: Record<string, unknown> = { sort_order: nextSort, ...draftToRow(dr) };
-    if (scope === "property") base.property_id = propertyId;
-    const { data, error } = await supabase.from(table).insert(base).select().single();
+    // property view → native payment tied to this property; general → optional property link
+    base.property_id = scope === "property" ? propertyId : dr.property_id || null;
+    const { data, error } = await supabase.from(dest).insert(base).select().single();
     if (error) return error.message;
-    setRows((prev) => [...prev, data as Row]);
+    setRows((prev) => [...prev, { ...(data as Row), _src: dest }]);
     setAdding(false);
     return null;
   }
-  async function saveEdit(id: string, dr: Draft) {
-    const { data, error } = await supabase.from(table).update(draftToRow(dr)).eq("id", id).select().single();
+  async function saveEdit(row: Row, dr: Draft) {
+    const src = srcOf(row);
+    const payload: Record<string, unknown> = draftToRow(dr);
+    // only general payments can be (re)linked to a property; native ones stay put
+    if (src === "general_payments") payload.property_id = dr.property_id || null;
+    const { data, error } = await supabase.from(src).update(payload).eq("id", row.id).select().single();
     if (error) return error.message;
-    setRows((prev) => prev.map((r) => (r.id === id ? (data as Row) : r)));
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...(data as Row), _src: src } : r)));
     setEditingId(null);
     return null;
   }
   async function markPaid(p: Row) {
     const today = new Date().toISOString().slice(0, 10);
-    const { data } = await supabase.from(table).update({ status: "Paid", paid_date: today }).eq("id", p.id).select().single();
-    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? (data as Row) : r)));
+    const { data } = await supabase.from(srcOf(p)).update({ status: "Paid", paid_date: today }).eq("id", p.id).select().single();
+    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? { ...(data as Row), _src: srcOf(p) } : r)));
   }
   async function approve(p: Row) {
     if (!isBruno) return;
-    const { data } = await supabase.from(table)
+    const { data } = await supabase.from(srcOf(p))
       .update({ approved_at: new Date().toISOString(), approved_by: meEmail }).eq("id", p.id).select().single();
-    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? (data as Row) : r)));
+    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? { ...(data as Row), _src: srcOf(p) } : r)));
   }
   async function unapprove(p: Row) {
     if (!isBruno) return;
-    const { data } = await supabase.from(table)
+    const { data } = await supabase.from(srcOf(p))
       .update({ approved_at: null, approved_by: null }).eq("id", p.id).select().single();
-    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? (data as Row) : r)));
+    if (data) setRows((prev) => prev.map((r) => (r.id === p.id ? { ...(data as Row), _src: srcOf(p) } : r)));
   }
-  async function remove(id: string) {
-    const { error } = await supabase.from(table).delete().eq("id", id);
-    if (!error) setRows((prev) => prev.filter((r) => r.id !== id));
+  async function remove(row: Row) {
+    const { error } = await supabase.from(srcOf(row)).delete().eq("id", row.id);
+    if (!error) setRows((prev) => prev.filter((r) => r.id !== row.id));
   }
   async function openInvoice(path: string) {
     // Open the tab synchronously (inside the click) so the popup blocker doesn't
@@ -320,7 +349,7 @@ export function PaymentsManager({
     editingId === p.id ? (
       <tr key={p.id}>
         <td colSpan={8} className="p-3">
-          <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p.id, dr)} onDelete={() => remove(p.id)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} />
+          <PaymentEditor initial={toDraft(p)} onCancel={() => setEditingId(null)} onSave={(dr) => saveEdit(p, dr)} onDelete={() => remove(p)} saveLabel="Guardar" scope={scope} propertyId={propertyId} existingId={p.id} properties={properties} />
         </td>
       </tr>
     ) : (
@@ -472,7 +501,7 @@ export function PaymentsManager({
       )}
 
       {adding && (
-        <PaymentEditor initial={emptyDraft} onCancel={() => setAdding(false)} onSave={addPayment} saveLabel="Crear pago" scope={scope} propertyId={propertyId} existingId={null} />
+        <PaymentEditor initial={emptyDraft} onCancel={() => setAdding(false)} onSave={addPayment} saveLabel="Crear pago" scope={scope} propertyId={propertyId} existingId={null} properties={properties} />
       )}
 
       {rows.length === 0 && !adding ? (
@@ -522,7 +551,7 @@ export function PaymentsManager({
 }
 
 function PaymentEditor({
-  initial, onCancel, onSave, onDelete, saveLabel, scope, propertyId, existingId,
+  initial, onCancel, onSave, onDelete, saveLabel, scope, propertyId, existingId, properties = [],
 }: {
   initial: Draft;
   onCancel: () => void;
@@ -532,6 +561,7 @@ function PaymentEditor({
   scope: "property" | "general";
   propertyId?: string;
   existingId: string | null;
+  properties?: { id: string; address: string }[];
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [dr, setDr] = useState<Draft>(initial);
@@ -599,8 +629,24 @@ function PaymentEditor({
           <input type="date" value={dr.due_date} onChange={(e) => set("due_date", e.target.value)} className="mt-1 w-full rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
         </label>
       </div>
+      {scope === "general" && (
+        <label className="block text-xs text-neutral-500">Propiedad vinculada <span className="text-neutral-400">(si es una propiedad del sistema, aparece también en su sección de Pagos)</span>
+          <select
+            value={dr.property_id ?? ""}
+            onChange={(e) => {
+              const id = e.target.value || null;
+              const addr = properties.find((p) => p.id === id)?.address;
+              setDr((prev) => ({ ...prev, property_id: id, project: id && addr ? addr : prev.project }));
+            }}
+            className="mt-1 w-full rounded-md border border-line bg-card px-2 py-1.5 text-sm outline-none focus:border-brand"
+          >
+            <option value="">— Ninguna (solo General) —</option>
+            {properties.map((p) => (<option key={p.id} value={p.id}>{p.address}</option>))}
+          </select>
+        </label>
+      )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <label className="text-xs text-neutral-500">Proyecto
+        <label className="text-xs text-neutral-500">Proyecto {scope === "general" && <span className="text-neutral-400">(o texto libre)</span>}
           <input value={dr.project} onChange={(e) => set("project", e.target.value)} placeholder="ej: LR 134, BV 5040, General…" className="mt-1 w-full rounded-md border border-line px-2 py-1.5 text-sm outline-none focus:border-brand" />
         </label>
         <label className="text-xs text-neutral-500">Proveedor / pagador
