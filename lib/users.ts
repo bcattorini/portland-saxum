@@ -14,12 +14,34 @@ export function personForEmail(email?: string | null): AppPerson | null {
   return PEOPLE.find((p) => p.email.toLowerCase() === e) ?? null;
 }
 
-// Viewer role: read-only access limited to Preconstruction. Add emails here
-// (lowercase). Everyone not listed is a full member (Bruno / Sol).
-export const VIEWER_EMAILS = new Set<string>([
-  "lmarin@saxuminternational.com",
-]);
+// Roles. "member" = full access (Bruno / Sol). Restricted roles only see one
+// section. Add emails here (lowercase).
+//  - "viewer": read-only, Preconstruction only.
+//  - "pagos": Pagos only, manages payments (can't approve — that's Bruno).
+export type Role = "member" | "viewer" | "pagos";
+
+const ROLE_BY_EMAIL: Record<string, Role> = {
+  "lmarin@saxuminternational.com": "viewer",
+  "dsinisi@portlandsaxum.com": "pagos",
+};
+
+export function roleForEmail(email?: string | null): Role {
+  if (!email) return "member";
+  return ROLE_BY_EMAIL[email.toLowerCase()] ?? "member";
+}
+
+// The only nav section a restricted role may see (null = full access).
+export function allowedSection(email?: string | null): string | null {
+  switch (roleForEmail(email)) {
+    case "viewer": return "/permisos";
+    case "pagos": return "/pagos";
+    default: return null;
+  }
+}
+export function homePath(email?: string | null): string {
+  return allowedSection(email) ?? "/";
+}
 
 export function isViewer(email?: string | null): boolean {
-  return !!email && VIEWER_EMAILS.has(email.toLowerCase());
+  return roleForEmail(email) === "viewer";
 }

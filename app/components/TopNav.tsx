@@ -12,9 +12,9 @@ const TABS = [
   { href: "/seguimiento", label: "Seguimiento" },
 ];
 
-export function TopNav({ userEmail, isViewer = false }: { userEmail: string | null; isViewer?: boolean }) {
+export function TopNav({ userEmail, allowedHref = null }: { userEmail: string | null; allowedHref?: string | null }) {
   const pathname = usePathname();
-  const tabs = isViewer ? TABS.filter((t) => t.href === "/permisos") : TABS;
+  const tabs = allowedHref ? TABS.filter((t) => t.href === allowedHref) : TABS;
 
   return (
     <header className="bg-brand text-white">

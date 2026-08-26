@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isViewer } from "@/lib/users";
+import { allowedSection, homePath } from "@/lib/users";
 
 // Refreshes the Supabase session on every request and gates access:
 // unauthenticated users are redirected to /login (except the login page itself).
@@ -42,13 +42,14 @@ export async function updateSession(request: NextRequest) {
   }
   if (user && isLogin) {
     const url = request.nextUrl.clone();
-    url.pathname = isViewer(user.email) ? "/permisos" : "/";
+    url.pathname = homePath(user.email);
     return NextResponse.redirect(url);
   }
-  // Viewers are limited to Preconstruction (/permisos). Any other page → redirect.
-  if (user && isViewer(user.email) && !isLogin && !isAuthRoute && !path.startsWith("/permisos")) {
+  // Restricted roles (viewer → /permisos, pagos → /pagos) can only see their section.
+  const allowed = user ? allowedSection(user.email) : null;
+  if (user && allowed && !isLogin && !isAuthRoute && !path.startsWith(allowed)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/permisos";
+    url.pathname = allowed;
     return NextResponse.redirect(url);
   }
 
