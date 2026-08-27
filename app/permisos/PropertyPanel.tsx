@@ -178,16 +178,20 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
     .sort((a, b) => discName(a.discipline_id).localeCompare(discName(b.discipline_id)) || (a.ref_number ?? 0) - (b.ref_number ?? 0));
 
   // línea de comentario con disciplina (nombre completo: Public Works, Environmental, etc.)
-  const commentLine = (c: Comment) => (
-    <li key={c.id} className="flex items-start gap-2 px-3 py-2">
-      <span className="w-9 shrink-0 font-mono text-xs text-neutral-400">#{c.ref_number}</span>
-      <span className="w-28 shrink-0 text-[11px] font-medium text-neutral-500">
-        <span className="mr-1 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{discById.get(c.discipline_id)?.code}</span>
-        {discName(c.discipline_id)}
-      </span>
-      <span className="flex-1 text-xs text-neutral-600">{c.text}</span>
-    </li>
-  );
+  const commentLine = (c: Comment) => {
+    const asignee = tracking[c.id]?.assignee;
+    return (
+      <li key={c.id} className="flex items-start gap-2 px-3 py-2">
+        <span className="w-9 shrink-0 font-mono text-xs text-neutral-400">#{c.ref_number}</span>
+        <span className="w-28 shrink-0 text-[11px] font-medium text-neutral-500">
+          <span className="mr-1 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{discById.get(c.discipline_id)?.code}</span>
+          {discName(c.discipline_id)}
+        </span>
+        <span className="flex-1 text-xs text-neutral-600">{c.text}</span>
+        {asignee && <AssigneeChip name={asignee} />}
+      </li>
+    );
+  };
 
   return (
     <div className="space-y-2">
