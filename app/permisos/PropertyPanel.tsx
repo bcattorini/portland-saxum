@@ -338,6 +338,7 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
                                 {c.text}
                               </span>
                               <span className="flex shrink-0 flex-col items-end gap-1">
+                                {t?.assignee && <AssigneeChip name={t.assignee} />}
                                 <CommentStatusBadge status={c.city_status} />
                                 {t?.finalized_at ? (
                                   <span className="badge badge-success">✓ Finalizado</span>
@@ -370,4 +371,14 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
       )}
     </div>
   );
+}
+
+// Small colored chip showing who a comment is assigned to (Owner / David / …).
+function AssigneeChip({ name }: { name: string }) {
+  const n = name.trim().toLowerCase();
+  const style =
+    n === "owner" ? "bg-[#fbf3d0] text-[#8a6d00]" :
+    n === "david" ? "bg-[#e7eef8] text-[#1b3a6b]" :
+    "bg-neutral-100 text-neutral-600";
+  return <span className={"rounded px-1.5 py-0.5 text-[10px] font-semibold " + style}>👤 {name}</span>;
 }
