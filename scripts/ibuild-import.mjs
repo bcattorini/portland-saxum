@@ -45,11 +45,15 @@ for (const file of files) {
   console.log(`  property: ${prop.address}`);
 
   const { data: discRows } = await sb.from("disciplines").select("id,code").eq("property_id", prop.id);
-  const discByCode = new Map(discRows.map((d) => [d.code, d.id]));
-  const { data: existRows } = await sb
-    .from("comments")
-    .select("id,ref_number,city_status,discipline_id,cycle")
-    .in("discipline_id", discRows.length ? discRows.map((d) => d.id) : ["x"]);
+  const discByCode = new Map((discRows ?? []).map((d) => [d.code, d.id]));
+  let existRows = [];
+  if ((discRows ?? []).length) {
+    const { data } = await sb
+      .from("comments")
+      .select("id,ref_number,city_status,discipline_id,cycle")
+      .in("discipline_id", discRows.map((d) => d.id));
+    existRows = data ?? [];
+  }
   const existByRef = new Map(existRows.map((c) => [c.ref_number, c]));
 
   const codesInPdf = [...new Set(kept.map((r) => r.code))];
