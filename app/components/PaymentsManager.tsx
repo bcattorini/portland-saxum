@@ -253,7 +253,8 @@ export function PaymentsManager({
     else window.location.href = data.signedUrl; // fallback if popup was blocked
   }
   async function downloadInvoice(path: string, desc?: string) {
-    const name = `${(desc?.trim() || "invoice").replace(/[^\w\s-]/g, "").slice(0, 60) || "invoice"}.pdf`;
+    const ext = (path.split(".").pop() || "pdf").toLowerCase();
+    const name = `${(desc?.trim() || "invoice").replace(/[^\w\s-]/g, "").slice(0, 60) || "invoice"}.${ext}`;
     const { data, error } = await supabase.storage.from("invoices").createSignedUrl(path, 120, { download: name });
     if (error || !data?.signedUrl) { alert("No se pudo descargar el invoice: " + (error?.message ?? "archivo no encontrado")); return; }
     const a = document.createElement("a");
@@ -389,10 +390,10 @@ export function PaymentsManager({
             <span className="font-medium">{p.description}</span>
             {p.invoice_url && (
               <>
-                <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice (PDF)" className="text-[#a32d2d] hover:text-[#7a2020]">
+                <button onClick={() => openInvoice(p.invoice_url!)} title="Ver invoice" className="text-[#a32d2d] hover:text-[#7a2020]">
                   <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V7.414A2 2 0 0017.414 6L14 2.586A2 2 0 0012.586 2H4zm8 1.5L15.5 8H13a1 1 0 01-1-1V4.5zM6 10h8v1H6v-1zm0 3h8v1H6v-1z" /></svg>
                 </button>
-                <button onClick={() => downloadInvoice(p.invoice_url!, p.description)} title="Descargar invoice (PDF)" className="text-neutral-400 hover:text-neutral-700">
+                <button onClick={() => downloadInvoice(p.invoice_url!, p.description)} title="Descargar invoice" className="text-neutral-400 hover:text-neutral-700">
                   <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v6.586l1.293-1.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 10.586V4a1 1 0 011-1z" /><path d="M3 14a1 1 0 011 1v1a1 1 0 001 1h10a1 1 0 001-1v-1a1 1 0 112 0v1a3 3 0 01-3 3H5a3 3 0 01-3-3v-1a1 1 0 011-1z" /></svg>
                 </button>
               </>
@@ -644,17 +645,22 @@ function PaymentEditor({
   const set = (k: keyof Draft, v: string) => setDr((p) => ({ ...p, [k]: v }));
 
   async function handleFile(file: File) {
-    if (file.type !== "application/pdf") { setErr("El invoice debe ser un PDF."); return; }
+    const EXT: Record<string, string> = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" };
+    const ext = EXT[file.type];
+    if (!ext) { setErr("El invoice debe ser PDF, JPG o PNG."); return; }
     setUploading(true); setErr(null);
     const base = scope === "property" ? propertyId ?? "general" : "general";
-    const path = `${base}/${folderId}/invoice.pdf`;
-    const { error } = await supabase.storage.from("invoices").upload(path, file, { upsert: true, contentType: "application/pdf" });
+    const path = `${base}/${folderId}/invoice.${ext}`;
+    const { error } = await supabase.storage.from("invoices").upload(path, file, { upsert: true, contentType: file.type });
     setUploading(false);
     if (error) { setErr("Error al subir: " + error.message); return; }
     setDr((p) => ({ ...p, invoice_url: path }));
   }
 
-  const invoiceName = () => `${(dr.description.trim() || "invoice").replace(/[^\w\s-]/g, "").slice(0, 60) || "invoice"}.pdf`;
+  const invoiceName = () => {
+    const ext = (dr.invoice_url?.split(".").pop() || "pdf").toLowerCase();
+    return `${(dr.description.trim() || "invoice").replace(/[^\w\s-]/g, "").slice(0, 60) || "invoice"}.${ext}`;
+  };
   async function viewInvoice() {
     if (!dr.invoice_url) return;
     const win = window.open("", "_blank");
@@ -737,7 +743,7 @@ function PaymentEditor({
 
       {/* Invoice PDF */}
       <div className="flex items-center gap-2">
-        <input ref={fileRef} type="file" accept="application/pdf" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
+        <input ref={fileRef} type="file" accept="application/pdf,image/jpeg,image/png" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
         {dr.invoice_url ? (
           <>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-[#3b6d11]">
@@ -752,7 +758,7 @@ function PaymentEditor({
           </>
         ) : (
           <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="rounded-md border border-line px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-card disabled:opacity-50">
-            {uploading ? "Subiendo…" : "📎 Adjuntar invoice (PDF)"}
+            {uploading ? "Subiendo…" : "📎 Adjuntar invoice (PDF o imagen)"}
           </button>
         )}
       </div>
