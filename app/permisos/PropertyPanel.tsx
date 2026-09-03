@@ -347,7 +347,7 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
                                 {t?.finalized_at ? (
                                   <span className="badge badge-success">✓ Finalizado</span>
                                 ) : (
-                                  t && <InternalStatusBadge status={t.internal_status} />
+                                  t && c.city_status === "Unresolved" && <InternalStatusBadge status={t.internal_status} />
                                 )}
                               </span>
                             </button>
