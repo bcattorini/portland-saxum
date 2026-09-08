@@ -40,10 +40,18 @@ export function IbuildUpload() {
     const fd = new FormData();
     for (const f of chosen) fd.append("files", f);
     fd.append("apply", apply ? "1" : "0");
-    const res = await fetch("/api/ibuild-import", { method: "POST", body: fd });
-    const json = await res.json();
-    if (!res.ok) { setError(json.error || "Error en la importación."); return null; }
-    return json.results as Summary[];
+    let res: Response;
+    try {
+      res = await fetch("/api/ibuild-import", { method: "POST", body: fd });
+    } catch {
+      setError("No se pudo conectar con el servidor. Reintentá.");
+      return null;
+    }
+    let json: { error?: string; results?: Summary[] } | null = null;
+    try { json = await res.json(); } catch { json = null; }
+    if (!res.ok) { setError(json?.error || `Error del servidor (HTTP ${res.status}). Reintentá o avisá.`); return null; }
+    if (!json?.results) { setError("Respuesta inesperada del servidor."); return null; }
+    return json.results;
   }
 
   async function onPick(list: FileList | null) {
