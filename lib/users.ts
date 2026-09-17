@@ -17,12 +17,14 @@ export function personForEmail(email?: string | null): AppPerson | null {
 // Roles. "member" = full access (Bruno / Sol). Restricted roles only see one
 // section. Add emails here (lowercase).
 //  - "viewer": read-only, Preconstruction only.
+//  - "precon": Preconstruction only, but CAN edit comment tracking.
 //  - "pagos": Pagos only, manages payments (can't approve — that's Bruno).
-export type Role = "member" | "viewer" | "pagos";
+export type Role = "member" | "viewer" | "precon" | "pagos";
 
 const ROLE_BY_EMAIL: Record<string, Role> = {
   "lmarin@saxuminternational.com": "viewer",
   "dsinisi@portlandsaxum.com": "pagos",
+  "david@hdcmiami.com": "precon",
 };
 
 export function roleForEmail(email?: string | null): Role {
@@ -34,6 +36,7 @@ export function roleForEmail(email?: string | null): Role {
 export function allowedSection(email?: string | null): string | null {
   switch (roleForEmail(email)) {
     case "viewer": return "/permisos";
+    case "precon": return "/permisos";
     case "pagos": return "/pagos";
     default: return null;
   }
