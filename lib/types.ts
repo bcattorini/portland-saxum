@@ -124,6 +124,9 @@ export interface CommentTracking {
   id: string;
   comment_id: string;
   assignee: string | null;
+  assignee2: string | null;
+  dialog: string | null;
+  final_response: string | null;
   internal_status: InternalStatus;
   notes: string | null;
   finalized_at: string | null;

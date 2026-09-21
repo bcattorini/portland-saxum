@@ -7,8 +7,10 @@ import type {
   Comment,
   CommentTracking,
   Discipline,
+  InternalStatus,
   PropertyWithStats,
 } from "@/lib/types";
+import { INTERNAL_STATUSES } from "@/lib/types";
 import {
   CommentStatusBadge,
   DisciplineStatusBadge,
@@ -74,8 +76,9 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [commentsByDisc, setCommentsByDisc] = useState<Record<string, Comment[]>>({});
   const [tracking, setTracking] = useState<Record<string, CommentTracking>>({});
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [cycleOpen, setCycleOpen] = useState<Set<number>>(new Set());
+  const [discFilter, setDiscFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"pending" | "resolved" | "all">("pending");
   const [drawer, setDrawer] = useState<{ comment: Comment; discipline: Discipline } | null>(null);
 
   useEffect(() => {
@@ -135,12 +138,16 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
     };
   }, [property.id, supabase]);
 
-  function toggle(id: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  // upsert a patch onto a comment's tracking row (create it if missing)
+  async function updateTracking(commentId: string, patch: Partial<CommentTracking>) {
+    const existing = tracking[commentId];
+    if (existing) {
+      const { data } = await supabase.from("comment_tracking").update(patch).eq("id", existing.id).select().single();
+      if (data) setTracking((prev) => ({ ...prev, [commentId]: data as CommentTracking }));
+    } else {
+      const { data } = await supabase.from("comment_tracking").insert({ comment_id: commentId, internal_status: "Pending", ...patch }).select().single();
+      if (data) setTracking((prev) => ({ ...prev, [commentId]: data as CommentTracking }));
+    }
   }
 
   if (loading) return <div className="py-8 text-center text-sm text-neutral-400">Cargando…</div>;
@@ -171,15 +178,16 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
   }
   const cycleKeys = [...resolvedByCycle.keys()].sort((a, b) => b - a);
 
-  // pendientes por resolver (Unresolved), ordenados por disciplina y luego ref
   const discName = (id: string) => discById.get(id)?.name ?? discById.get(id)?.code ?? "—";
-  const pending = allComments
-    .filter((c) => c.city_status === "Unresolved")
+  // comments for the editable table, filtered by discipline + status
+  const filteredComments = allComments
+    .filter((c) => discFilter === "all" || c.discipline_id === discFilter)
+    .filter((c) => (statusFilter === "all" ? true : statusFilter === "resolved" ? c.city_status === "Resolved" : c.city_status === "Unresolved"))
     .sort((a, b) => discName(a.discipline_id).localeCompare(discName(b.discipline_id)) || (a.ref_number ?? 0) - (b.ref_number ?? 0));
 
   // línea de comentario con disciplina (nombre completo: Public Works, Environmental, etc.)
   const commentLine = (c: Comment) => {
-    const asignee = tracking[c.id]?.assignee;
+    const t = tracking[c.id];
     return (
       <li key={c.id} className="flex items-start gap-2 px-3 py-2">
         <span className="w-9 shrink-0 font-mono text-xs text-neutral-400">#{c.ref_number}</span>
@@ -188,7 +196,10 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
           {discName(c.discipline_id)}
         </span>
         <span className="flex-1 text-xs text-neutral-600">{c.text}</span>
-        {asignee && <AssigneeChip name={asignee} />}
+        <span className="flex shrink-0 flex-col items-end gap-1">
+          {t?.assignee && <AssigneeChip name={t.assignee} />}
+          {t?.assignee2 && <AssigneeChip name={t.assignee2} />}
+        </span>
       </li>
     );
   };
@@ -252,35 +263,7 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
         )}
       </div>
 
-      {/* Comentarios pendientes por resolver (Unresolved) */}
-      <div className="rounded-lg border border-line bg-page/40 px-4 py-3">
-        <button
-          onClick={() => setCycleOpen((prev) => { const s = new Set(prev); s.has(-1) ? s.delete(-1) : s.add(-1); return s; })}
-          className="flex w-full items-center justify-between gap-2 text-left"
-        >
-          <span className="text-sm font-semibold">
-            Pendientes por resolver
-            {maxCycle > 0 && <span className="ml-1 font-normal text-neutral-400">· ciclo actual {maxCycle}</span>}
-          </span>
-          <span className="flex items-center gap-2 text-xs">
-            <span className="font-semibold text-[#a32d2d]">{pending.length} pendientes</span>
-            <svg className={clsx("h-4 w-4 text-neutral-400 transition-transform", cycleOpen.has(-1) && "rotate-90")} viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-            </svg>
-          </span>
-        </button>
-        {cycleOpen.has(-1) && (
-          pending.length === 0 ? (
-            <p className="mt-1.5 text-xs text-neutral-400">No quedan comentarios abiertos. 🎉</p>
-          ) : (
-            <ul className="mt-2 divide-y divide-line rounded-md border border-line bg-card">
-              {pending.map((c) => commentLine(c))}
-            </ul>
-          )
-        )}
-      </div>
-
-      {/* Discipline table */}
+      {/* Discipline overview — resumen (no se abre) */}
       <div className="overflow-hidden rounded-lg border border-line">
         <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 bg-page px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
           <span className="w-8">Cód.</span>
@@ -288,79 +271,70 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
           <span>Estado ciudad</span>
           <span className="text-right">Abiertos</span>
         </div>
-        {disciplines.map((d) => {
-          const isOpen = expanded.has(d.id);
-          const comments = commentsByDisc[d.id] ?? [];
-          return (
-            <div key={d.id} className="border-t border-line first:border-t-0">
-              <button
-                onClick={() => toggle(d.id)}
-                className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3 text-left hover:bg-page/60"
-              >
-                <span className="grid h-7 w-8 place-items-center rounded bg-brand/10 text-xs font-semibold text-brand">
-                  {d.code}
-                </span>
-                <span>
-                  <span className="font-medium">{d.name}</span>
-                  <span className="ml-2 text-xs text-neutral-400">{d.reviewer_name}</span>
-                </span>
-                <DisciplineStatusBadge status={d.city_status} />
-                <span className="flex items-center justify-end gap-2 text-sm">
-                  <span className={clsx("font-semibold", d.open_comments > 0 ? "text-[#a32d2d]" : "text-neutral-400")}>
-                    {d.open_comments}
-                  </span>
-                  <span className="text-neutral-300">/ {d.total_comments}</span>
-                  <svg
-                    className={clsx("h-4 w-4 text-neutral-400 transition-transform", isOpen && "rotate-90")}
-                    viewBox="0 0 20 20" fill="currentColor"
-                  >
-                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </button>
+        {disciplines.map((d) => (
+          <div key={d.id} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 border-t border-line px-4 py-3">
+            <span className="grid h-7 w-8 place-items-center rounded bg-brand/10 text-xs font-semibold text-brand">{d.code}</span>
+            <span>
+              <span className="font-medium">{d.name}</span>
+              <span className="ml-2 text-xs text-neutral-400">{d.reviewer_name}</span>
+            </span>
+            <DisciplineStatusBadge status={d.city_status} />
+            <span className="flex items-center justify-end gap-1 text-sm">
+              <span className={clsx("font-semibold", d.open_comments > 0 ? "text-[#a32d2d]" : "text-neutral-400")}>{d.open_comments}</span>
+              <span className="text-neutral-300">/ {d.total_comments}</span>
+            </span>
+          </div>
+        ))}
+      </div>
 
-              {isOpen && (
-                <div className="border-t border-line bg-page/30 px-4 py-2">
-                  {comments.length === 0 ? (
-                    <div className="py-3 text-xs text-neutral-400">
-                      Sin comentarios detallados. (Header: {d.open_comments} abiertos, {d.info_comments} info.)
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-line">
-                      {comments.map((c) => {
-                        const t = tracking[c.id];
-                        return (
-                          <li key={c.id}>
-                            <button
-                              onClick={() => setDrawer({ comment: c, discipline: d })}
-                              className="flex w-full items-start gap-3 py-2.5 text-left hover:bg-card"
-                            >
-                              <span className="mt-0.5 w-10 shrink-0 font-mono text-xs text-neutral-400">
-                                #{c.ref_number}
-                              </span>
-                              <span className="flex-1 text-sm text-neutral-700">
-                                {c.text}
-                              </span>
-                              <span className="flex shrink-0 flex-col items-end gap-1">
-                                {t?.assignee && <AssigneeChip name={t.assignee} />}
-                                <CommentStatusBadge status={c.city_status} />
-                                {t?.finalized_at ? (
-                                  <span className="badge badge-success">✓ Finalizado</span>
-                                ) : (
-                                  t && c.city_status === "Unresolved" && <InternalStatusBadge status={t.internal_status} />
-                                )}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+      {/* Comentarios — planilla editable con filtros */}
+      <div>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold">Comentarios</span>
+          <select value={discFilter} onChange={(e) => setDiscFilter(e.target.value)} className="rounded-md border border-line bg-card px-2 py-1 text-xs outline-none focus:border-brand">
+            <option value="all">Todas las disciplinas</option>
+            {disciplines.map((d) => (<option key={d.id} value={d.id}>{d.code} — {d.name}</option>))}
+          </select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as "pending" | "resolved" | "all")} className="rounded-md border border-line bg-card px-2 py-1 text-xs outline-none focus:border-brand">
+            <option value="pending">Pendientes</option>
+            <option value="resolved">Resueltos</option>
+            <option value="all">Todos</option>
+          </select>
+          <span className="text-xs text-neutral-400">{filteredComments.length} comentarios</span>
+        </div>
+        {filteredComments.length === 0 ? (
+          <div className="rounded-lg border border-line py-6 text-center text-sm text-neutral-400">Ningún comentario con estos filtros.</div>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-line">
+            <table className="w-full min-w-[1240px] text-sm">
+              <thead>
+                <tr className="bg-page text-left text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+                  <th className="px-2 py-2">#</th>
+                  <th className="px-2 py-2">Disc.</th>
+                  <th className="px-2 py-2">Comentario original</th>
+                  <th className="px-2 py-2">Diálogo (ciudad ↔ nosotros)</th>
+                  <th className="px-2 py-2">Quién 1</th>
+                  <th className="px-2 py-2">Quién 2</th>
+                  <th className="px-2 py-2">Estado</th>
+                  <th className="px-2 py-2">Respuesta final</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredComments.map((c) => (
+                  <CommentRow
+                    key={c.id}
+                    comment={c}
+                    disc={discById.get(c.discipline_id) ?? null}
+                    tracking={tracking[c.id] ?? null}
+                    readOnly={readOnly}
+                    onPatch={(patch) => updateTracking(c.id, patch)}
+                    onOpenHistory={() => { const dd = discById.get(c.discipline_id); if (dd) setDrawer({ comment: c, discipline: dd }); }}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {drawer && (
@@ -379,10 +353,105 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
 
 // Small colored chip showing who a comment is assigned to (Owner / David / …).
 function AssigneeChip({ name }: { name: string }) {
-  const n = name.trim().toLowerCase();
-  const style =
-    n === "owner" ? "bg-[#fbf3d0] text-[#8a6d00]" :
-    n === "david" ? "bg-[#e7eef8] text-[#1b3a6b]" :
-    "bg-neutral-100 text-neutral-600";
-  return <span className={"rounded px-1.5 py-0.5 text-[10px] font-semibold " + style}>👤 {name}</span>;
+  const c = respColor(name);
+  return <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold" style={{ color: c.color, backgroundColor: c.bg }}>👤 {name}</span>;
+}
+
+// Preset responsables for the quick-assign dropdowns (+ free text via "Otro…").
+const RESP_OPTIONS = ["ARCH", "STR", "CIVIL", "MECHA", "ELEC", "PLUMB", "LANDSC", "OWNER", "RUNNER"];
+function respColor(v: string): { color: string; bg: string } {
+  const u = (v || "").trim().toUpperCase();
+  if (u === "OWNER") return { color: "#8a6d00", bg: "#fbf3d0" };
+  if (u === "RUNNER") return { color: "#3b6d11", bg: "#eaf3de" };
+  if (v && v.trim()) return { color: "#1b3a6b", bg: "#e7eef8" };
+  return { color: "#737373", bg: "#ffffff" };
+}
+
+function AssigneePicker({ value, onChange, readOnly = false }: { value: string; onChange: (v: string | null) => void; readOnly?: boolean }) {
+  const cur = (value ?? "").trim();
+  const known = RESP_OPTIONS.includes(cur.toUpperCase());
+  if (readOnly) return cur ? <AssigneeChip name={cur} /> : <span className="text-[10px] text-neutral-300">—</span>;
+  const c = respColor(cur);
+  return (
+    <select
+      value={known ? cur.toUpperCase() : cur ? "__cur__" : ""}
+      onChange={(e) => {
+        const v = e.target.value;
+        if (v === "__otro__") { const t = window.prompt("Responsable (ej: nombre del ingeniero):", cur); if (t && t.trim()) onChange(t.trim()); }
+        else if (v === "__cur__") { /* keep current custom value */ }
+        else onChange(v || null);
+      }}
+      title="Responsable"
+      style={{ color: c.color, backgroundColor: c.bg }}
+      className="w-full rounded border border-line px-1 py-0.5 text-[11px] font-semibold outline-none focus:border-brand"
+    >
+      <option value="">—</option>
+      {RESP_OPTIONS.map((o) => (<option key={o} value={o}>{o}</option>))}
+      {cur && !known && <option value="__cur__">{cur}</option>}
+      <option value="__otro__">＋ Otro…</option>
+    </select>
+  );
+}
+
+// Editable multi-line cell that saves on blur (Diálogo / Respuesta final).
+function EditableCell({ value, onSave, readOnly, placeholder }: { value: string; onSave: (v: string) => void; readOnly: boolean; placeholder: string }) {
+  const [v, setV] = useState(value);
+  useEffect(() => { setV(value); }, [value]);
+  if (readOnly) return <div className="min-w-[180px] whitespace-pre-wrap text-xs text-neutral-600">{value || "—"}</div>;
+  return (
+    <textarea
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={() => { if (v.trim() !== (value ?? "").trim()) onSave(v.trim()); }}
+      rows={3}
+      placeholder={placeholder}
+      className="min-w-[190px] w-full resize-y rounded border border-line bg-card px-1.5 py-1 text-xs outline-none focus:border-brand"
+    />
+  );
+}
+
+function CommentRow({
+  comment, disc, tracking, readOnly, onPatch, onOpenHistory,
+}: {
+  comment: Comment;
+  disc: Discipline | null;
+  tracking: CommentTracking | null;
+  readOnly: boolean;
+  onPatch: (patch: Partial<CommentTracking>) => void;
+  onOpenHistory: () => void;
+}) {
+  const t = tracking;
+  return (
+    <tr className="border-t border-line align-top">
+      <td className="px-2 py-2">
+        <button onClick={onOpenHistory} title="Ver historial / notas del comentario" className="font-mono text-xs font-medium text-brand hover:underline">#{comment.ref_number}</button>
+      </td>
+      <td className="px-2 py-2">
+        <span title={disc?.name ?? ""} className="rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{disc?.code ?? "—"}</span>
+      </td>
+      <td className="px-2 py-2">
+        <div className="max-h-36 min-w-[280px] max-w-[380px] overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-neutral-700">{comment.text}</div>
+      </td>
+      <td className="px-2 py-2"><EditableCell value={t?.dialog ?? ""} readOnly={readOnly} placeholder="Ida y vuelta con la ciudad / notas…" onSave={(v) => onPatch({ dialog: v || null })} /></td>
+      <td className="w-24 px-2 py-2"><AssigneePicker value={t?.assignee ?? ""} readOnly={readOnly} onChange={(v) => onPatch({ assignee: v })} /></td>
+      <td className="w-24 px-2 py-2"><AssigneePicker value={t?.assignee2 ?? ""} readOnly={readOnly} onChange={(v) => onPatch({ assignee2: v })} /></td>
+      <td className="w-28 px-2 py-2">
+        <div className="flex flex-col items-start gap-1">
+          <CommentStatusBadge status={comment.city_status} />
+          {readOnly ? (
+            t && <InternalStatusBadge status={t.internal_status} />
+          ) : (
+            <select
+              value={t?.internal_status ?? "Pending"}
+              onChange={(e) => onPatch({ internal_status: e.target.value as InternalStatus })}
+              className="w-full rounded border border-line bg-card px-1 py-0.5 text-[10px] outline-none focus:border-brand"
+            >
+              {INTERNAL_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
+            </select>
+          )}
+        </div>
+      </td>
+      <td className="px-2 py-2"><EditableCell value={t?.final_response ?? ""} readOnly={readOnly} placeholder="Cómo se resolvió / respuesta final…" onSave={(v) => onPatch({ final_response: v || null })} /></td>
+    </tr>
+  );
 }
