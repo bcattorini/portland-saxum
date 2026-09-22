@@ -410,6 +410,14 @@ function EditableCell({ value, onSave, readOnly, placeholder }: { value: string;
   );
 }
 
+// Split the iBuild comment text into the original comment and the city↔us dialogue.
+function splitComment(text: string | null): { original: string; dialogue: string } {
+  const t = text ?? "";
+  const idx = t.search(/Reviewer Response:/i);
+  if (idx < 0) return { original: t.trim(), dialogue: "" };
+  return { original: t.slice(0, idx).trim(), dialogue: t.slice(idx).trim() };
+}
+
 function CommentRow({
   comment, disc, tracking, readOnly, onPatch, onOpenHistory,
 }: {
@@ -421,6 +429,7 @@ function CommentRow({
   onOpenHistory: () => void;
 }) {
   const t = tracking;
+  const { original, dialogue } = splitComment(comment.text);
   return (
     <tr className="border-t border-line align-top">
       <td className="px-2 py-2">
@@ -430,9 +439,11 @@ function CommentRow({
         <span title={disc?.name ?? ""} className="rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{disc?.code ?? "—"}</span>
       </td>
       <td className="px-2 py-2">
-        <div className="max-h-36 min-w-[280px] max-w-[380px] overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-neutral-700">{comment.text}</div>
+        <div className="max-h-36 min-w-[260px] max-w-[360px] overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-neutral-700">{original}</div>
       </td>
-      <td className="px-2 py-2"><EditableCell value={t?.dialog ?? ""} readOnly={readOnly} placeholder="Ida y vuelta con la ciudad / notas…" onSave={(v) => onPatch({ dialog: v || null })} /></td>
+      <td className="px-2 py-2">
+        <div className="max-h-36 min-w-[260px] max-w-[360px] overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-neutral-500">{dialogue || "—"}</div>
+      </td>
       <td className="w-24 px-2 py-2"><AssigneePicker value={t?.assignee ?? ""} readOnly={readOnly} onChange={(v) => onPatch({ assignee: v })} /></td>
       <td className="w-24 px-2 py-2"><AssigneePicker value={t?.assignee2 ?? ""} readOnly={readOnly} onChange={(v) => onPatch({ assignee2: v })} /></td>
       <td className="w-28 px-2 py-2">
