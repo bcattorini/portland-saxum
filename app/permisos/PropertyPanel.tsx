@@ -79,6 +79,7 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
   const [cycleOpen, setCycleOpen] = useState<Set<number>>(new Set());
   const [discFilter, setDiscFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"pending" | "resolved" | "all">("pending");
+  const [showReport, setShowReport] = useState(false);
   const [drawer, setDrawer] = useState<{ comment: Comment; discipline: Discipline } | null>(null);
 
   useEffect(() => {
@@ -206,12 +207,12 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
         <button
-          onClick={() => window.print()}
-          className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-page"
+          onClick={() => setShowReport(true)}
+          className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
         >
-          Exportar PDF
+          Generar reporte
         </button>
       </div>
 
@@ -347,6 +348,243 @@ function PlanosTab({ property, readOnly = false }: { property: PropertyWithStats
           onSaved={(t) => setTracking((prev) => ({ ...prev, [t.comment_id]: t }))}
         />
       )}
+
+      {showReport && (
+        <PermitReport
+          property={property}
+          disciplines={disciplines}
+          commentsByDisc={commentsByDisc}
+          tracking={tracking}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// Reporte de estado de permisos — arma automáticamente el "estamos acá,
+// falta esto, próximos pasos" a partir de la data que la app ya tiene
+// (disciplinas, comentarios, ciclos y responsables). Se imprime a PDF.
+// ------------------------------------------------------------------
+function PermitReport({
+  property,
+  disciplines,
+  commentsByDisc,
+  tracking,
+  onClose,
+}: {
+  property: PropertyWithStats;
+  disciplines: Discipline[];
+  commentsByDisc: Record<string, Comment[]>;
+  tracking: Record<string, CommentTracking>;
+  onClose: () => void;
+}) {
+  const discById = new Map(disciplines.map((d) => [d.id, d]));
+  const discName = (id: string) => discById.get(id)?.name ?? discById.get(id)?.code ?? "—";
+  const allComments = Object.values(commentsByDisc).flat();
+
+  const totalNow = disciplines.reduce((s, d) => s + d.total_comments, 0);
+  const openNow = disciplines.reduce((s, d) => s + d.open_comments, 0);
+  const infoNow = disciplines.reduce((s, d) => s + d.info_comments, 0);
+  const resolvedNow = Math.max(0, totalNow - openNow - infoNow);
+  const maxCycle = allComments.reduce((m, c) => Math.max(m, c.cycle ?? 0), 0);
+  const pct = totalNow > 0 ? Math.round((resolvedNow / totalNow) * 100) : 0;
+
+  // pendientes por disciplina (con responsables + texto)
+  const pending = allComments.filter((c) => c.city_status === "Unresolved");
+  const pendingByDisc = new Map<string, Comment[]>();
+  for (const c of pending) {
+    if (!pendingByDisc.has(c.discipline_id)) pendingByDisc.set(c.discipline_id, []);
+    pendingByDisc.get(c.discipline_id)!.push(c);
+  }
+  const pendingDiscOrder = disciplines
+    .filter((d) => pendingByDisc.has(d.id))
+    .sort((a, b) => (b.open_comments ?? 0) - (a.open_comments ?? 0));
+
+  // próximos pasos agrupados por responsable
+  const byResp = new Map<string, { c: Comment; disc: string }[]>();
+  for (const c of pending) {
+    const t = tracking[c.id];
+    const owners = [t?.assignee, t?.assignee2].map((x) => (x ?? "").trim()).filter(Boolean);
+    const keys = owners.length ? owners : ["Sin asignar"];
+    for (const k of keys) {
+      if (!byResp.has(k)) byResp.set(k, []);
+      byResp.get(k)!.push({ c, disc: discById.get(c.discipline_id)?.code ?? "—" });
+    }
+  }
+  const respOrder = [...byResp.keys()].sort((a, b) => {
+    if (a === "Sin asignar") return 1;
+    if (b === "Sin asignar") return -1;
+    return byResp.get(b)!.length - byResp.get(a)!.length;
+  });
+
+  const today = new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-auto bg-black/40 p-4 print:static print:bg-white print:p-0" onClick={onClose}>
+      <style>{`@media print { body > *:not(.pr-print-root) { display: none !important; } .pr-print-root { position: static !important; background: #fff !important; padding: 0 !important; } .pr-no-print { display: none !important; } .pr-sheet { box-shadow: none !important; margin: 0 !important; max-width: none !important; border: 0 !important; } @page { size: A4; margin: 16mm; } }`}</style>
+
+      <div className="pr-print-root">
+        {/* barra de acciones (no se imprime) */}
+        <div className="pr-no-print mx-auto mb-3 flex max-w-[820px] items-center justify-between">
+          <span className="text-sm font-medium text-white drop-shadow">Reporte de estado — {property.address}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); window.print(); }}
+              className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
+            >
+              Imprimir / PDF
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+
+        {/* hoja */}
+        <div
+          className="pr-sheet mx-auto max-w-[820px] rounded-lg bg-white p-10 text-neutral-800 shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* encabezado */}
+          <div className="mb-6 border-b border-neutral-200 pb-5">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-brand">Portland Saxum · Preconstruction</div>
+            <h1 className="mt-1 text-2xl font-bold leading-tight text-neutral-900">{property.address}</h1>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-neutral-500">
+              {property.permit_number && <span>Permit: <span className="font-medium text-neutral-700">{property.permit_number}</span></span>}
+              <span>Ciclo actual: <span className="font-medium text-neutral-700">{maxCycle > 0 ? maxCycle : "—"}</span></span>
+              <span>Fecha: <span className="font-medium text-neutral-700">{today}</span></span>
+            </div>
+          </div>
+
+          {/* resumen — estamos acá */}
+          <section className="mb-7">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-neutral-400">Estamos acá</h2>
+            <div className="flex flex-wrap items-stretch gap-3">
+              <div className="flex-1 rounded-lg border border-neutral-200 px-4 py-3 text-center">
+                <div className="text-2xl font-bold text-[#3b6d11]">{resolvedNow}</div>
+                <div className="text-[11px] uppercase tracking-wide text-neutral-400">Resueltos</div>
+              </div>
+              <div className="flex-1 rounded-lg border border-neutral-200 px-4 py-3 text-center">
+                <div className="text-2xl font-bold text-[#a32d2d]">{openNow}</div>
+                <div className="text-[11px] uppercase tracking-wide text-neutral-400">Pendientes</div>
+              </div>
+              <div className="flex-1 rounded-lg border border-neutral-200 px-4 py-3 text-center">
+                <div className="text-2xl font-bold text-neutral-700">{totalNow}</div>
+                <div className="text-[11px] uppercase tracking-wide text-neutral-400">Total{infoNow > 0 ? ` · ${infoNow} info` : ""}</div>
+              </div>
+              <div className="flex-1 rounded-lg border border-neutral-200 px-4 py-3 text-center">
+                <div className="text-2xl font-bold text-brand">{pct}%</div>
+                <div className="text-[11px] uppercase tracking-wide text-neutral-400">Avance</div>
+              </div>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
+              <div className="h-full rounded-full bg-[#3b6d11]" style={{ width: `${pct}%` }} />
+            </div>
+          </section>
+
+          {/* estado por disciplina */}
+          <section className="mb-7">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-neutral-400">Estado por disciplina</h2>
+            <table className="w-full border-collapse text-[13px]">
+              <thead>
+                <tr className="border-b border-neutral-200 text-left text-[11px] uppercase tracking-wide text-neutral-400">
+                  <th className="py-1.5 pr-2 font-semibold">Disciplina</th>
+                  <th className="py-1.5 px-2 font-semibold">Estado ciudad</th>
+                  <th className="py-1.5 px-2 text-right font-semibold">Pendientes</th>
+                  <th className="py-1.5 pl-2 text-right font-semibold">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {disciplines.map((d) => (
+                  <tr key={d.id} className="border-b border-neutral-100">
+                    <td className="py-1.5 pr-2">
+                      <span className="mr-1.5 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{d.code}</span>
+                      {d.name}
+                    </td>
+                    <td className="py-1.5 px-2">
+                      <span className={d.city_status === "APPROVED" ? "text-[#3b6d11]" : d.open_comments > 0 ? "text-[#a32d2d]" : "text-neutral-500"}>
+                        {d.city_status === "APPROVED" ? "Aprobado" : d.open_comments > 0 ? "Con correcciones" : "En revisión"}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-2 text-right font-medium">{d.open_comments}</td>
+                    <td className="py-1.5 pl-2 text-right text-neutral-500">{d.total_comments}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {/* falta esto — pendientes por disciplina */}
+          <section className="mb-7">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-neutral-400">Falta esto — pendientes por disciplina</h2>
+            {pendingDiscOrder.length === 0 ? (
+              <p className="text-sm text-[#3b6d11]">No quedan comentarios pendientes. 🎉</p>
+            ) : (
+              <div className="space-y-4">
+                {pendingDiscOrder.map((d) => (
+                  <div key={d.id} className="break-inside-avoid">
+                    <div className="mb-1 text-[13px] font-semibold text-neutral-700">
+                      <span className="mr-1.5 rounded bg-brand/10 px-1 text-[10px] font-semibold text-brand">{d.code}</span>
+                      {d.name} <span className="font-normal text-neutral-400">· {pendingByDisc.get(d.id)!.length} pendiente(s)</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {pendingByDisc.get(d.id)!.map((c) => {
+                        const t = tracking[c.id];
+                        const owners = [t?.assignee, t?.assignee2].map((x) => (x ?? "").trim()).filter(Boolean);
+                        return (
+                          <li key={c.id} className="flex items-start gap-2 text-[12.5px] leading-snug">
+                            <span className="mt-0.5 w-8 shrink-0 font-mono text-[11px] text-neutral-400">#{c.ref_number}</span>
+                            <span className="flex-1 text-neutral-600">{c.text}</span>
+                            {owners.length > 0 && (
+                              <span className="flex shrink-0 flex-col items-end gap-0.5">
+                                {owners.map((o, i) => <AssigneeChip key={i} name={o} />)}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* próximos pasos — por responsable */}
+          {respOrder.length > 0 && (
+            <section className="mb-2 break-inside-avoid">
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-neutral-400">Próximos pasos — por responsable</h2>
+              <div className="space-y-3">
+                {respOrder.map((r) => (
+                  <div key={r} className="break-inside-avoid">
+                    <div className="mb-1 flex items-center gap-2">
+                      <AssigneeChip name={r} />
+                      <span className="text-[12px] text-neutral-400">{byResp.get(r)!.length} ítem(s)</span>
+                    </div>
+                    <ul className="ml-1 list-inside space-y-0.5 text-[12.5px] text-neutral-600">
+                      {byResp.get(r)!.map(({ c, disc }, i) => (
+                        <li key={i} className="leading-snug">
+                          <span className="mr-1 rounded bg-neutral-100 px-1 text-[10px] font-semibold text-neutral-500">{disc}</span>
+                          <span className="font-mono text-[10px] text-neutral-400">#{c.ref_number}</span> {c.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <div className="mt-8 border-t border-neutral-200 pt-3 text-center text-[10px] uppercase tracking-widest text-neutral-300">
+            Generado automáticamente · Portland Saxum
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
