@@ -380,6 +380,8 @@ function PermitReport({
   tracking: Record<string, CommentTracking>;
   onClose: () => void;
 }) {
+  const [mode, setMode] = useState<"interno" | "cliente">("interno");
+  const isClient = mode === "cliente";
   const discById = new Map(disciplines.map((d) => [d.id, d]));
   const discName = (id: string) => discById.get(id)?.name ?? discById.get(id)?.code ?? "—";
   const allComments = Object.values(commentsByDisc).flat();
@@ -429,7 +431,21 @@ function PermitReport({
         {/* barra de acciones (no se imprime) */}
         <div className="pr-no-print mx-auto mb-3 flex max-w-[820px] items-center justify-between">
           <span className="text-sm font-medium text-white drop-shadow">Reporte de estado — {property.address}</span>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex overflow-hidden rounded-md border border-white/40 text-sm">
+              <button
+                onClick={(e) => { e.stopPropagation(); setMode("interno"); }}
+                className={`px-3 py-1.5 font-medium ${mode === "interno" ? "bg-white text-neutral-800" : "bg-white/10 text-white hover:bg-white/20"}`}
+              >
+                Interno
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setMode("cliente"); }}
+                className={`px-3 py-1.5 font-medium ${mode === "cliente" ? "bg-white text-neutral-800" : "bg-white/10 text-white hover:bg-white/20"}`}
+              >
+                Cliente
+              </button>
+            </div>
             <button
               onClick={(e) => { e.stopPropagation(); window.print(); }}
               className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
@@ -540,7 +556,7 @@ function PermitReport({
                           <li key={c.id} className="flex items-start gap-2 text-[12.5px] leading-snug">
                             <span className="mt-0.5 w-8 shrink-0 font-mono text-[11px] text-neutral-400">#{c.ref_number}</span>
                             <span className="flex-1 text-neutral-600">{c.text}</span>
-                            {owners.length > 0 && (
+                            {!isClient && owners.length > 0 && (
                               <span className="flex shrink-0 flex-col items-end gap-0.5">
                                 {owners.map((o, i) => <AssigneeChip key={i} name={o} />)}
                               </span>
@@ -555,8 +571,8 @@ function PermitReport({
             )}
           </section>
 
-          {/* próximos pasos — por responsable */}
-          {respOrder.length > 0 && (
+          {/* próximos pasos — por responsable (solo interno) */}
+          {!isClient && respOrder.length > 0 && (
             <section className="mb-2 break-inside-avoid">
               <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-neutral-400">Próximos pasos — por responsable</h2>
               <div className="space-y-3">
